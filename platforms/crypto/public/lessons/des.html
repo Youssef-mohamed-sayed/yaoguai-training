@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DES â€” YAOGUAI</title>
+<title>DES — YAOGUAI</title>
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
 <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
@@ -31,9 +31,9 @@
   <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
   <main class="lesson-main">
     <div class="lesson-head">
-      <div class="cat-tag">ENCRYPTION Â· MODULE 07 Â· SYMMETRIC BLOCK CIPHER</div>
+      <div class="cat-tag">ENCRYPTION · MODULE 07 · SYMMETRIC BLOCK CIPHER</div>
       <h1>DES</h1>
-      <div class="native">æ—§ä¸–ä»£æš—å· â€” legacy cipher</div>
+
       <div class="lesson-meta">
         <span class="badge intermediate">Intermediate</span>
         <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
@@ -43,7 +43,7 @@
         <ul>
           <li>What a block cipher and a Feistel network are</li>
           <li>DES's round structure: expansion, subkey XOR, S-boxes, permutation</li>
-          <li>Exactly why a 56-bit key retired DES â€” and why that's a key-size problem, not a design flaw</li>
+          <li>Exactly why a 56-bit key retired DES — and why that's a key-size problem, not a design flaw</li>
           <li>Why a weak key-derivation process can break a cipher even when the algorithm itself is sound</li>
         </ul>
       </div>
@@ -51,33 +51,33 @@
 
     <section class="lsec" id="intro" data-title="Introduction">
       <h2><span class="mk"></span>Introduction</h2>
-      <p>DES is your first true <strong>block cipher</strong> â€” the family AES belongs to. Where XOR and RC4 worked byte-by-byte, DES processes data in fixed 64-bit chunks through a structured, repeated scrambling process called a <strong>Feistel network</strong>. Understanding DES's rounds makes AES's rounds (coming up next) far easier to follow, since the overall idea â€” repeat a round function many times, mixing in a different subkey each time â€” is shared by both.</p>
+      <p>DES is your first true <strong>block cipher</strong> — the family AES belongs to. Where XOR and RC4 worked byte-by-byte, DES processes data in fixed 64-bit chunks through a structured, repeated scrambling process called a <strong>Feistel network</strong>. Understanding DES's rounds makes AES's rounds (coming up next) far easier to follow, since the overall idea — repeat a round function many times, mixing in a different subkey each time — is shared by both.</p>
     </section>
 
     <section class="lsec" id="history" data-title="History">
       <h2><span class="mk"></span>History</h2>
-      <p>DES ("Data Encryption Standard") was developed by IBM in the early 1970s (building on an internal cipher called Lucifer) and standardized by the US government (NBS, now NIST) in 1977. It became the first publicly available, government-endorsed encryption standard, and dominated commercial and government cryptography for two decades. Its downfall was its key: only <strong>56 bits</strong>. As computing power grew, 56-bit keys became brute-forceable â€” a dedicated machine called "Deep Crack" broke a DES key in under a day in 1998. NIST formally deprecated DES and ran the open competition that produced its replacement: AES.</p>
+      <p>DES ("Data Encryption Standard") was developed by IBM in the early 1970s (building on an internal cipher called Lucifer) and standardized by the US government (NBS, now NIST) in 1977. It became the first publicly available, government-endorsed encryption standard, and dominated commercial and government cryptography for two decades. Its downfall was its key: only <strong>56 bits</strong>. As computing power grew, 56-bit keys became brute-forceable — a dedicated machine called "Deep Crack" broke a DES key in under a day in 1998. NIST formally deprecated DES and ran the open competition that produced its replacement: AES.</p>
       <div class="badge advanced" style="display:inline-block;margin:6px 0 10px;">Status today: Educational / Legacy / Insecure (56-bit key is brute-forceable)</div>
     </section>
 
     <section class="lsec" id="definition" data-title="Brief definition">
       <h2><span class="mk"></span>Brief definition</h2>
       <div class="callout define"><span class="term">DEFINITION</span><p>DES is a symmetric block cipher: it encrypts 64-bit (8-byte) blocks using a 56-bit key (stored as a 64-bit value with 8 unused parity bits), through 16 structured rounds.</p></div>
-      <div class="callout define"><span class="term">FEISTEL NETWORK</span><p>A cipher structure that splits each block into two halves, and in every round runs one half through a scrambling function mixed with a subkey, XORs the result into the other half, then swaps the halves. Its key property: the same structure decrypts correctly just by running the subkeys in reverse order â€” no separate "inverse" function needed for the round itself.</p></div>
+      <div class="callout define"><span class="term">FEISTEL NETWORK</span><p>A cipher structure that splits each block into two halves, and in every round runs one half through a scrambling function mixed with a subkey, XORs the result into the other half, then swaps the halves. Its key property: the same structure decrypts correctly just by running the subkeys in reverse order — no separate "inverse" function needed for the round itself.</p></div>
     </section>
 
     <section class="lsec" id="theory" data-title="How DES works">
       <h2><span class="mk"></span>How it works</h2>
-      <div class="flow"><span>64-bit block</span><i>â†’</i><span>Initial Permutation (IP)</span><i>â†’</i><span>16 Feistel rounds</span><i>â†’</i><span>Swap</span><i>â†’</i><span>Final Permutation (IPâ»Â¹)</span><i>â†’</i><span>64-bit ciphertext</span></div>
+      <div class="flow"><span>64-bit block</span><i>→</i><span>Initial Permutation (IP)</span><i>→</i><span>16 Feistel rounds</span><i>→</i><span>Swap</span><i>→</i><span>Final Permutation (IP⁻¹)</span><i>→</i><span>64-bit ciphertext</span></div>
       <h3>Key schedule</h3>
-      <p>The 64-bit key first passes through <strong>PC-1</strong> (Permuted Choice 1), which drops the 8 parity bits and permutes the remaining 56. That 56-bit value is split into two 28-bit halves, which are rotated left by 1 or 2 bits every round, then combined and compressed by <strong>PC-2</strong> into a 48-bit subkey for that round â€” 16 rounds, 16 different subkeys.</p>
+      <p>The 64-bit key first passes through <strong>PC-1</strong> (Permuted Choice 1), which drops the 8 parity bits and permutes the remaining 56. That 56-bit value is split into two 28-bit halves, which are rotated left by 1 or 2 bits every round, then combined and compressed by <strong>PC-2</strong> into a 48-bit subkey for that round — 16 rounds, 16 different subkeys.</p>
       <h3>One Feistel round</h3>
       <ol>
         <li>Split the 64-bit block into left (L) and right (R) 32-bit halves.</li>
-        <li><strong>Expansion (E)</strong> â€” expand R from 32 to 48 bits (duplicating some bits) so it can be XORed with the 48-bit subkey.</li>
+        <li><strong>Expansion (E)</strong> — expand R from 32 to 48 bits (duplicating some bits) so it can be XORed with the 48-bit subkey.</li>
         <li><strong>XOR</strong> the expanded R with that round's subkey.</li>
-        <li><strong>S-boxes</strong> â€” 8 fixed substitution tables compress the 48 bits back down to 32, non-linearly (DES's confusion step, playing the same role AES's SubBytes does).</li>
-        <li><strong>Permutation (P)</strong> â€” shuffle those 32 bits.</li>
+        <li><strong>S-boxes</strong> — 8 fixed substitution tables compress the 48 bits back down to 32, non-linearly (DES's confusion step, playing the same role AES's SubBytes does).</li>
+        <li><strong>Permutation (P)</strong> — shuffle those 32 bits.</li>
         <li><strong>XOR</strong> the result into L, then swap L and R for the next round.</li>
       </ol>
       <div class="task">
@@ -86,7 +86,7 @@
           <p>Put DES's round operations in order: <code>S-boxes</code>, <code>Expansion</code>, <code>XOR with subkey</code>, <code>Permutation</code>.</p>
           <input type="text" placeholder="e.g. Expansion, XOR with subkey, S-boxes, Permutation">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'expansion,xor with subkey,s-boxes,permutation')">Check</button></div>
-          <div class="task-fb" data-ok="Correct â€” expand, mix in the key, substitute non-linearly, then permute."></div>
+          <div class="task-fb" data-ok="Correct — expand, mix in the key, substitute non-linearly, then permute."></div>
         </div>
       </div>
     </section>
@@ -112,10 +112,10 @@ plaintext = des_decrypt(ciphertext, <span class="str">"mykey123"</span>)
         <div class="task-body">
           <p>Why does DES decrypt using the exact same round structure as encryption?</p>
           <div class="mc-opts">
-            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">It doesn't â€” decryption needs a completely different algorithm</div>
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">It doesn't — decryption needs a completely different algorithm</div>
             <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">A Feistel network decrypts correctly just by applying the 16 subkeys in reverse order</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” this is the defining advantage of the Feistel structure."></div>
+          <div class="task-fb" data-ok="Correct — this is the defining advantage of the Feistel structure."></div>
         </div>
       </div>
     </section>
@@ -128,7 +128,7 @@ plaintext = des_decrypt(ciphertext, <span class="str">"mykey123"</span>)
           <p>In one sentence: what's the single biggest practical reason DES is retired?</p>
           <input type="text" placeholder="one sentence">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,['56bit','56-bit','short key','key size','brute force','bruteforce'],'input,textarea')">Check</button></div>
-          <div class="task-fb" data-ok="Right idea â€” the 56-bit key space (2^56 possibilities) is small enough for modern hardware to brute-force." data-bad="Think about the key size specifically, not the round structure."></div>
+          <div class="task-fb" data-ok="Right idea — the 56-bit key space (2^56 possibilities) is small enough for modern hardware to brute-force." data-bad="Think about the key size specifically, not the round structure."></div>
         </div>
       </div>
     </section>
@@ -136,32 +136,32 @@ plaintext = des_decrypt(ciphertext, <span class="str">"mykey123"</span>)
     <section class="lsec" id="strengths" data-title="Strengths">
       <h2><span class="mk"></span>Strengths</h2>
       <ul>
-        <li><strong>Historically foundational</strong> â€” the Feistel structure, S-boxes, and key-schedule ideas DES pioneered directly shaped how later ciphers (and cryptanalysis techniques) were designed.</li>
-        <li><strong>Well-studied</strong> â€” decades of public cryptanalysis found no practical shortcut attack better than brute force on the key itself, which at the time (1970s hardware) was considered secure.</li>
+        <li><strong>Historically foundational</strong> — the Feistel structure, S-boxes, and key-schedule ideas DES pioneered directly shaped how later ciphers (and cryptanalysis techniques) were designed.</li>
+        <li><strong>Well-studied</strong> — decades of public cryptanalysis found no practical shortcut attack better than brute force on the key itself, which at the time (1970s hardware) was considered secure.</li>
       </ul>
     </section>
 
     <section class="lsec" id="weaknesses" data-title="Weaknesses">
       <h2><span class="mk"></span>Weaknesses</h2>
-      <div class="callout danger"><p><strong>Algorithm weakness â€” key size:</strong> 56 bits means 2^56 (about 72 quadrillion) possible keys. That sounds large, but modern hardware (and especially GPUs/FPGAs/cloud compute) can exhaust that space in hours to days. <strong>DES is obsolete</strong> for this reason alone, even though no deeper structural flaw in its rounds was ever found.</p></div>
-      <div class="callout warn"><p><strong>Also algorithm-level â€” small block size:</strong> 64-bit blocks make DES vulnerable to "birthday bound" collision attacks (like Sweet32) once enough data is encrypted under one key â€” another reason block size matters, which is part of why AES uses 128-bit blocks.</p></div>
+      <div class="callout danger"><p><strong>Algorithm weakness — key size:</strong> 56 bits means 2^56 (about 72 quadrillion) possible keys. That sounds large, but modern hardware (and especially GPUs/FPGAs/cloud compute) can exhaust that space in hours to days. <strong>DES is obsolete</strong> for this reason alone, even though no deeper structural flaw in its rounds was ever found.</p></div>
+      <div class="callout warn"><p><strong>Also algorithm-level — small block size:</strong> 64-bit blocks make DES vulnerable to "birthday bound" collision attacks (like Sweet32) once enough data is encrypted under one key — another reason block size matters, which is part of why AES uses 128-bit blocks.</p></div>
     </section>
 
     <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
       <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
-      <p>DES rarely appears in modern production systems, but it appears constantly in legacy-system audits, old hardware (ATMs, old payment terminals, some embedded devices), and CTF/educational contexts specifically because its key is small enough to brute-force within a challenge's time budget â€” making "just brute force the DES key" a legitimate, intended solution path rather than a shortcut. Recognizing an 8-byte block cipher with a short key as "probably DES" is a useful forensic instinct.</p>
+      <p>DES rarely appears in modern production systems, but it appears constantly in legacy-system audits, old hardware (ATMs, old payment terminals, some embedded devices), and CTF/educational contexts specifically because its key is small enough to brute-force within a challenge's time budget — making "just brute force the DES key" a legitimate, intended solution path rather than a shortcut. Recognizing an 8-byte block cipher with a short key as "probably DES" is a useful forensic instinct.</p>
     </section>
 
     <section class="lsec" id="challenge" data-title="CTF Challenge">
       <h2><span class="mk"></span>CTF Challenge</h2>
       <div class="ctf">
-        <div class="ctf-head"><b>CHALLENGE Â· SHORT KEY, LONG NIGHT</b><span class="badge intermediate">Intermediate</span></div>
+        <div class="ctf-head"><b>CHALLENGE · SHORT KEY, LONG NIGHT</b><span class="badge intermediate">Intermediate</span></div>
         <div class="ctf-body">
-          <div class="ctf-row"><span class="k">SCENARIO</span><p>A legacy device DES-encrypts its config with a key that was generated from a known 4-digit PIN, padded with zero bytes â€” not a full random 56-bit key.</p></div>
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A legacy device DES-encrypts its config with a key that was generated from a known 4-digit PIN, padded with zero bytes — not a full random 56-bit key.</p></div>
           <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Describe the attack: given the DES ciphertext and the knowledge that the key is <code>PIN + "\x00\x00\x00\x00"</code> where PIN is 4 ASCII digits, how many keys does an attacker actually need to try?</p></div>
           <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{N}</code> where N is the number of keys to try</p></div>
           <div class="hint-list">
-            <details class="hint"><summary>Hint 1</summary><p>A 4-digit PIN made of ASCII digits '0'-'9' â€” how many combinations is that, not 2^56?</p></details>
+            <details class="hint"><summary>Hint 1</summary><p>A 4-digit PIN made of ASCII digits '0'-'9' — how many combinations is that, not 2^56?</p></details>
           </div>
           <div class="ctf-flag">
             <input type="text" placeholder="flag{...}">
@@ -172,7 +172,7 @@ plaintext = des_decrypt(ciphertext, <span class="str">"mykey123"</span>)
             <summary>Show solution</summary>
             <div class="sol-body">
               <h5>REASONING</h5>
-              <p>The real key space here isn't DES's theoretical 2^56 â€” it's however many values the <em>key-derivation</em> process can actually produce. A 4-digit PIN has only 10,000 possibilities (0000â€“9999), so the effective keyspace is 10,000 keys, trivially brute-forced in milliseconds. The lesson: a cipher's security is capped by its weakest link, and a poorly chosen key defeats even a sound algorithm.</p>
+              <p>The real key space here isn't DES's theoretical 2^56 — it's however many values the <em>key-derivation</em> process can actually produce. A 4-digit PIN has only 10,000 possibilities (0000–9999), so the effective keyspace is 10,000 keys, trivially brute-forced in milliseconds. The lesson: a cipher's security is capped by its weakest link, and a poorly chosen key defeats even a sound algorithm.</p>
               <h5>FLAG</h5>
               <p><code>flag{10000}</code></p>
             </div>
@@ -186,20 +186,20 @@ plaintext = des_decrypt(ciphertext, <span class="str">"mykey123"</span>)
       <ul>
         <li>DES encrypts 64-bit blocks through 16 Feistel rounds (expand, XOR, S-box, permute).</li>
         <li>Its 56-bit key is the fatal weakness: brute-forceable on modern hardware, not a deeper structural flaw.</li>
-        <li>The Feistel structure's elegant property â€” same steps decrypt by reversing subkey order â€” reappears conceptually in many later ciphers.</li>
+        <li>The Feistel structure's elegant property — same steps decrypt by reversing subkey order — reappears conceptually in many later ciphers.</li>
         <li>Up next: Triple DES, a stopgap that reuses DES three times to patch the key-size problem.</li>
       </ul>
       <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
     </section>
 
     <div class="lesson-nav">
-      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
-      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">← previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next →</span><span class="ttl"></span></a>
     </div>
   </main>
 </div>
 
-<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+<footer><div class="wrap"><span>Yaoguai YAOGUAI — a beginner-to-CTF cryptography curriculum.</span></div></footer>
 
 <script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
 <script src="../js/api.js"></script>

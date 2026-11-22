@@ -9,7 +9,7 @@
     <button class="btn btn-primary" type="submit">Search</button>
   </form>
   {% if query %}
-    <p class="search-count">{{ results|length }} result{% if results|length != 1 %}s{% endif %} for â€œ{{ query }}â€</p>
+    <p class="search-count">{{ results|length }} result{% if results|length != 1 %}s{% endif %} for “{{ query }}”</p>
     {% if results %}
       <ul class="search-results">
       {% for score, item, anchor, section, snippet in results %}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hexadecimal â€” YAOGUAI</title>
+<title>Hexadecimal — YAOGUAI</title>
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
 <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
@@ -35,9 +35,9 @@
 
   <main class="lesson-main">
     <div class="lesson-head">
-      <div class="cat-tag">ENCODING Â· MODULE 01</div>
+      <div class="cat-tag">ENCODING · MODULE 01</div>
       <h1>Hexadecimal</h1>
-      <div class="native">åå…­é€²æ³• â€” base-16</div>
+
       <div class="lesson-meta">
         <span class="badge beginner">Beginner</span>
         <div class="diffmeter"><i class="on"></i><i></i><i></i><i></i><i></i></div>
@@ -48,7 +48,7 @@
           <li>What "base 16" means and why computing uses it</li>
           <li>How bytes become the hex strings you see everywhere in security tools</li>
           <li>How to encode and decode hex yourself, by hand and in Python</li>
-          <li>Why hex gives you <strong>no</strong> secrecy at all â€” and why CTFs use it anyway</li>
+          <li>Why hex gives you <strong>no</strong> secrecy at all — and why CTFs use it anyway</li>
         </ul>
       </div>
     </div>
@@ -56,15 +56,15 @@
     <!-- 1. INTRODUCTION -->
     <section class="lsec" id="intro" data-title="Introduction">
       <h2><span class="mk"></span>Introduction</h2>
-      <p>Open any packet capture, malware sample, or CTF challenge and you'll see strings like <code>48656c6c6f</code>. That's hexadecimal â€” a way of writing bytes using the digits <code>0-9</code> and letters <code>a-f</code> instead of the 0s and 1s a computer actually stores.</p>
-      <p>Hex matters in cybersecurity not because it protects anything, but because it's the universal <strong>readable form</strong> of raw bytes. Before you can understand XOR, AES, or a hash digest, you need to be fluent in reading and writing hex â€” this module is that fluency.</p>
+      <p>Open any packet capture, malware sample, or CTF challenge and you'll see strings like <code>48656c6c6f</code>. That's hexadecimal — a way of writing bytes using the digits <code>0-9</code> and letters <code>a-f</code> instead of the 0s and 1s a computer actually stores.</p>
+      <p>Hex matters in cybersecurity not because it protects anything, but because it's the universal <strong>readable form</strong> of raw bytes. Before you can understand XOR, AES, or a hash digest, you need to be fluent in reading and writing hex — this module is that fluency.</p>
     </section>
 
     <!-- 2. HISTORY -->
     <section class="lsec" id="history" data-title="History">
       <h2><span class="mk"></span>History</h2>
-      <p>Early computers exposed memory and registers as raw binary, which is unreadable at any real length â€” a single byte is 8 ones and zeros, and a few kilobytes of binary is an unreadable wall of digits. Octal (base 8) was an early fix; hexadecimal (base 16) became the standard once computing settled on the 8-bit byte, because <strong>exactly two hex digits represent one byte</strong> perfectly, with nothing left over.</p>
-      <p>There's no single inventor or release date the way there is for an algorithm â€” hex is a notation, not an invention, and it's been the default way to display raw bytes since the 1960s. It's still universal today: every debugger, disassembler, packet sniffer and hash function output you'll ever see uses it.</p>
+      <p>Early computers exposed memory and registers as raw binary, which is unreadable at any real length — a single byte is 8 ones and zeros, and a few kilobytes of binary is an unreadable wall of digits. Octal (base 8) was an early fix; hexadecimal (base 16) became the standard once computing settled on the 8-bit byte, because <strong>exactly two hex digits represent one byte</strong> perfectly, with nothing left over.</p>
+      <p>There's no single inventor or release date the way there is for an algorithm — hex is a notation, not an invention, and it's been the default way to display raw bytes since the 1960s. It's still universal today: every debugger, disassembler, packet sniffer and hash function output you'll ever see uses it.</p>
     </section>
 
     <!-- 3. DEFINITION / TERMINOLOGY -->
@@ -77,23 +77,23 @@
       <p>Some terminology you'll reuse for the rest of the course:</p>
       <div class="callout define">
         <span class="term">BYTE</span>
-        <p>A group of 8 bits (binary digits). A byte can hold 256 different values (0â€“255) â€” which is exactly what two hex digits can represent (00 to ff).</p>
+        <p>A group of 8 bits (binary digits). A byte can hold 256 different values (0–255) — which is exactly what two hex digits can represent (00 to ff).</p>
       </div>
       <div class="callout define">
         <span class="term">ENCODING</span>
-        <p>A reversible way of representing data in a different form. Encoding changes <em>how data looks</em>, never <em>what it means</em> â€” anyone can reverse it, with no secret key required.</p>
+        <p>A reversible way of representing data in a different form. Encoding changes <em>how data looks</em>, never <em>what it means</em> — anyone can reverse it, with no secret key required.</p>
       </div>
       <p>Converting <code>"H"</code> (the letter) to hex: the letter H is byte value 72 in ASCII. 72 in hex is <code>48</code>. So the text <code>"Hello"</code> becomes:</p>
       <pre class="code"><span class="cmt"># each character -> its byte value -> 2 hex digits</span>
 H  e  l  l  l  o
-48 65 6c 6c 6f  â†’  "48656c6c6f"</pre>
+48 65 6c 6c 6f  →  "48656c6c6f"</pre>
     </section>
 
     <!-- 4. THEORY -->
     <section class="lsec" id="theory" data-title="How hex encoding works">
       <h2><span class="mk"></span>How it works</h2>
-      <div class="flow"><span>Text</span><i>â†’</i><span>Bytes (UTF-8)</span><i>â†’</i><span>Each byte â†’ 2 hex digits</span><i>â†’</i><span>Hex string</span></div>
-      <p>To encode: take each byte of the data (0â€“255), and write it as two hex digits (00 to ff). To decode: read two hex digits at a time, and turn each pair back into one byte.</p>
+      <div class="flow"><span>Text</span><i>→</i><span>Bytes (UTF-8)</span><i>→</i><span>Each byte → 2 hex digits</span><i>→</i><span>Hex string</span></div>
+      <p>To encode: take each byte of the data (0–255), and write it as two hex digits (00 to ff). To decode: read two hex digits at a time, and turn each pair back into one byte.</p>
       <table class="cmp">
         <tr><th>Decimal</th><th>Binary</th><th>Hex</th></tr>
         <tr><td>0</td><td>0000</td><td>0</td></tr>
@@ -110,7 +110,7 @@ H  e  l  l  l  o
           <p>Actual value to decode: <code>59616f67756169</code></p>
           <input type="text" placeholder="decoded text">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'Yaoguai')">Check</button></div>
-          <div class="task-fb" data-ok="Correct â€” 59 61 6f 67 75 61 69 is Y a o g u a i."></div>
+          <div class="task-fb" data-ok="Correct — 59 61 6f 67 75 61 69 is Y a o g u a i."></div>
         </div>
       </div>
     </section>
@@ -143,7 +143,7 @@ decoded = ______(encoded)
 assert decoded == data</pre>
           <input type="text" placeholder="function name">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'hex_decode')">Check</button></div>
-          <div class="task-fb" data-ok="Correct â€” hex_decode() reverses hex_encode()."></div>
+          <div class="task-fb" data-ok="Correct — hex_decode() reverses hex_encode()."></div>
         </div>
       </div>
     </section>
@@ -157,7 +157,7 @@ assert decoded == data</pre>
           <p>Encode the word <code>key</code> to hex by hand (ASCII: k=107, e=101, y=121).</p>
           <input type="text" placeholder="hex string">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'6b6579')">Check</button></div>
-          <div class="task-fb" data-ok="Correct â€” 6b 65 79."></div>
+          <div class="task-fb" data-ok="Correct — 6b 65 79."></div>
         </div>
       </div>
       <div class="task">
@@ -167,9 +167,9 @@ assert decoded == data</pre>
           <div class="mc-opts">
             <div class="mc-opt" data-id="a" onclick="pickMC(this,'c')">It makes data unreadable to anyone without a key</div>
             <div class="mc-opt" data-id="b" onclick="pickMC(this,'c')">It compresses data to save space</div>
-            <div class="mc-opt" data-id="c" onclick="pickMC(this,'c')">Anyone can reverse it instantly â€” it provides no secrecy</div>
+            <div class="mc-opt" data-id="c" onclick="pickMC(this,'c')">Anyone can reverse it instantly — it provides no secrecy</div>
           </div>
-          <div class="task-fb" data-ok="Correct. No key is needed to reverse hex â€” it's representation only." data-bad="Not quite â€” think about what a 'key' would even mean here."></div>
+          <div class="task-fb" data-ok="Correct. No key is needed to reverse hex — it's representation only." data-bad="Not quite — think about what a 'key' would even mean here."></div>
         </div>
       </div>
     </section>
@@ -178,17 +178,17 @@ assert decoded == data</pre>
     <section class="lsec" id="strengths" data-title="Strengths">
       <h2><span class="mk"></span>Strengths</h2>
       <ul>
-        <li><strong>Lossless and exact</strong> â€” every byte maps to exactly two hex digits, with no ambiguity.</li>
-        <li><strong>Universally supported</strong> â€” every language, debugger and tool can read and write it.</li>
-        <li><strong>Compact enough to read</strong> â€” far shorter than writing out binary (0s and 1s) by hand.</li>
+        <li><strong>Lossless and exact</strong> — every byte maps to exactly two hex digits, with no ambiguity.</li>
+        <li><strong>Universally supported</strong> — every language, debugger and tool can read and write it.</li>
+        <li><strong>Compact enough to read</strong> — far shorter than writing out binary (0s and 1s) by hand.</li>
       </ul>
     </section>
 
     <!-- 8. WEAKNESSES / ENCODING vs ENCRYPTION -->
     <section class="lsec" id="weaknesses" data-title="Weaknesses &amp; the encoding vs. encryption trap">
-      <h2><span class="mk"></span>Weaknesses â€” and the trap beginners fall into</h2>
+      <h2><span class="mk"></span>Weaknesses — and the trap beginners fall into</h2>
       <div class="callout danger">
-        <p><strong>Hex provides zero confidentiality.</strong> It is not a cipher. Anyone who sees a hex string can decode it instantly â€” there is no key, no secret, nothing to crack. This is the single most common beginner mistake in cryptography: mistaking <em>encoding</em> for <em>encryption</em>.</p>
+        <p><strong>Hex provides zero confidentiality.</strong> It is not a cipher. Anyone who sees a hex string can decode it instantly — there is no key, no secret, nothing to crack. This is the single most common beginner mistake in cryptography: mistaking <em>encoding</em> for <em>encryption</em>.</p>
       </div>
       <div class="compare2">
         <div>
@@ -200,20 +200,20 @@ assert decoded == data</pre>
           <p>Protects confidentiality. Reversible only with the correct key. Examples: AES, RSA.</p>
         </div>
       </div>
-      <p>In real CTFs, hex is almost never the "challenge" by itself â€” it's a layer wrapped around something that actually matters (a password, an encrypted blob, a flag). Treat a hex string as a wrapper to peel off, not a puzzle to solve.</p>
+      <p>In real CTFs, hex is almost never the "challenge" by itself — it's a layer wrapped around something that actually matters (a password, an encrypted blob, a flag). Treat a hex string as a wrapper to peel off, not a puzzle to solve.</p>
     </section>
 
     <!-- 9. CTF / REAL WORLD -->
     <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
       <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
-      <p>Hex shows up constantly in real security work: hash digests are displayed in hex, memory dumps and disassembly are hex, network packet bytes in Wireshark are hex, and malware authors often hex-encode a payload to dodge simple string-based detection (hiding <code>cmd.exe</code> as <code>63 6d 64 2e 65 78 65</code>). Recognizing hex on sight â€” and knowing it's "step one, not the answer" â€” is a core forensics and CTF skill.</p>
+      <p>Hex shows up constantly in real security work: hash digests are displayed in hex, memory dumps and disassembly are hex, network packet bytes in Wireshark are hex, and malware authors often hex-encode a payload to dodge simple string-based detection (hiding <code>cmd.exe</code> as <code>63 6d 64 2e 65 78 65</code>). Recognizing hex on sight — and knowing it's "step one, not the answer" — is a core forensics and CTF skill.</p>
     </section>
 
     <!-- 10. CHALLENGE -->
     <section class="lsec" id="challenge" data-title="CTF Challenge">
       <h2><span class="mk"></span>CTF Challenge</h2>
       <div class="ctf">
-        <div class="ctf-head"><b>CHALLENGE Â· HIDDEN IN PLAIN HEX</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-head"><b>CHALLENGE · HIDDEN IN PLAIN HEX</b><span class="badge easy">Easy</span></div>
         <div class="ctf-body">
           <div class="ctf-row"><span class="k">SCENARIO</span><p>A malware sample stores its command-and-control domain hex-encoded inside a string constant, hoping static analysis tools won't flag a plain-text domain.</p></div>
           <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Recover the hidden domain.</p></div>
@@ -221,7 +221,7 @@ assert decoded == data</pre>
           <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code></p></div>
           <div class="hint-list">
             <details class="hint"><summary>Hint 1</summary><p>Split the string into pairs of two characters.</p></details>
-            <details class="hint"><summary>Hint 2</summary><p>Each pair is one ASCII byte â€” decode each pair the same way you did in Task 01.</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>Each pair is one ASCII byte — decode each pair the same way you did in Task 01.</p></details>
           </div>
           <div class="ctf-flag">
             <input type="text" placeholder="flag{...}">
@@ -232,7 +232,7 @@ assert decoded == data</pre>
             <summary>Show solution</summary>
             <div class="sol-body">
               <h5>REASONING</h5>
-              <p>The string is hex â€” pairs of two hex digits, each one byte. Decoding it character-by-character spells out the flag directly.</p>
+              <p>The string is hex — pairs of two hex digits, each one byte. Decoding it character-by-character spells out the flag directly.</p>
               <h5>PYTHON</h5>
               <pre class="code"><span class="kw">print</span>(bytes.fromhex(<span class="str">"666c61677b6865785f69735f6e6f745f656e6372797074696f6e7d"</span>).decode())</pre>
               <h5>FLAG</h5>
@@ -248,7 +248,7 @@ assert decoded == data</pre>
       <h2><span class="mk"></span>Summary</h2>
       <ul>
         <li>Hex is base-16; two hex digits = one byte.</li>
-        <li>It's an <strong>encoding</strong>, not encryption â€” fully reversible with no key.</li>
+        <li>It's an <strong>encoding</strong>, not encryption — fully reversible with no key.</li>
         <li><code>data.encode("utf-8").hex()</code> and <code>bytes.fromhex(x).decode()</code> are the encode/decode pair.</li>
         <li>In security contexts, hex is almost always a wrapper around something else worth decoding.</li>
       </ul>
@@ -256,13 +256,13 @@ assert decoded == data</pre>
     </section>
 
     <div class="lesson-nav">
-      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
-      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">← previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next →</span><span class="ttl"></span></a>
     </div>
   </main>
 </div>
 
-<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+<footer><div class="wrap"><span>Yaoguai YAOGUAI — a beginner-to-CTF cryptography curriculum.</span></div></footer>
 
 <script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
 <script src="../js/api.js"></script>

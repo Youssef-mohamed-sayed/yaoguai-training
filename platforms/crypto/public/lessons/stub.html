@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Drafting â€” YAOGUAI</title>
+<title>Drafting — YAOGUAI</title>
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
 <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
@@ -28,13 +28,13 @@
 
 <div class="wrap-narrow" style="padding:70px 28px;">
   <div class="hero-kicker"><span class="rule"></span><span id="cat-label">MODULE</span></div>
-  <h1 style="font-family:var(--serif);font-size:42px;margin:0 0 10px;" id="title">Loadingâ€¦</h1>
+  <h1 style="font-family:var(--serif);font-size:42px;margin:0 0 10px;" id="title">Loading…</h1>
   <p style="color:var(--paper-dim);margin:0 0 30px;" id="summary"></p>
   <div class="stub-box">
     <p style="margin:0 0 10px;">This module is identified in the course material and reserved in the curriculum, but its full lesson hasn't been written yet in this prototype.</p>
-    <p style="margin:0;font-size:13.5px;">It will follow the same structure as the completed modules: introduction â†’ history â†’ theory â†’ Python practical â†’ vulnerabilities â†’ CTF challenge.</p>
+    <p style="margin:0;font-size:13.5px;">It will follow the same structure as the completed modules: introduction → history → theory → Python practical → vulnerabilities → CTF challenge.</p>
   </div>
-  <div style="margin-top:28px;"><a class="btn btn-ghost" href="../index.html">â† Back to dashboard</a></div>
+  <div style="margin-top:28px;"><a class="btn btn-ghost" href="../index.html">← Back to dashboard</a></div>
 </div>
 
 <script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
@@ -46,10 +46,10 @@
   const id = params.get("id");
   const c = courseById(id);
   if (c){
-    document.getElementById("cat-label").textContent = c.category.toUpperCase() + " Â· " + c.difficulty;
+    document.getElementById("cat-label").textContent = c.category.toUpperCase() + " · " + c.difficulty;
     document.getElementById("title").textContent = c.title + (c.native ? "  " + c.native : "");
     document.getElementById("summary").textContent = c.summary;
-    document.title = c.title + " (drafting) â€” YAOGUAI";
+    document.title = c.title + " (drafting) — YAOGUAI";
   }
 </script>
 <script src="../js/training-bridge.js"></script>

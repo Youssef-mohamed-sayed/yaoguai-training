@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RC4 â€” YAOGUAI</title>
+<title>RC4 — YAOGUAI</title>
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
 <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
@@ -31,9 +31,9 @@
   <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
   <main class="lesson-main">
     <div class="lesson-head">
-      <div class="cat-tag">ENCRYPTION Â· MODULE 06 Â· SYMMETRIC STREAM CIPHER</div>
+      <div class="cat-tag">ENCRYPTION · MODULE 06 · SYMMETRIC STREAM CIPHER</div>
       <h1>RC4</h1>
-      <div class="native">æµå¯†ç  â€” stream cipher</div>
+
       <div class="lesson-meta">
         <span class="badge intermediate">Intermediate</span>
         <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
@@ -43,7 +43,7 @@
         <ul>
           <li>What a stream cipher is, and how it differs from a block cipher</li>
           <li>How RC4's KSA and PRGA stages turn a key into a long keystream</li>
-          <li>Why RC4 is formally retired â€” a real algorithm-level flaw, not just an implementation mistake</li>
+          <li>Why RC4 is formally retired — a real algorithm-level flaw, not just an implementation mistake</li>
           <li>Why reusing an RC4 key reopens the exact same attack as reused XOR keys</li>
         </ul>
       </div>
@@ -51,13 +51,13 @@
 
     <section class="lsec" id="intro" data-title="Introduction">
       <h2><span class="mk"></span>Introduction</h2>
-      <p>XOR taught you the core idea â€” plaintext XOR key = ciphertext â€” but a short, repeated key leaks patterns. RC4 fixes exactly that problem: instead of cycling a short key directly over the data, it uses the key to generate a long, pseudo-random <strong>keystream</strong> first, then XORs that against the data. Same core operation, much better key material.</p>
+      <p>XOR taught you the core idea — plaintext XOR key = ciphertext — but a short, repeated key leaks patterns. RC4 fixes exactly that problem: instead of cycling a short key directly over the data, it uses the key to generate a long, pseudo-random <strong>keystream</strong> first, then XORs that against the data. Same core operation, much better key material.</p>
       <div class="callout define"><span class="term">STREAM CIPHER</span><p>A cipher that encrypts data one byte (or bit) at a time by combining it with a keystream, rather than processing fixed-size blocks like AES.</p></div>
     </section>
 
     <section class="lsec" id="history" data-title="History">
       <h2><span class="mk"></span>History</h2>
-      <p>RC4 ("Rivest Cipher 4") was designed by Ron Rivest in 1987 for RSA Security, originally kept as a trade secret until it leaked in 1994. Its simplicity and speed made it hugely popular â€” it secured early SSL/TLS, WEP (early Wi-Fi security), and Microsoft protocols for over two decades. Statistical biases discovered in its keystream (certain output bytes aren't uniformly random) were gradually weaponized into practical attacks, and by 2015 the IETF formally prohibited RC4 in TLS. It is retired for anything security-sensitive today.</p>
+      <p>RC4 ("Rivest Cipher 4") was designed by Ron Rivest in 1987 for RSA Security, originally kept as a trade secret until it leaked in 1994. Its simplicity and speed made it hugely popular — it secured early SSL/TLS, WEP (early Wi-Fi security), and Microsoft protocols for over two decades. Statistical biases discovered in its keystream (certain output bytes aren't uniformly random) were gradually weaponized into practical attacks, and by 2015 the IETF formally prohibited RC4 in TLS. It is retired for anything security-sensitive today.</p>
       <div class="badge advanced" style="display:inline-block;margin:6px 0 10px;">Status today: Educational / Legacy / Insecure</div>
     </section>
 
@@ -65,27 +65,27 @@
       <h2><span class="mk"></span>Brief definition</h2>
       <div class="callout define"><span class="term">DEFINITION</span><p>RC4 is a stream cipher: it uses a key to generate a long pseudo-random keystream, then XORs that keystream against the plaintext, byte by byte.</p></div>
       <div class="compare2">
-        <div><h4>XOR (module 05)</h4><p>Key is cycled directly over the data â€” short, repeating, and leaky.</p></div>
-        <div><h4>RC4</h4><p>Key seeds an algorithm that generates a long, non-repeating-looking keystream â€” XOR is still the final step.</p></div>
+        <div><h4>XOR (module 05)</h4><p>Key is cycled directly over the data — short, repeating, and leaky.</p></div>
+        <div><h4>RC4</h4><p>Key seeds an algorithm that generates a long, non-repeating-looking keystream — XOR is still the final step.</p></div>
       </div>
     </section>
 
     <section class="lsec" id="theory" data-title="How RC4 works">
       <h2><span class="mk"></span>How it works</h2>
-      <div class="flow"><span>Key</span><i>â†’</i><span>KSA (scramble a 256-byte state)</span><i>â†’</i><span>PRGA (generate keystream bytes one at a time)</span><i>â†’</i><span>XOR with plaintext</span></div>
-      <h3>KSA â€” Key Scheduling Algorithm</h3>
-      <p>RC4 keeps an internal array <code>S</code> of the 256 values 0â€“255. The KSA shuffles this array using the key â€” for each position <code>i</code>, it swaps <code>S[i]</code> with another position chosen using the key bytes (cycled, exactly like the XOR cipher's key-cycling, reused here as one ingredient of a bigger algorithm).</p>
-      <h3>PRGA â€” Pseudo-Random Generation Algorithm</h3>
+      <div class="flow"><span>Key</span><i>→</i><span>KSA (scramble a 256-byte state)</span><i>→</i><span>PRGA (generate keystream bytes one at a time)</span><i>→</i><span>XOR with plaintext</span></div>
+      <h3>KSA — Key Scheduling Algorithm</h3>
+      <p>RC4 keeps an internal array <code>S</code> of the 256 values 0–255. The KSA shuffles this array using the key — for each position <code>i</code>, it swaps <code>S[i]</code> with another position chosen using the key bytes (cycled, exactly like the XOR cipher's key-cycling, reused here as one ingredient of a bigger algorithm).</p>
+      <h3>PRGA — Pseudo-Random Generation Algorithm</h3>
       <p>After scrambling, RC4 generates the keystream one byte at a time: it swaps two more positions in <code>S</code> based on running counters, and outputs <code>S[(S[i]+S[j]) % 256]</code> as the next keystream byte. This repeats for as many bytes as the plaintext needs.</p>
       <div class="task">
         <div class="task-head"><b>TASK 01</b><span class="task-type">identify</span></div>
         <div class="task-body">
           <p>Which stage of RC4 actually uses the secret key?</p>
           <div class="mc-opts">
-            <div class="mc-opt" data-id="a" onclick="pickMC(this,'a')">The KSA â€” the key seeds the initial shuffle of the 256-byte state</div>
-            <div class="mc-opt" data-id="b" onclick="pickMC(this,'a')">The PRGA â€” the key is used while generating each keystream byte</div>
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'a')">The KSA — the key seeds the initial shuffle of the 256-byte state</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'a')">The PRGA — the key is used while generating each keystream byte</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” once KSA finishes, PRGA runs on the scrambled state alone; the key itself is never touched again." data-bad="The key's job is to scramble the initial 256-byte table â€” look at which stage does that."></div>
+          <div class="task-fb" data-ok="Correct — once KSA finishes, PRGA runs on the scrambled state alone; the key itself is never touched again." data-bad="The key's job is to scramble the initial 256-byte table — look at which stage does that."></div>
         </div>
       </div>
     </section>
@@ -114,7 +114,7 @@
 <span class="kw">print</span>(ciphertext)
 
 plaintext = rc4_decrypt(ciphertext, <span class="str">"secretkey"</span>)
-<span class="kw">print</span>(plaintext)   <span class="cmt"># attack at dawn â€” same key both ways, same as XOR</span></pre>
+<span class="kw">print</span>(plaintext)   <span class="cmt"># attack at dawn — same key both ways, same as XOR</span></pre>
       <div class="task">
         <div class="task-head"><b>TASK 02</b><span class="task-type">complete the code</span></div>
         <div class="task-body">
@@ -136,10 +136,10 @@ assert pt == "secret msg"</pre>
         <div class="task-body">
           <p>If you reuse the same RC4 key for two different messages, what happens?</p>
           <div class="mc-opts">
-            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Nothing â€” RC4's keystream is always safe to reuse</div>
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Nothing — RC4's keystream is always safe to reuse</div>
             <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">The identical keystream is generated both times, recreating exactly the same key-reuse vulnerability as XOR</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” RC4 is still XOR under the hood, so keystream reuse is just as fatal as key reuse was in the XOR lesson." data-bad="RC4's keystream is deterministic given the key â€” think about what 'deterministic' implies for reuse."></div>
+          <div class="task-fb" data-ok="Correct — RC4 is still XOR under the hood, so keystream reuse is just as fatal as key reuse was in the XOR lesson." data-bad="RC4's keystream is deterministic given the key — think about what 'deterministic' implies for reuse."></div>
         </div>
       </div>
     </section>
@@ -147,26 +147,26 @@ assert pt == "secret msg"</pre>
     <section class="lsec" id="strengths" data-title="Strengths">
       <h2><span class="mk"></span>Strengths</h2>
       <ul>
-        <li><strong>Extremely fast and simple</strong> â€” no block padding, minimal state, byte-at-a-time â€” which is exactly why it was so widely adopted.</li>
-        <li><strong>Any-length input</strong> â€” stream ciphers don't need block padding the way AES does.</li>
+        <li><strong>Extremely fast and simple</strong> — no block padding, minimal state, byte-at-a-time — which is exactly why it was so widely adopted.</li>
+        <li><strong>Any-length input</strong> — stream ciphers don't need block padding the way AES does.</li>
       </ul>
     </section>
 
     <section class="lsec" id="weaknesses" data-title="Weaknesses">
       <h2><span class="mk"></span>Weaknesses</h2>
-      <div class="callout danger"><p><strong>Algorithm weakness:</strong> RC4's keystream has statistical biases â€” some byte values appear slightly more often than true randomness would allow, especially in the first bytes of output. Over enough reused or related keystreams, these biases let attackers recover plaintext without ever learning the key. This is a flaw in RC4 itself, not a misuse â€” it's why RC4 is formally banned in TLS.</p></div>
-      <div class="callout warn"><p><strong>Implementation weakness:</strong> exactly like XOR, reusing a key (and therefore a keystream) across multiple messages is catastrophic â€” this is precisely what broke WEP Wi-Fi security in the early 2000s.</p></div>
+      <div class="callout danger"><p><strong>Algorithm weakness:</strong> RC4's keystream has statistical biases — some byte values appear slightly more often than true randomness would allow, especially in the first bytes of output. Over enough reused or related keystreams, these biases let attackers recover plaintext without ever learning the key. This is a flaw in RC4 itself, not a misuse — it's why RC4 is formally banned in TLS.</p></div>
+      <div class="callout warn"><p><strong>Implementation weakness:</strong> exactly like XOR, reusing a key (and therefore a keystream) across multiple messages is catastrophic — this is precisely what broke WEP Wi-Fi security in the early 2000s.</p></div>
     </section>
 
     <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
       <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
-      <p>RC4 appears constantly in CTFs and legacy-system assessments precisely because it's still found in old code, old protocols, and old malware. Spotting "stream cipher with a short key and reused keystream" is a direct bridge from the XOR lesson's key-reuse attack â€” the technique (XOR two ciphertexts encrypted under the same keystream to cancel the key) applies identically here.</p>
+      <p>RC4 appears constantly in CTFs and legacy-system assessments precisely because it's still found in old code, old protocols, and old malware. Spotting "stream cipher with a short key and reused keystream" is a direct bridge from the XOR lesson's key-reuse attack — the technique (XOR two ciphertexts encrypted under the same keystream to cancel the key) applies identically here.</p>
     </section>
 
     <section class="lsec" id="challenge" data-title="CTF Challenge">
       <h2><span class="mk"></span>CTF Challenge</h2>
       <div class="ctf">
-        <div class="ctf-head"><b>CHALLENGE Â· REUSED KEYSTREAM</b><span class="badge intermediate">Intermediate</span></div>
+        <div class="ctf-head"><b>CHALLENGE · REUSED KEYSTREAM</b><span class="badge intermediate">Intermediate</span></div>
         <div class="ctf-body">
           <div class="ctf-row"><span class="k">SCENARIO</span><p>A legacy system RC4-encrypts every message with the same hardcoded key. You've captured two ciphertexts, and you know the first one's plaintext was exactly <code>"welcome back!!"</code> (14 bytes, same length as the flag message).</p></div>
           <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Recover the second message without knowing the key.</p></div>
@@ -174,8 +174,8 @@ assert pt == "secret msg"</pre>
 C2 = 0f3a28415a607c96a9879fa4abd4cc</pre></div>
           <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code></p></div>
           <div class="hint-list">
-            <details class="hint"><summary>Hint 1</summary><p>Same key -&gt; same keystream for both messages. C1 âŠ• C2 = P1 âŠ• P2 â€” the keystream cancels, exactly like the XOR module's Task 02.</p></details>
-            <details class="hint"><summary>Hint 2</summary><p>You know P1. Compute P1 âŠ• (C1 âŠ• C2) to recover P2 directly.</p></details>
+            <details class="hint"><summary>Hint 1</summary><p>Same key -&gt; same keystream for both messages. C1 ⊕ C2 = P1 ⊕ P2 — the keystream cancels, exactly like the XOR module's Task 02.</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>You know P1. Compute P1 ⊕ (C1 ⊕ C2) to recover P2 directly.</p></details>
           </div>
           <div class="ctf-flag">
             <input type="text" placeholder="flag{...}">
@@ -186,7 +186,7 @@ C2 = 0f3a28415a607c96a9879fa4abd4cc</pre></div>
             <summary>Show solution</summary>
             <div class="sol-body">
               <h5>REASONING</h5>
-              <p>Because both messages were encrypted with the identical RC4 keystream, XORing the two ciphertexts cancels the keystream entirely (same trick as reused XOR keys), leaving P1 âŠ• P2 â€” and since P1 is known, P2 falls straight out.</p>
+              <p>Because both messages were encrypted with the identical RC4 keystream, XORing the two ciphertexts cancels the keystream entirely (same trick as reused XOR keys), leaving P1 ⊕ P2 — and since P1 is known, P2 falls straight out.</p>
               <h5>PYTHON</h5>
               <pre class="code">c1 = bytes.fromhex(<span class="str">"1a2b3c4d5e6f7081929394a5b6c7d8"</span>)
 c2 = bytes.fromhex(<span class="str">"0f3a28415a607c96a9879fa4abd4cc"</span>)
@@ -194,7 +194,7 @@ p1 = b<span class="str">"welcome back!!"</span>
 p2 = bytes(a ^ b ^ c <span class="kw">for</span> a, b, c <span class="kw">in</span> zip(c1, c2, p1))
 <span class="kw">print</span>(p2.decode())</pre>
               <h5>FLAG</h5>
-              <p><code>flag{keystream_reuse_breaks_rc4}</code> (illustrative â€” the technique matters more than the exact bytes here)</p>
+              <p><code>flag{keystream_reuse_breaks_rc4}</code> (illustrative — the technique matters more than the exact bytes here)</p>
             </div>
           </details>
         </div>
@@ -205,20 +205,20 @@ p2 = bytes(a ^ b ^ c <span class="kw">for</span> a, b, c <span class="kw">in</sp
       <h2><span class="mk"></span>Summary</h2>
       <ul>
         <li>RC4 generates a keystream (KSA scrambles state, PRGA produces bytes) and XORs it with the plaintext.</li>
-        <li>Statistical biases in that keystream are a real, exploited algorithm flaw â€” RC4 is formally retired.</li>
+        <li>Statistical biases in that keystream are a real, exploited algorithm flaw — RC4 is formally retired.</li>
         <li>Reusing a key regenerates the identical keystream, reopening the exact same XOR key-reuse attack from module 05.</li>
       </ul>
       <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
     </section>
 
     <div class="lesson-nav">
-      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
-      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">← previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next →</span><span class="ttl"></span></a>
     </div>
   </main>
 </div>
 
-<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+<footer><div class="wrap"><span>Yaoguai YAOGUAI — a beginner-to-CTF cryptography curriculum.</span></div></footer>
 
 <script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
 <script src="../js/api.js"></script>

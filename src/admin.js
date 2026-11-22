@@ -3,7 +3,7 @@ import { api } from './auth.js';
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const stat = (label, value) => `<div class="admin-stat"><span>${esc(label)}</span><strong>${Number(value || 0).toLocaleString('en-US')}</strong></div>`;
 
-export async function mountAdmin(root, getUser, openAuth) {
+export async function mountAdmin(root, getUser) {
   root.innerHTML = '<div class="admin-page"><p class="admin-empty">Loading administration data</p></div>';
   try {
     const [summary, members, levels, groups, tasks, submissions, platforms] = await Promise.all([
@@ -14,7 +14,6 @@ export async function mountAdmin(root, getUser, openAuth) {
   } catch (error) {
     if (error.message.includes('Sign in')) {
       root.innerHTML = '<div class="admin-page"><div class="admin-alert">Sign in with an administrator account to open this page</div></div>';
-      openAuth('login');
       return;
     }
     root.innerHTML = `<div class="admin-page"><div class="admin-alert error">${esc(error.message)}</div></div>`;

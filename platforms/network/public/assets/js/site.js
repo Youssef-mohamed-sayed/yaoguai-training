@@ -90,7 +90,13 @@ window.addEventListener("yaoguai-progress", update);
 if (current) {
   bindActivities(current, progress);
   document.querySelector("[data-completion]").hidden = false;
-  document.querySelector("[data-complete]").addEventListener("click", () => progress.toggleLesson(current));
+  document.querySelector("[data-complete]").addEventListener("click", async () => {
+    if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
+      if (await window.YaoguaiTraining.complete(`network/${current.replace(/^\/network\//, '')}`)) progress.toggleLesson(current);
+      return;
+    }
+    progress.toggleLesson(current);
+  });
   progress.visit(current);
 } else {
   update();

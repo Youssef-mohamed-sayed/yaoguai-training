@@ -23,6 +23,10 @@
     { "source": "/crypto", "destination": "/api?route=/crypto" },
     { "source": "/crypto/:path*", "destination": "/api?route=/crypto/:path*" },
     { "source": "/admin", "destination": "/api?route=/admin" },
+    { "source": "/login", "destination": "/api?route=/login" },
+    { "source": "/register", "destination": "/api?route=/register" },
+    { "source": "/forgot-password", "destination": "/api?route=/forgot-password" },
+    { "source": "/profile", "destination": "/api?route=/profile" },
     { "source": "/reset-password", "destination": "/api?route=/reset-password" }
   ]
 }

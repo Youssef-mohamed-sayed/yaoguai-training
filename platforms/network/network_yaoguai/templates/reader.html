@@ -11,10 +11,10 @@
             <summary><span>{{ item.number }}</span> {{ item.index.title }}</summary>
             <ul>
               <li><a href="{{ item.index.url }}"{% if page.url == item.index.url %} aria-current="page"{% endif %}>
-                {% if item.index.url in course.positions %}<span data-status-for="{{ item.index.url }}" aria-hidden="true">â—‹</span>{% endif %}
+                {% if item.index.url in course.positions %}<span data-status-for="{{ item.index.url }}" aria-hidden="true">○</span>{% endif %}
                 Module overview</a></li>
               {% for lesson in item.lessons %}
-              <li><a href="{{ lesson.url }}"{% if page.url == lesson.url %} aria-current="page"{% endif %}><span data-status-for="{{ lesson.url }}" aria-hidden="true">â—‹</span>{{ lesson.title }}</a></li>
+              <li><a href="{{ lesson.url }}"{% if page.url == lesson.url %} aria-current="page"{% endif %}><span data-status-for="{{ lesson.url }}" aria-hidden="true">○</span>{{ lesson.title }}</a></li>
               {% endfor %}
             </ul>
           </details>
@@ -30,10 +30,10 @@
         <a href="/network/course">Course guide</a>
         {% if module and page.kind != 'module' %}<span aria-hidden="true">/</span><a href="{{ module.index.url }}">{{ module.index.title }}</a>{% endif %}
       </nav>
-      {% if module %}<div class="cat-tag">MODULE {{ module.number }}{% if page.module == 'final-challenges' %} Â· CTF{% endif %}</div>{% endif %}
+      {% if module %}<div class="cat-tag">MODULE {{ module.number }}{% if page.module == 'final-challenges' %} · CTF{% endif %}</div>{% endif %}
       <h1>{{ page.title }}</h1>
       {% if page.kind == 'module' and module.lessons %}
-        <a class="btn btn-primary btn-sm" href="{{ module.lessons[0].url }}">Open first {{ 'challenge' if module.slug == 'final-challenges' else 'lesson' }} â†’</a>
+        <a class="btn btn-primary btn-sm" href="{{ module.lessons[0].url }}">Open first {{ 'challenge' if module.slug == 'final-challenges' else 'lesson' }} →</a>
       {% endif %}
     </header>
 
@@ -54,10 +54,10 @@
       <button class="btn btn-primary" type="button" data-complete aria-pressed="false">Mark complete</button>
     </div>
     <nav class="lesson-nav" aria-label="Learning path">
-      {% if previous %}<a class="nav-link" rel="prev" href="{{ previous.url }}"><small>â† Previous</small><b>{{ previous.title }}</b></a>
-      {% else %}<a class="nav-link" href="/network/course"><small>â† Course guide</small><b>Network Essentials</b></a>{% endif %}
-      {% if following %}<a class="nav-link" rel="next" href="{{ following.url }}"><small>Next â†’</small><b>{{ following.title }}</b></a>
-      {% else %}<a class="nav-link" href="/network#modules"><small>Modules â†’</small><b>Back to dashboard</b></a>{% endif %}
+      {% if previous %}<a class="nav-link" rel="prev" href="{{ previous.url }}"><small>← Previous</small><b>{{ previous.title }}</b></a>
+      {% else %}<a class="nav-link" href="/network/course"><small>← Course guide</small><b>Network Essentials</b></a>{% endif %}
+      {% if following %}<a class="nav-link" rel="next" href="{{ following.url }}"><small>Next →</small><b>{{ following.title }}</b></a>
+      {% else %}<a class="nav-link" href="/network#modules"><small>Modules →</small><b>Back to dashboard</b></a>{% endif %}
     </nav>
     {% endif %}
   </main>

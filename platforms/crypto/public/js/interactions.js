@@ -6,7 +6,8 @@
 
 function _norm(s){ return (s || "").trim().toLowerCase().replace(/\s+/g, ""); }
 
-function _checkAuth(actionDesc) {
+async function _checkAuth(actionDesc) {
+  if (window.YaoguaiTraining?.ready) await window.YaoguaiTraining.ready;
   if (window.AuthUI && !window.AuthUI.isLoggedIn()) {
     window.AuthUI.promptAuth(actionDesc || "Please log in or create an account to interact with lesson tasks and track progress.");
     return false;
@@ -18,7 +19,7 @@ function _checkAuth(actionDesc) {
  *  btn: the Check button. expected: string or array of acceptable answers.
  *  inputSelector: CSS selector (relative to the task) for the input/textarea. */
 function checkTask(btn, expected, inputSelector){
-  if (!_checkAuth("Please log in or create an account to solve interactive tasks and record your course progress.")) {
+  if (!await _checkAuth("Please log in or create an account to solve interactive tasks and record your course progress.")) {
     return;
   }
 
@@ -43,7 +44,7 @@ function checkTask(btn, expected, inputSelector){
 
 /** Multiple choice tasks. optEl: the clicked .mc-opt div. correctId: dataset id of right option. */
 function pickMC(optEl, correctId){
-  if (!_checkAuth("Please log in or create an account to answer multiple choice tasks and earn progress.")) {
+  if (!await _checkAuth("Please log in or create an account to answer multiple choice tasks and earn progress.")) {
     return;
   }
 
@@ -67,7 +68,7 @@ function pickMC(optEl, correctId){
 
 /** CTF flag submission. */
 function checkFlag(btn, expectedFlag){
-  if (!_checkAuth("Please log in or create an account to submit CTF challenge flags and earn completion.")) {
+  if (!await _checkAuth("Please log in or create an account to submit CTF challenge flags and earn completion.")) {
     return;
   }
 
@@ -98,13 +99,17 @@ function updateProgressUI(){
   if (chip) chip.textContent = `progress: ${pct}%`;
 }
 
-function markLessonComplete(){
-  if (!_checkAuth("Please log in or create an account to mark modules complete and record your progress.")) {
+async function markLessonComplete(){
+  if (!await _checkAuth("Please log in or create an account to mark modules complete and record your progress.")) {
     return;
   }
 
   const lessonId = document.body.dataset.lesson;
   if (!lessonId) return;
+  if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
+    const saved = await window.YaoguaiTraining.complete(`crypto/${lessonId}`);
+    if (!saved) return;
+  }
   Progress.markComplete(lessonId);
   updateProgressUI();
   const btn = document.getElementById("complete-btn");

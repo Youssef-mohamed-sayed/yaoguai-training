@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diffieâ€“Hellman â€” YAOGUAI</title>
+<title>Diffie–Hellman — YAOGUAI</title>
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
 <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
@@ -31,9 +31,9 @@
   <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
   <main class="lesson-main">
     <div class="lesson-head">
-      <div class="cat-tag">ENCRYPTION Â· MODULE 10 Â· KEY EXCHANGE</div>
-      <h1>Diffieâ€“Hellman</h1>
-      <div class="native">éµäº¤æ› â€” key exchange</div>
+      <div class="cat-tag">ENCRYPTION · MODULE 10 · KEY EXCHANGE</div>
+      <h1>Diffie–Hellman</h1>
+
       <div class="lesson-meta">
         <span class="badge intermediate">Intermediate</span>
         <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
@@ -51,52 +51,52 @@
 
     <section class="lsec" id="intro" data-title="Introduction">
       <h2><span class="mk"></span>Introduction</h2>
-      <p>Every cipher so far assumed both sides already share a secret key. But how do two people who've never met, talking over a channel an attacker can fully observe, agree on a secret key <em>in the first place</em>? Diffieâ€“Hellman answers exactly that question â€” it's not encryption at all; nothing confidential is ever sent. It's a <strong>key exchange</strong>: a way to end up with the same secret number on both ends, without ever transmitting that number.</p>
-      <div class="callout warn"><p><strong>Note on sourcing:</strong> this module extends beyond the provided course slides â€” it's included because it's the conceptual bridge every real-world RSA/TLS deployment relies on, and the course's progression (symmetric â†’ asymmetric encryption) doesn't fully make sense without it.</p></div>
+      <p>Every cipher so far assumed both sides already share a secret key. But how do two people who've never met, talking over a channel an attacker can fully observe, agree on a secret key <em>in the first place</em>? Diffie–Hellman answers exactly that question — it's not encryption at all; nothing confidential is ever sent. It's a <strong>key exchange</strong>: a way to end up with the same secret number on both ends, without ever transmitting that number.</p>
+      <div class="callout warn"><p><strong>Note on sourcing:</strong> this module extends beyond the provided course slides — it's included because it's the conceptual bridge every real-world RSA/TLS deployment relies on, and the course's progression (symmetric → asymmetric encryption) doesn't fully make sense without it.</p></div>
     </section>
 
     <section class="lsec" id="history" data-title="History">
       <h2><span class="mk"></span>History</h2>
-      <p>Published in 1976 by Whitfield Diffie and Martin Hellman (with foundational contributions from Ralph Merkle), this was the breakthrough that created modern public-key cryptography as a field. Before it, every known cipher â€” including everything in this course so far â€” needed the two parties to somehow securely share a key beforehand, which is itself a hard logistical problem at scale. Diffieâ€“Hellman solved "how do we agree on a secret over a public channel," which directly enabled RSA (covered next) and everything built on it â€” it's the reason your browser can set up a secure HTTPS connection with a server it's never talked to before.</p>
+      <p>Published in 1976 by Whitfield Diffie and Martin Hellman (with foundational contributions from Ralph Merkle), this was the breakthrough that created modern public-key cryptography as a field. Before it, every known cipher — including everything in this course so far — needed the two parties to somehow securely share a key beforehand, which is itself a hard logistical problem at scale. Diffie–Hellman solved "how do we agree on a secret over a public channel," which directly enabled RSA (covered next) and everything built on it — it's the reason your browser can set up a secure HTTPS connection with a server it's never talked to before.</p>
     </section>
 
     <section class="lsec" id="definition" data-title="Brief definition">
       <h2><span class="mk"></span>Brief definition</h2>
-      <div class="callout define"><span class="term">DEFINITION</span><p>Diffieâ€“Hellman lets two parties, communicating only over a public channel, compute an identical shared secret number â€” without ever sending that secret, and without an eavesdropper who sees every message being able to compute it too.</p></div>
-      <div class="callout define"><span class="term">ASYMMETRIC / PUBLIC-KEY CRYPTOGRAPHY</span><p>Cryptography where the two parties don't use the same secret value the same way â€” unlike XOR, RC4, DES, AES (all symmetric), here each side keeps something private and shares something else publicly.</p></div>
-      <p>It relies on a mathematical one-way street: given a prime <code>p</code>, a base <code>g</code>, and a secret exponent <code>a</code>, computing <code>g^a mod p</code> is fast â€” but working backwards from <code>g^a mod p</code> to recover <code>a</code> (the "discrete logarithm problem") is, for large enough numbers, computationally infeasible.</p>
+      <div class="callout define"><span class="term">DEFINITION</span><p>Diffie–Hellman lets two parties, communicating only over a public channel, compute an identical shared secret number — without ever sending that secret, and without an eavesdropper who sees every message being able to compute it too.</p></div>
+      <div class="callout define"><span class="term">ASYMMETRIC / PUBLIC-KEY CRYPTOGRAPHY</span><p>Cryptography where the two parties don't use the same secret value the same way — unlike XOR, RC4, DES, AES (all symmetric), here each side keeps something private and shares something else publicly.</p></div>
+      <p>It relies on a mathematical one-way street: given a prime <code>p</code>, a base <code>g</code>, and a secret exponent <code>a</code>, computing <code>g^a mod p</code> is fast — but working backwards from <code>g^a mod p</code> to recover <code>a</code> (the "discrete logarithm problem") is, for large enough numbers, computationally infeasible.</p>
     </section>
 
     <section class="lsec" id="theory" data-title="How it works">
       <h2><span class="mk"></span>How it works</h2>
-      <div class="flow"><span>Agree publicly: p, g</span><i>â†’</i><span>Each picks a secret (a, b)</span><i>â†’</i><span>Exchange g^a mod p and g^b mod p publicly</span><i>â†’</i><span>Each computes the same shared secret</span></div>
+      <div class="flow"><span>Agree publicly: p, g</span><i>→</i><span>Each picks a secret (a, b)</span><i>→</i><span>Exchange g^a mod p and g^b mod p publicly</span><i>→</i><span>Each computes the same shared secret</span></div>
       <p>Step by step, for Alice and Bob:</p>
       <ol>
-        <li>Publicly agree on a large prime <code>p</code> and a base <code>g</code> â€” these can be sent in the clear, an eavesdropper seeing them learns nothing useful alone.</li>
+        <li>Publicly agree on a large prime <code>p</code> and a base <code>g</code> — these can be sent in the clear, an eavesdropper seeing them learns nothing useful alone.</li>
         <li>Alice picks a secret number <code>a</code>, keeps it private, and sends Bob <code>A = g^a mod p</code>.</li>
         <li>Bob picks a secret number <code>b</code>, keeps it private, and sends Alice <code>B = g^b mod p</code>.</li>
-        <li>Alice computes <code>B^a mod p</code>. Bob computes <code>A^b mod p</code>. Both equal <code>g^(ab) mod p</code> â€” the same shared secret, computed independently.</li>
+        <li>Alice computes <code>B^a mod p</code>. Bob computes <code>A^b mod p</code>. Both equal <code>g^(ab) mod p</code> — the same shared secret, computed independently.</li>
       </ol>
-      <p>An eavesdropper who saw <code>p</code>, <code>g</code>, <code>A</code>, and <code>B</code> still can't compute <code>g^(ab) mod p</code> without solving the discrete logarithm problem to recover <code>a</code> or <code>b</code> â€” which, for properly sized numbers, is considered infeasible with current computing power.</p>
+      <p>An eavesdropper who saw <code>p</code>, <code>g</code>, <code>A</code>, and <code>B</code> still can't compute <code>g^(ab) mod p</code> without solving the discrete logarithm problem to recover <code>a</code> or <code>b</code> — which, for properly sized numbers, is considered infeasible with current computing power.</p>
       <div class="task">
-        <div class="task-head"><b>TASK 01</b><span class="task-type">predict output (small numbers, for intuition only â€” not secure sizes)</span></div>
+        <div class="task-head"><b>TASK 01</b><span class="task-type">predict output (small numbers, for intuition only — not secure sizes)</span></div>
         <div class="task-body">
           <p>Using p=23, g=5: Alice's secret is a=6, so she sends A = 5^6 mod 23 = 8. Bob's secret is b=15, so he sends B = 5^15 mod 23 = 19. Alice computes the shared secret as B^a mod 23 = 19^6 mod 23. What does Bob compute, and does it match?</p>
           <div class="mc-opts">
             <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Bob computes A^b mod 23 = 8^15 mod 23, and it's a different number</div>
             <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">Bob computes A^b mod 23 = 8^15 mod 23, and both sides land on the same value (2, in this toy example)</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” g^(ab) mod p is the same regardless of which order the exponents are applied in." data-bad="Both routes compute g raised to a times b, mod p â€” exponentiation order doesn't matter here."></div>
+          <div class="task-fb" data-ok="Correct — g^(ab) mod p is the same regardless of which order the exponents are applied in." data-bad="Both routes compute g raised to a times b, mod p — exponentiation order doesn't matter here."></div>
         </div>
       </div>
     </section>
 
-    <section class="lsec" id="python" data-title="Diffieâ€“Hellman in Python">
-      <h2><span class="mk"></span>Diffieâ€“Hellman in Python</h2>
-      <div class="callout warn"><p>This isn't one of the existing Flask API's endpoints (there's no key exchange protocol to expose via a stateless HTTP call) â€” the snippet below is a minimal, standalone illustration, not production code. Real deployments use much larger primes (2048+ bits) and standardized parameter groups.</p></div>
+    <section class="lsec" id="python" data-title="Diffie–Hellman in Python">
+      <h2><span class="mk"></span>Diffie–Hellman in Python</h2>
+      <div class="callout warn"><p>This isn't one of the existing Flask API's endpoints (there's no key exchange protocol to expose via a stateless HTTP call) — the snippet below is a minimal, standalone illustration, not production code. Real deployments use much larger primes (2048+ bits) and standardized parameter groups.</p></div>
       <pre class="code"><span class="kw">import</span> secrets
 
-p, g = 23, 5   <span class="cmt"># toy values â€” public, agreed in advance</span>
+p, g = 23, 5   <span class="cmt"># toy values — public, agreed in advance</span>
 
 <span class="cmt"># Alice's side</span>
 a = secrets.randbelow(p)
@@ -117,7 +117,7 @@ bob_shared   = pow(A, b, p)
           <pre class="code">bob_shared = pow(______, b, p)</pre>
           <input type="text" placeholder="which value?">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'A')">Check</button></div>
-          <div class="task-fb" data-ok="Correct â€” Bob raises Alice's public value A to his own private exponent b."></div>
+          <div class="task-fb" data-ok="Correct — Bob raises Alice's public value A to his own private exponent b."></div>
         </div>
       </div>
     </section>
@@ -127,12 +127,12 @@ bob_shared   = pow(A, b, p)
       <div class="task">
         <div class="task-head"><b>TASK 03</b><span class="task-type">multiple choice</span></div>
         <div class="task-body">
-          <p>Does Diffieâ€“Hellman encrypt any actual message content?</p>
+          <p>Does Diffie–Hellman encrypt any actual message content?</p>
           <div class="mc-opts">
             <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Yes, it's a full encryption scheme</div>
-            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No â€” it only establishes a shared secret, which is then typically used as a key for a symmetric cipher like AES</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No — it only establishes a shared secret, which is then typically used as a key for a symmetric cipher like AES</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” in real protocols (like TLS), Diffie-Hellman sets up the key, then AES does the actual encrypting."></div>
+          <div class="task-fb" data-ok="Correct — in real protocols (like TLS), Diffie-Hellman sets up the key, then AES does the actual encrypting."></div>
         </div>
       </div>
     </section>
@@ -140,32 +140,32 @@ bob_shared   = pow(A, b, p)
     <section class="lsec" id="strengths" data-title="Strengths">
       <h2><span class="mk"></span>Strengths</h2>
       <ul>
-        <li><strong>Solves the key-distribution problem</strong> outright â€” no prior shared secret, no trusted courier, no pre-shared key file.</li>
-        <li><strong>Forward secrecy</strong> (when fresh keys are used per session, "ephemeral" Diffieâ€“Hellman) â€” even if a long-term key is later compromised, past session keys stay secret.</li>
+        <li><strong>Solves the key-distribution problem</strong> outright — no prior shared secret, no trusted courier, no pre-shared key file.</li>
+        <li><strong>Forward secrecy</strong> (when fresh keys are used per session, "ephemeral" Diffie–Hellman) — even if a long-term key is later compromised, past session keys stay secret.</li>
       </ul>
     </section>
 
     <section class="lsec" id="weaknesses" data-title="Weaknesses">
       <h2><span class="mk"></span>Weaknesses</h2>
-      <div class="callout danger"><p><strong>Algorithm weakness â€” no authentication:</strong> plain Diffieâ€“Hellman, by itself, doesn't verify who you're actually exchanging keys with. This opens the door to a <strong>Man-in-the-Middle (MITM) attack</strong>: an attacker intercepts and relays the exchange, establishing one shared secret with Alice and a <em>different</em> one with Bob, while Alice and Bob believe they share one secret directly with each other. Real protocols (TLS) bolt on authentication (certificates/signatures) specifically to close this gap â€” Diffie-Hellman alone is not enough.</p></div>
-      <div class="callout warn"><p><strong>Implementation weakness â€” weak or reused parameters:</strong> using a small or poorly chosen prime <code>p</code>, or reusing the same <code>p</code>/<code>g</code> across huge numbers of connections (as the real-world "Logjam" attack exploited in 2015), can make the discrete-log problem tractable in practice even though the algorithm itself is sound.</p></div>
+      <div class="callout danger"><p><strong>Algorithm weakness — no authentication:</strong> plain Diffie–Hellman, by itself, doesn't verify who you're actually exchanging keys with. This opens the door to a <strong>Man-in-the-Middle (MITM) attack</strong>: an attacker intercepts and relays the exchange, establishing one shared secret with Alice and a <em>different</em> one with Bob, while Alice and Bob believe they share one secret directly with each other. Real protocols (TLS) bolt on authentication (certificates/signatures) specifically to close this gap — Diffie-Hellman alone is not enough.</p></div>
+      <div class="callout warn"><p><strong>Implementation weakness — weak or reused parameters:</strong> using a small or poorly chosen prime <code>p</code>, or reusing the same <code>p</code>/<code>g</code> across huge numbers of connections (as the real-world "Logjam" attack exploited in 2015), can make the discrete-log problem tractable in practice even though the algorithm itself is sound.</p></div>
     </section>
 
     <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
       <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
-      <p>Diffieâ€“Hellman CTF challenges typically target small or badly chosen parameters (a weak prime, a tiny private exponent) that make the discrete logarithm solvable in practice, or they directly stage a Man-in-the-Middle scenario to test whether you understand why authentication matters. This module is also the conceptual hinge the course needed: everything before this point was symmetric (one shared key); everything from RSA onward is asymmetric (different keys for different roles) â€” Diffieâ€“Hellman is the bridge that shows why asymmetric ideas were needed at all.</p>
+      <p>Diffie–Hellman CTF challenges typically target small or badly chosen parameters (a weak prime, a tiny private exponent) that make the discrete logarithm solvable in practice, or they directly stage a Man-in-the-Middle scenario to test whether you understand why authentication matters. This module is also the conceptual hinge the course needed: everything before this point was symmetric (one shared key); everything from RSA onward is asymmetric (different keys for different roles) — Diffie–Hellman is the bridge that shows why asymmetric ideas were needed at all.</p>
     </section>
 
     <section class="lsec" id="challenge" data-title="CTF Challenge">
       <h2><span class="mk"></span>CTF Challenge</h2>
       <div class="ctf">
-        <div class="ctf-head"><b>CHALLENGE Â· SMALL PRIME</b><span class="badge intermediate">Intermediate</span></div>
+        <div class="ctf-head"><b>CHALLENGE · SMALL PRIME</b><span class="badge intermediate">Intermediate</span></div>
         <div class="ctf-body">
           <div class="ctf-row"><span class="k">SCENARIO</span><p>A toy implementation uses p=23, g=5. You observe Alice's public value A=8 on the wire.</p></div>
           <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Because p is small, brute-force every possible private exponent a (0 to 22) to find Alice's actual secret: the value of a such that 5^a mod 23 = 8.</p></div>
           <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{a}</code> where a is the recovered secret exponent</p></div>
           <div class="hint-list">
-            <details class="hint"><summary>Hint 1</summary><p>With such a small prime, you can just try every exponent 0â€“22 with <code>pow(5, a, 23)</code> and check which one gives 8.</p></details>
+            <details class="hint"><summary>Hint 1</summary><p>With such a small prime, you can just try every exponent 0–22 with <code>pow(5, a, 23)</code> and check which one gives 8.</p></details>
           </div>
           <div class="ctf-flag">
             <input type="text" placeholder="flag{...}">
@@ -181,7 +181,7 @@ bob_shared   = pow(A, b, p)
         <span class="kw">print</span>(a)   <span class="cmt"># 6</span>
         <span class="kw">break</span></pre>
               <h5>WHY THIS MATTERS</h5>
-              <p>This is exactly why real Diffieâ€“Hellman uses primes thousands of bits long â€” brute-forcing the exponent (or solving the discrete log problem any other known way) becomes computationally infeasible at that scale.</p>
+              <p>This is exactly why real Diffie–Hellman uses primes thousands of bits long — brute-forcing the exponent (or solving the discrete log problem any other known way) becomes computationally infeasible at that scale.</p>
               <h5>FLAG</h5>
               <p><code>flag{6}</code></p>
             </div>
@@ -193,22 +193,22 @@ bob_shared   = pow(A, b, p)
     <section class="lsec" id="summary" data-title="Summary">
       <h2><span class="mk"></span>Summary</h2>
       <ul>
-        <li>Diffieâ€“Hellman establishes a shared secret over a public channel â€” it's a key exchange, not encryption itself.</li>
+        <li>Diffie–Hellman establishes a shared secret over a public channel — it's a key exchange, not encryption itself.</li>
         <li>Security rests on the discrete logarithm problem: easy to compute g^a mod p, hard to reverse.</li>
-        <li>Plain Diffie-Hellman has no authentication â€” vulnerable to Man-in-the-Middle without it.</li>
-        <li>It's the conceptual bridge from symmetric to asymmetric cryptography â€” RSA is next.</li>
+        <li>Plain Diffie-Hellman has no authentication — vulnerable to Man-in-the-Middle without it.</li>
+        <li>It's the conceptual bridge from symmetric to asymmetric cryptography — RSA is next.</li>
       </ul>
       <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
     </section>
 
     <div class="lesson-nav">
-      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
-      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">← previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next →</span><span class="ttl"></span></a>
     </div>
   </main>
 </div>
 
-<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+<footer><div class="wrap"><span>Yaoguai YAOGUAI — a beginner-to-CTF cryptography curriculum.</span></div></footer>
 
 <script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
 <script src="../js/api.js"></script>

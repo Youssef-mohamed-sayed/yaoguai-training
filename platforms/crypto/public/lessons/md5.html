@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MD5 â€” YAOGUAI</title>
+<title>MD5 — YAOGUAI</title>
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
 <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
@@ -31,9 +31,9 @@
   <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
   <main class="lesson-main">
     <div class="lesson-head">
-      <div class="cat-tag">HASHING Â· MODULE 12</div>
+      <div class="cat-tag">HASHING · MODULE 12</div>
       <h1>MD5</h1>
-      <div class="native">ä¸€æ–¹å‘é–¢æ•° â€” one-way digest</div>
+
       <div class="lesson-meta">
         <span class="badge easy">Easy</span>
         <div class="diffmeter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
@@ -42,7 +42,7 @@
         <p>In this lesson you will learn:</p>
         <ul>
           <li>What a hash function is, and how it's fundamentally different from encryption</li>
-          <li>Why "decrypt this hash" is not a real sentence â€” and what people actually mean by it</li>
+          <li>Why "decrypt this hash" is not a real sentence — and what people actually mean by it</li>
           <li>How MD5 works internally, and in Python</li>
           <li>Why MD5 is broken for security purposes, and what "collision" actually means</li>
         </ul>
@@ -51,20 +51,20 @@
 
     <section class="lsec" id="intro" data-title="Introduction">
       <h2><span class="mk"></span>Introduction</h2>
-      <p>Every algorithm so far â€” hex, Base64, XOR, AES â€” was reversible: give the right input (and key, for ciphers), and you get the original back. Hashing breaks that pattern entirely. MD5 is your first <strong>one-way function</strong>: a hash function by design that you are never meant to reverse.</p>
+      <p>Every algorithm so far — hex, Base64, XOR, AES — was reversible: give the right input (and key, for ciphers), and you get the original back. Hashing breaks that pattern entirely. MD5 is your first <strong>one-way function</strong>: a hash function by design that you are never meant to reverse.</p>
       <div class="callout define"><span class="term">HASH FUNCTION</span><p>A function that takes data of any size and produces a fixed-size output (a "digest"), deterministically (same input always gives the same output), and designed so you cannot feasibly reconstruct the input from the output.</p></div>
       <div class="callout define"><span class="term">DIGEST</span><p>The fixed-size output of a hash function. MD5's digest is always 128 bits (32 hex characters), no matter how large the input was.</p></div>
     </section>
 
     <section class="lsec" id="history" data-title="History">
       <h2><span class="mk"></span>History</h2>
-      <p>MD5 ("Message Digest 5") was designed by Ronald Rivest in 1991, replacing the earlier, already-weakening MD4. For years it was the default choice for checksums and even for some password storage. That changed once researchers found practical <strong>collisions</strong> (2004 onward) â€” pairs of different inputs that produce the same MD5 digest â€” which broke the core guarantee a hash is supposed to provide.</p>
+      <p>MD5 ("Message Digest 5") was designed by Ronald Rivest in 1991, replacing the earlier, already-weakening MD4. For years it was the default choice for checksums and even for some password storage. That changed once researchers found practical <strong>collisions</strong> (2004 onward) — pairs of different inputs that produce the same MD5 digest — which broke the core guarantee a hash is supposed to provide.</p>
       <div class="badge advanced" style="display:inline-block;margin:6px 0 10px;">Status today: Educational / Legacy / Insecure for security purposes</div>
       <p>MD5 is still used today for <strong>non-security</strong> purposes like quick file-integrity checks against accidental corruption, but must never be used for passwords, digital signatures, or anywhere an attacker might want to forge a match.</p>
     </section>
 
     <section class="lsec" id="definition" data-title="Brief definition">
-      <h2><span class="mk"></span>Brief definition â€” and encoding vs. encryption vs. hashing</h2>
+      <h2><span class="mk"></span>Brief definition — and encoding vs. encryption vs. hashing</h2>
       <div class="callout define">
         <span class="term">DEFINITION</span>
         <p>MD5 is a hash function that takes any input and produces a 128-bit digest, with no key and no way back.</p>
@@ -75,7 +75,7 @@
         <tr><td>Encryption (AES)</td><td>Yes, with the key</td><td>Yes</td><td>Confidentiality</td></tr>
         <tr><td>Hashing (MD5)</td><td><strong>No</strong>, by design</td><td>No</td><td>Integrity / fingerprinting</td></tr>
       </table>
-      <p>So when people say "decrypt this MD5 hash," what's actually happening is <strong>cracking</strong>: guessing candidate inputs, hashing each one, and checking for a match â€” never reversing the function itself. You'll do exactly this in the CTF challenge below.</p>
+      <p>So when people say "decrypt this MD5 hash," what's actually happening is <strong>cracking</strong>: guessing candidate inputs, hashing each one, and checking for a match — never reversing the function itself. You'll do exactly this in the CTF challenge below.</p>
 
       <div class="task">
         <div class="task-head"><b>TASK 01</b><span class="task-type">multiple choice</span></div>
@@ -85,26 +85,26 @@
             <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Given an MD5 digest and the right key, you can recover the original input</div>
             <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">There is no key involved at all, and no algorithm to "decrypt" a digest back to its input</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” hashing has no key and is one-way by design."></div>
+          <div class="task-fb" data-ok="Correct — hashing has no key and is one-way by design."></div>
         </div>
       </div>
     </section>
 
     <section class="lsec" id="theory" data-title="How MD5 works">
       <h2><span class="mk"></span>How it works</h2>
-      <div class="flow"><span>Message</span><i>â†’</i><span>Pad to 512-bit multiple</span><i>â†’</i><span>4 working buffers (A,B,C,D)</span><i>â†’</i><span>4 rounds Ã— 16 steps per 512-bit block</span><i>â†’</i><span>128-bit digest</span></div>
-      <p>MD5 keeps four 32-bit "state" buffers, initialized to fixed constants. The message is padded (length info is appended) so it divides evenly into 512-bit blocks. Each block is run through <strong>4 rounds of 16 steps</strong> â€” 64 steps total â€” where each step mixes the four buffers together using a different nonlinear function per round, a message word, and a per-step constant, then rotates and swaps the buffers. After all blocks are processed, the four buffers are concatenated into the final 128-bit digest.</p>
-      <p>The important property for a beginner to internalize: <strong>every step is a one-way mixing operation</strong> â€” there's no inverse step that would let you run the whole thing backwards from the digest.</p>
+      <div class="flow"><span>Message</span><i>→</i><span>Pad to 512-bit multiple</span><i>→</i><span>4 working buffers (A,B,C,D)</span><i>→</i><span>4 rounds × 16 steps per 512-bit block</span><i>→</i><span>128-bit digest</span></div>
+      <p>MD5 keeps four 32-bit "state" buffers, initialized to fixed constants. The message is padded (length info is appended) so it divides evenly into 512-bit blocks. Each block is run through <strong>4 rounds of 16 steps</strong> — 64 steps total — where each step mixes the four buffers together using a different nonlinear function per round, a message word, and a per-step constant, then rotates and swaps the buffers. After all blocks are processed, the four buffers are concatenated into the final 128-bit digest.</p>
+      <p>The important property for a beginner to internalize: <strong>every step is a one-way mixing operation</strong> — there's no inverse step that would let you run the whole thing backwards from the digest.</p>
 
       <div class="task">
         <div class="task-head"><b>TASK 02</b><span class="task-type">predict output</span></div>
         <div class="task-body">
           <p>If you hash the exact same input twice with MD5, do you get the same digest both times?</p>
           <div class="mc-opts">
-            <div class="mc-opt" data-id="a" onclick="pickMC(this,'y')">Yes â€” hashing is deterministic</div>
-            <div class="mc-opt" data-id="b" onclick="pickMC(this,'y')">No â€” it's randomized each time</div>
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'y')">Yes — hashing is deterministic</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'y')">No — it's randomized each time</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” hash functions are deterministic; a cipher's IV is what you're thinking of with 'randomized'." data-bad="Hash functions aren't randomized â€” that would make it impossible to check if two files match."></div>
+          <div class="task-fb" data-ok="Correct — hash functions are deterministic; a cipher's IV is what you're thinking of with 'randomized'." data-bad="Hash functions aren't randomized — that would make it impossible to check if two files match."></div>
         </div>
       </div>
     </section>
@@ -114,12 +114,12 @@
       <span class="code-label">hashing.py</span>
       <pre class="code"><span class="kw">def</span> md5_hash(data: str) -> str:
     <span class="kw">return</span> _md5(data.encode(<span class="str">"utf-8"</span>)).hex()</pre>
-      <p><code>md5_core.py</code> implements the padding, the four rounds, and the final digest assembly from scratch â€” verified against Python's built-in <code>hashlib</code> to confirm it's bit-for-bit correct.</p>
+      <p><code>md5_core.py</code> implements the padding, the four rounds, and the final digest assembly from scratch — verified against Python's built-in <code>hashlib</code> to confirm it's bit-for-bit correct.</p>
       <span class="code-label">calling it</span>
       <pre class="code">digest = md5_hash(<span class="str">"password123"</span>)
 <span class="kw">print</span>(digest)   <span class="cmt"># 482c811da5d5b4bc6d497ffa98491e38</span>
 
-<span class="cmt"># there is no md5_decrypt() â€” it does not exist, by design</span></pre>
+<span class="cmt"># there is no md5_decrypt() — it does not exist, by design</span></pre>
 
       <div class="task">
         <div class="task-head"><b>TASK 03</b><span class="task-type">identify the weakness</span></div>
@@ -127,7 +127,7 @@
           <p>A login system stores passwords as <code>md5_hash(password)</code> with no salt, and compares digests directly on login. What's wrong with this, specifically?</p>
           <input type="text" placeholder="one or two sentences">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,['norainbow','rainbowtable','precomputed'],'input,textarea')">Check</button></div>
-          <div class="task-fb" data-ok="On the right track â€” unsalted MD5 is vulnerable to precomputed rainbow-table lookups, and MD5 is also fast enough that brute-forcing it on modern GPUs is cheap. See the bcrypt lesson for the fix." data-bad="Think about what happens if two users pick the same password, and how fast modern hardware can compute MD5."></div>
+          <div class="task-fb" data-ok="On the right track — unsalted MD5 is vulnerable to precomputed rainbow-table lookups, and MD5 is also fast enough that brute-forcing it on modern GPUs is cheap. See the bcrypt lesson for the fix." data-bad="Think about what happens if two users pick the same password, and how fast modern hardware can compute MD5."></div>
         </div>
       </div>
     </section>
@@ -140,7 +140,7 @@
           <p>Compute the MD5 digest of the exact string <code>flag</code> (lowercase, no quotes) and paste the hex digest below. (This runs in your browser using the same algorithm as <code>md5_core.py</code>.)</p>
           <input type="text" id="md5-in" placeholder="type text to hash">
           <button class="btn btn-sm" onclick="document.getElementById('md5-out').textContent = Offline.md5(document.getElementById('md5-in').value)">Hash it</button>
-          <pre class="code" id="md5-out" style="margin-top:10px;">â€”</pre>
+          <pre class="code" id="md5-out" style="margin-top:10px;">—</pre>
         </div>
       </div>
     </section>
@@ -148,8 +148,8 @@
     <section class="lsec" id="strengths" data-title="Strengths">
       <h2><span class="mk"></span>Strengths</h2>
       <ul>
-        <li><strong>Very fast</strong> â€” cheap to compute, which is great for non-security checksums (e.g. verifying a download wasn't corrupted).</li>
-        <li><strong>Simple and universally implemented</strong> â€” available in every language's standard library.</li>
+        <li><strong>Very fast</strong> — cheap to compute, which is great for non-security checksums (e.g. verifying a download wasn't corrupted).</li>
+        <li><strong>Simple and universally implemented</strong> — available in every language's standard library.</li>
         <li><strong>Fixed-size output</strong> regardless of input size, useful for indexing and comparison.</li>
       </ul>
     </section>
@@ -157,30 +157,30 @@
     <section class="lsec" id="weaknesses" data-title="Weaknesses">
       <h2><span class="mk"></span>Weaknesses</h2>
       <div class="callout danger">
-        <p><strong>Algorithm weakness â€” collisions:</strong> researchers can deliberately construct two different inputs that produce the identical MD5 digest, efficiently. This breaks MD5's core promise for any security-relevant use: digital signatures, certificate fingerprints, or anywhere "this digest proves this exact file" matters. <strong>MD5 is not suitable for modern cryptographic integrity/security applications.</strong></p>
+        <p><strong>Algorithm weakness — collisions:</strong> researchers can deliberately construct two different inputs that produce the identical MD5 digest, efficiently. This breaks MD5's core promise for any security-relevant use: digital signatures, certificate fingerprints, or anywhere "this digest proves this exact file" matters. <strong>MD5 is not suitable for modern cryptographic integrity/security applications.</strong></p>
       </div>
       <div class="callout warn">
-        <p><strong>Implementation weakness â€” speed, for passwords:</strong> MD5 is designed to be fast, which is exactly wrong for password storage. Modern GPUs compute billions of MD5 hashes per second, making brute-force and dictionary attacks against stolen MD5 password hashes extremely cheap (see the bcrypt lesson for the purpose-built alternative).</p>
+        <p><strong>Implementation weakness — speed, for passwords:</strong> MD5 is designed to be fast, which is exactly wrong for password storage. Modern GPUs compute billions of MD5 hashes per second, making brute-force and dictionary attacks against stolen MD5 password hashes extremely cheap (see the bcrypt lesson for the purpose-built alternative).</p>
       </div>
     </section>
 
     <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
       <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
-      <p>Finding "MD5 hash, no salt" in a leaked database is one of the most common wins in CTFs and real breaches alike â€” tools like <strong>hashcat</strong> and <strong>John the Ripper</strong> (covered in the Cracking Hashes module) can test huge wordlists like <strong>rockyou.txt</strong> against MD5 digests extremely quickly, and sites like CrackStation host precomputed lookup tables for exactly this. Forensics and malware analysis also use MD5/SHA digests constantly â€” as file fingerprints for known-malware databases â€” which is a legitimate, non-security-critical use that survives MD5's collision weakness.</p>
+      <p>Finding "MD5 hash, no salt" in a leaked database is one of the most common wins in CTFs and real breaches alike — tools like <strong>hashcat</strong> and <strong>John the Ripper</strong> (covered in the Cracking Hashes module) can test huge wordlists like <strong>rockyou.txt</strong> against MD5 digests extremely quickly, and sites like CrackStation host precomputed lookup tables for exactly this. Forensics and malware analysis also use MD5/SHA digests constantly — as file fingerprints for known-malware databases — which is a legitimate, non-security-critical use that survives MD5's collision weakness.</p>
     </section>
 
     <section class="lsec" id="challenge" data-title="CTF Challenge">
       <h2><span class="mk"></span>CTF Challenge</h2>
       <div class="ctf">
-        <div class="ctf-head"><b>CHALLENGE Â· CRACK THE DIGEST</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-head"><b>CHALLENGE · CRACK THE DIGEST</b><span class="badge easy">Easy</span></div>
         <div class="ctf-body">
           <div class="ctf-row"><span class="k">SCENARIO</span><p>You dumped a leaked password table. One account's password column holds only an MD5 digest, unsalted.</p></div>
           <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Recover the original password. It's a common, short, lowercase word.</p></div>
           <div class="ctf-row"><span class="k">GIVEN DATA</span><pre class="code">5f4dcc3b5aa765d61d8327deb882cf99</pre></div>
           <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{the_recovered_password}</code></p></div>
           <div class="hint-list">
-            <details class="hint"><summary>Hint 1</summary><p>You can't reverse MD5 â€” you have to guess-and-check. This is exactly what a wordlist attack (John/Hashcat against rockyou.txt) automates.</p></details>
-            <details class="hint"><summary>Hint 2</summary><p>It's one of the most common passwords of all time â€” five letters.</p></details>
+            <details class="hint"><summary>Hint 1</summary><p>You can't reverse MD5 — you have to guess-and-check. This is exactly what a wordlist attack (John/Hashcat against rockyou.txt) automates.</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>It's one of the most common passwords of all time — five letters.</p></details>
           </div>
           <div class="ctf-flag">
             <input type="text" placeholder="flag{...}">
@@ -191,7 +191,7 @@
             <summary>Show solution</summary>
             <div class="sol-body">
               <h5>REASONING</h5>
-              <p><code>5f4dcc3b5aa765d61d8327deb882cf99</code> is the MD5 digest of the literal string <code>password</code> â€” one of the first entries in any common wordlist, including rockyou.txt.</p>
+              <p><code>5f4dcc3b5aa765d61d8327deb882cf99</code> is the MD5 digest of the literal string <code>password</code> — one of the first entries in any common wordlist, including rockyou.txt.</p>
               <h5>PYTHON</h5>
               <pre class="code"><span class="kw">import</span> hashlib
 <span class="kw">for</span> candidate <span class="kw">in</span> open(<span class="str">"rockyou.txt"</span>, encoding=<span class="str">"latin-1"</span>):
@@ -211,21 +211,21 @@
       <h2><span class="mk"></span>Summary</h2>
       <ul>
         <li>Hashing is one-way: no key, and by design, no way back to the input.</li>
-        <li>MD5's digest is 128 bits, computed over 4 rounds Ã— 16 steps per 512-bit block.</li>
+        <li>MD5's digest is 128 bits, computed over 4 rounds × 16 steps per 512-bit block.</li>
         <li>Practical collisions make MD5 unsuitable for security-critical integrity or signatures.</li>
-        <li>Its speed makes it unsuitable for passwords specifically â€” "cracking," not "decrypting," is how attackers recover the input.</li>
+        <li>Its speed makes it unsuitable for passwords specifically — "cracking," not "decrypting," is how attackers recover the input.</li>
       </ul>
       <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
     </section>
 
     <div class="lesson-nav">
-      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
-      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">← previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next →</span><span class="ttl"></span></a>
     </div>
   </main>
 </div>
 
-<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+<footer><div class="wrap"><span>Yaoguai YAOGUAI — a beginner-to-CTF cryptography curriculum.</span></div></footer>
 
 <script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
 <script src="../js/api.js"></script>

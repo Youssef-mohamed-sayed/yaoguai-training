@@ -22,7 +22,9 @@ def module_status(user_id, module):
         record = progress.get(activity.id)
         is_done = bool(record and record.completed_at)
         items.append({"id": activity.id, "title": activity.title, "type": activity.activity_type,
-                      "completed": is_done, "score": record.score if record else None,
+                      "completed": is_done, "started": bool(record and (record.time_spent_seconds or record.attempt_count or record.last_heartbeat_at)),
+                      "time_spent_seconds": record.time_spent_seconds if record else 0,
+                      "score": record.score if record else None,
                       "attempts": record.attempt_count if record else 0})
     completed_count = sum(item["completed"] for item in items)
     return {"completed": completed_count == len(required), "completed_count": completed_count,

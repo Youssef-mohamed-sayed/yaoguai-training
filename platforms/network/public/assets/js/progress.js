@@ -32,12 +32,13 @@ export const progress = {
   visit(url) {
     update(data => {
       data.last = url;
-      lesson(data, url);
+      lesson(data, url).started = true;
     });
   },
   toggleLesson(url) {
     update(data => {
       const entry = lesson(data, url);
+      if (window.YaoguaiAccountUser && entry.done) return;
       entry.done = !entry.done;
     });
   },
@@ -50,6 +51,29 @@ export const progress = {
     });
   },
 };
+
+window.addEventListener("yaoguai:central-progress", event => {
+  if (!window.YaoguaiAccountUser) return;
+  const activities = event.detail?.platforms?.find(platform => platform.id === "network")?.modules?.flatMap(module => module.activities || []) || [];
+  update(data => {
+    data.lessons = {};
+    const last = event.detail?.last_activity?.id;
+    if (last?.startsWith("network/")) data.last = "/network/" + last.replace(/^network\//, "").replace(/\/exercise\/[^/]+$/, "");
+    for (const activity of activities) {
+      if (activity.type === "exercise" || activity.type === "challenge" || activity.type === "quiz") {
+        const match = activity.id.match(/^network\/(.+)\/exercise\/([^/]+)$/);
+        if (match) lesson(data, "/network/" + match[1]).exercises[match[2]] = activity.completed;
+      } else {
+        const url = "/network/" + activity.id.replace(/^network\//, "");
+        if (activity.completed || activity.started) {
+          const entry = lesson(data, url);
+          entry.done = Boolean(activity.completed);
+          entry.started = Boolean(activity.started);
+        }
+      }
+    }
+  });
+});
 
 window.addEventListener("storage", event => {
   if (event.key === key || event.key === null) {

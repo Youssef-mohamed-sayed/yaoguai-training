@@ -35,6 +35,10 @@ def test_lesson_requires_authenticated_open_and_module_progress_is_derived(app, 
     complete_url = f"/api/progress/activities/{activity_id}/complete"
     assert client.post(complete_url, json={}).status_code == 409
     assert client.post("/api/progress/visits", json={"activity_id": activity_id}).status_code == 201
+    snapshot = client.get("/api/progress").json["data"]
+    item = snapshot["platforms"][0]["modules"][0]["activities"][0]
+    assert item["started"] is True
+    assert item["completed"] is False
     response = client.post(complete_url, json={})
     assert response.status_code == 200
     assert response.json["data"]["module"]["completed"] is True

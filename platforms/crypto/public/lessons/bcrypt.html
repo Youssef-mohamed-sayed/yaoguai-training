@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>bcrypt â€” YAOGUAI</title>
+<title>bcrypt — YAOGUAI</title>
 <link rel="stylesheet" href="../assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
 <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
@@ -31,9 +31,9 @@
   <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
   <main class="lesson-main">
     <div class="lesson-head">
-      <div class="cat-tag">HASHING Â· MODULE 15 Â· PASSWORD HASHING</div>
+      <div class="cat-tag">HASHING · MODULE 15 · PASSWORD HASHING</div>
       <h1>bcrypt</h1>
-      <div class="native">é…å»¶ãƒãƒƒã‚·ãƒ¥ â€” deliberately slow hash</div>
+
       <div class="lesson-meta">
         <span class="badge intermediate">Intermediate</span>
         <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
@@ -51,12 +51,12 @@
 
     <section class="lsec" id="intro" data-title="Introduction">
       <h2><span class="mk"></span>Introduction</h2>
-      <p>You've now seen two very different hash functions, MD5 and (implicitly) SHA-256 â€” both fast, both "secure" as general-purpose hashes. So why do passwords need something else entirely? Because <strong>speed is the enemy</strong> when the input space is small and guessable, which is exactly what human-chosen passwords are. bcrypt is a hash function purpose-built to be slow â€” and to stay exactly as slow as you choose, even decades from now.</p>
+      <p>You've now seen two very different hash functions, MD5 and (implicitly) SHA-256 — both fast, both "secure" as general-purpose hashes. So why do passwords need something else entirely? Because <strong>speed is the enemy</strong> when the input space is small and guessable, which is exactly what human-chosen passwords are. bcrypt is a hash function purpose-built to be slow — and to stay exactly as slow as you choose, even decades from now.</p>
     </section>
 
     <section class="lsec" id="history" data-title="History">
       <h2><span class="mk"></span>History</h2>
-      <p>bcrypt was designed by Niels Provos and David MaziÃ¨res in 1999, built on top of the <strong>Blowfish</strong> block cipher (Bruce Schneier, 1993). Rather than inventing a new cryptographic primitive, bcrypt's innovation was procedural: deliberately run Blowfish's key setup an expensive, tunable number of times before ever using it. It's held up remarkably well â€” still a recommended choice today, alongside newer alternatives like Argon2 and scrypt designed around the same idea.</p>
+      <p>bcrypt was designed by Niels Provos and David Mazières in 1999, built on top of the <strong>Blowfish</strong> block cipher (Bruce Schneier, 1993). Rather than inventing a new cryptographic primitive, bcrypt's innovation was procedural: deliberately run Blowfish's key setup an expensive, tunable number of times before ever using it. It's held up remarkably well — still a recommended choice today, alongside newer alternatives like Argon2 and scrypt designed around the same idea.</p>
     </section>
 
     <section class="lsec" id="definition" data-title="Brief definition">
@@ -66,7 +66,7 @@
         <p>bcrypt is a password-hashing function: like MD5 or SHA-256 it's one-way, but it's deliberately slow and tunable, and it automatically manages a random salt per password.</p>
       </div>
       <div class="callout define"><span class="term">SALT</span><p>A random value generated per password and stored alongside its hash. Two users with the identical password get completely different hashes, which defeats precomputed "rainbow table" lookups entirely.</p></div>
-      <div class="callout define"><span class="term">COST FACTOR (WORK FACTOR)</span><p>A configurable number â€” this project defaults to 12 â€” that sets how many times bcrypt's expensive internal key schedule repeats: specifically <code>2^cost</code> iterations. Raising it by 1 <strong>doubles</strong> the time to compute one hash.</p></div>
+      <div class="callout define"><span class="term">COST FACTOR (WORK FACTOR)</span><p>A configurable number — this project defaults to 12 — that sets how many times bcrypt's expensive internal key schedule repeats: specifically <code>2^cost</code> iterations. Raising it by 1 <strong>doubles</strong> the time to compute one hash.</p></div>
 
       <div class="task">
         <div class="task-head"><b>TASK 01</b><span class="task-type">predict output</span></div>
@@ -74,18 +74,18 @@
           <p>If cost factor 12 takes roughly 250ms to hash one password, how long does cost factor 13 take, roughly?</p>
           <input type="text" placeholder="e.g. ~500ms">
           <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,['500','~500ms','500ms'])">Check</button></div>
-          <div class="task-fb" data-ok="Correct â€” each +1 to the cost factor doubles the time, since the internal work is 2^cost iterations."></div>
+          <div class="task-fb" data-ok="Correct — each +1 to the cost factor doubles the time, since the internal work is 2^cost iterations."></div>
         </div>
       </div>
     </section>
 
     <section class="lsec" id="theory" data-title="How bcrypt works">
       <h2><span class="mk"></span>How it works</h2>
-      <div class="flow"><span>Password + random salt</span><i>â†’</i><span>EksBlowfish expensive key setup, 2^cost times</span><i>â†’</i><span>Encrypt fixed string with it</span><i>â†’</i><span>$2b$cost$salt+hash</span></div>
-      <h3>Internal mechanism â€” EksBlowfish</h3>
-      <p>bcrypt is built on Blowfish, but uses a modified, deliberately slow key setup ("Eksblowfish" = "expensive key schedule Blowfish") that mixes in both the password <em>and</em> the salt, repeatedly, <code>2^cost</code> times, before the cipher is ever used. The "hash" bcrypt produces is the result of using this expensively-initialized cipher to encrypt a fixed string a fixed number of times â€” it's a hash function built by repurposing a cipher as a slow one-way mixing step.</p>
+      <div class="flow"><span>Password + random salt</span><i>→</i><span>EksBlowfish expensive key setup, 2^cost times</span><i>→</i><span>Encrypt fixed string with it</span><i>→</i><span>$2b$cost$salt+hash</span></div>
+      <h3>Internal mechanism — EksBlowfish</h3>
+      <p>bcrypt is built on Blowfish, but uses a modified, deliberately slow key setup ("Eksblowfish" = "expensive key schedule Blowfish") that mixes in both the password <em>and</em> the salt, repeatedly, <code>2^cost</code> times, before the cipher is ever used. The "hash" bcrypt produces is the result of using this expensively-initialized cipher to encrypt a fixed string a fixed number of times — it's a hash function built by repurposing a cipher as a slow one-way mixing step.</p>
       <h3>Output format</h3>
-      <p>bcrypt hashes look like <code>$2b$12$N9qo8uLOickgx2ZMRZoHeO...</code> â€” <code>$2b$</code> identifies the bcrypt variant, <code>12</code> is the cost factor, followed by the salt and hash together. This is why you can verify a password later without storing the salt separately: it's embedded in the string itself.</p>
+      <p>bcrypt hashes look like <code>$2b$12$N9qo8uLOickgx2ZMRZoHeO...</code> — <code>$2b$</code> identifies the bcrypt variant, <code>12</code> is the cost factor, followed by the salt and hash together. This is why you can verify a password later without storing the salt separately: it's embedded in the string itself.</p>
 
       <div class="task">
         <div class="task-head"><b>TASK 02</b><span class="task-type">identify</span></div>
@@ -93,7 +93,7 @@
           <p>In <code>$2b$12$N9qo8uLOickgx2ZMRZoHeO...</code>, what does the <code>12</code> represent?</p>
           <div class="mc-opts">
             <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">The password's length</div>
-            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">The cost factor (work factor) â€” 2^12 internal iterations</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">The cost factor (work factor) — 2^12 internal iterations</div>
           </div>
           <div class="task-fb" data-ok="Correct."></div>
         </div>
@@ -119,7 +119,7 @@
 <span class="kw">print</span>(bcrypt_verify(<span class="str">"wrong guess"</span>, h))                   <span class="cmt"># False</span></pre>
 
       <div class="callout warn">
-        <p><strong>Why this project doesn't reimplement bcrypt manually:</strong> every other algorithm here (DES, AES, RSA, MD5, SHA-1, SHA-256) was reimplemented from scratch and checked against known test vectors. bcrypt wasn't, deliberately â€” its security depends on getting Blowfish's internal setup and the expensive key schedule exactly right, and subtle bugs here don't just produce wrong output, they can silently produce a <em>weaker</em> hash that still looks fine. There's also a well-known historical bug class around the <code>$2a$</code>/<code>$2b$</code> version strings and null-byte truncation. The well-audited <code>bcrypt</code> library sidesteps all of that.</p>
+        <p><strong>Why this project doesn't reimplement bcrypt manually:</strong> every other algorithm here (DES, AES, RSA, MD5, SHA-1, SHA-256) was reimplemented from scratch and checked against known test vectors. bcrypt wasn't, deliberately — its security depends on getting Blowfish's internal setup and the expensive key schedule exactly right, and subtle bugs here don't just produce wrong output, they can silently produce a <em>weaker</em> hash that still looks fine. There's also a well-known historical bug class around the <code>$2a$</code>/<code>$2b$</code> version strings and null-byte truncation. The well-audited <code>bcrypt</code> library sidesteps all of that.</p>
       </div>
 
       <div class="task">
@@ -143,9 +143,9 @@ login_ok = ______("hunter2", stored_hash)</pre>
           <p>Two users both pick the password "letmein123". With bcrypt, will their stored hashes be identical?</p>
           <div class="mc-opts">
             <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Yes, identical password always means identical hash</div>
-            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No â€” each gets a different random salt, so the hashes differ even though the password is the same</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No — each gets a different random salt, so the hashes differ even though the password is the same</div>
           </div>
-          <div class="task-fb" data-ok="Correct â€” this is exactly what defeats rainbow-table attacks."></div>
+          <div class="task-fb" data-ok="Correct — this is exactly what defeats rainbow-table attacks."></div>
         </div>
       </div>
     </section>
@@ -153,36 +153,36 @@ login_ok = ______("hunter2", stored_hash)</pre>
     <section class="lsec" id="strengths" data-title="Strengths">
       <h2><span class="mk"></span>Strengths</h2>
       <ul>
-        <li><strong>Built-in per-password salting</strong> â€” no separate salt column or management needed.</li>
-        <li><strong>Tunable over time</strong> â€” raise the cost factor as hardware gets faster, without changing the algorithm or breaking old hashes (old ones still verify at their original cost).</li>
-        <li><strong>Battle-tested</strong> â€” over two decades of public scrutiny with no practical break.</li>
+        <li><strong>Built-in per-password salting</strong> — no separate salt column or management needed.</li>
+        <li><strong>Tunable over time</strong> — raise the cost factor as hardware gets faster, without changing the algorithm or breaking old hashes (old ones still verify at their original cost).</li>
+        <li><strong>Battle-tested</strong> — over two decades of public scrutiny with no practical break.</li>
       </ul>
     </section>
 
     <section class="lsec" id="weaknesses" data-title="Weaknesses">
       <h2><span class="mk"></span>Weaknesses</h2>
       <div class="callout warn">
-        <p><strong>Implementation weakness:</strong> bcrypt silently truncates passwords longer than 72 bytes in some implementations â€” anything past that point is ignored, which can be surprising if you don't know about it. It also doesn't naturally resist memory-hard attacks the way scrypt/Argon2 do, since it uses a comparatively small, fixed amount of memory â€” making large-scale GPU/ASIC cracking farms somewhat more cost-effective against bcrypt than against newer alternatives, even though it's still far better than MD5/SHA-256 for this purpose.</p>
+        <p><strong>Implementation weakness:</strong> bcrypt silently truncates passwords longer than 72 bytes in some implementations — anything past that point is ignored, which can be surprising if you don't know about it. It also doesn't naturally resist memory-hard attacks the way scrypt/Argon2 do, since it uses a comparatively small, fixed amount of memory — making large-scale GPU/ASIC cracking farms somewhat more cost-effective against bcrypt than against newer alternatives, even though it's still far better than MD5/SHA-256 for this purpose.</p>
       </div>
-      <p>There is no meaningful "algorithm weakness" to report here the way there is for MD5 or DES â€” bcrypt remains a recommended, unbroken choice.</p>
+      <p>There is no meaningful "algorithm weakness" to report here the way there is for MD5 or DES — bcrypt remains a recommended, unbroken choice.</p>
     </section>
 
     <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
       <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
-      <p>Seeing <code>$2b$</code>/<code>$2a$</code>/<code>$2y$</code> at the start of a hash is an instant signal to a penetration tester or CTF player: this isn't a fast-crackable MD5/SHA digest, so a brute-force wordlist attack (even with hashcat/John, covered next) will be dramatically slower per guess â€” sometimes by a factor of thousands, directly because of the cost factor. This changes real attacker strategy: against bcrypt, targeted guessing (known weak passwords, leaked password reuse, social-engineering clues) matters far more than raw wordlist throughput.</p>
+      <p>Seeing <code>$2b$</code>/<code>$2a$</code>/<code>$2y$</code> at the start of a hash is an instant signal to a penetration tester or CTF player: this isn't a fast-crackable MD5/SHA digest, so a brute-force wordlist attack (even with hashcat/John, covered next) will be dramatically slower per guess — sometimes by a factor of thousands, directly because of the cost factor. This changes real attacker strategy: against bcrypt, targeted guessing (known weak passwords, leaked password reuse, social-engineering clues) matters far more than raw wordlist throughput.</p>
     </section>
 
     <section class="lsec" id="challenge" data-title="CTF Challenge">
       <h2><span class="mk"></span>CTF Challenge</h2>
       <div class="ctf">
-        <div class="ctf-head"><b>CHALLENGE Â· READ THE HASH</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-head"><b>CHALLENGE · READ THE HASH</b><span class="badge easy">Easy</span></div>
         <div class="ctf-body">
           <div class="ctf-row"><span class="k">SCENARIO</span><p>You're given a stored password hash from a breached user table and asked to assess how exposed it is.</p></div>
           <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Read the hash's own metadata (no cracking needed) and report its cost factor.</p></div>
           <div class="ctf-row"><span class="k">GIVEN DATA</span><pre class="code">$2b$14$oT8kK1Zc4p1h9dVxwHqDaOQyG6mZ6mE9K0d8iY1vQ3Lz8wQ9c1p2a</pre></div>
           <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{cost_&lt;number&gt;}</code>, e.g. <code>flag{cost_10}</code></p></div>
           <div class="hint-list">
-            <details class="hint"><summary>Hint 1</summary><p>The format is <code>$version$cost$salt+hash</code> â€” the second dollar-delimited field is the cost factor.</p></details>
+            <details class="hint"><summary>Hint 1</summary><p>The format is <code>$version$cost$salt+hash</code> — the second dollar-delimited field is the cost factor.</p></details>
           </div>
           <div class="ctf-flag">
             <input type="text" placeholder="flag{cost_..}">
@@ -193,7 +193,7 @@ login_ok = ______("hunter2", stored_hash)</pre>
             <summary>Show solution</summary>
             <div class="sol-body">
               <h5>REASONING</h5>
-              <p>Splitting <code>$2b$14$...</code> on <code>$</code> gives version <code>2b</code>, cost <code>14</code>, then the salt+hash. No cracking was required â€” the cost factor is metadata, not secret.</p>
+              <p>Splitting <code>$2b$14$...</code> on <code>$</code> gives version <code>2b</code>, cost <code>14</code>, then the salt+hash. No cracking was required — the cost factor is metadata, not secret.</p>
               <h5>FLAG</h5>
               <p><code>flag{cost_14}</code></p>
             </div>
@@ -205,22 +205,22 @@ login_ok = ______("hunter2", stored_hash)</pre>
     <section class="lsec" id="summary" data-title="Summary">
       <h2><span class="mk"></span>Summary</h2>
       <ul>
-        <li>bcrypt is for passwords specifically â€” slow on purpose, unlike MD5/SHA-256.</li>
+        <li>bcrypt is for passwords specifically — slow on purpose, unlike MD5/SHA-256.</li>
         <li>Salting (automatic, per-password) defeats rainbow tables; the cost factor defeats brute-force speedups from faster hardware.</li>
         <li>It's built on a deliberately expensive Blowfish key schedule ("EksBlowfish"), not reimplemented from scratch here for good reason.</li>
-        <li>This closes the hashing arc: MD5/SHA for integrity, bcrypt for passwords â€” never the other way around.</li>
+        <li>This closes the hashing arc: MD5/SHA for integrity, bcrypt for passwords — never the other way around.</li>
       </ul>
       <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
     </section>
 
     <div class="lesson-nav">
-      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
-      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">← previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next →</span><span class="ttl"></span></a>
     </div>
   </main>
 </div>
 
-<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+<footer><div class="wrap"><span>Yaoguai YAOGUAI — a beginner-to-CTF cryptography curriculum.</span></div></footer>
 
 <script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
 <script src="../js/api.js"></script>

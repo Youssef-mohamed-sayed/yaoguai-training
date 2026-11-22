@@ -93,7 +93,7 @@ code, pre{ font-family:var(--mono); }
 .topnav a:hover, .topnav a.active{ color:var(--paper); border-color:var(--red); }
 
 .topbar-tools{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
-/* Auth topbar wrapper â€” sits alongside progress-chip */
+/* Auth topbar wrapper — sits alongside progress-chip */
 .progress-chip{
   font-family:var(--mono); font-size:12px; color:var(--paper-faint);
   border:1px solid var(--line); padding:5px 10px;

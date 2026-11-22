@@ -5,11 +5,11 @@
     <div class="hero-static" aria-hidden="true"></div>
     <div class="wrap hero-inner">
       <div>
-        <div class="hero-kicker"><span class="rule"></span> å¦–æ€ª / YAOGUAI NETWORK</div>
+        <div class="hero-kicker"><span class="rule"></span> Yaoguai / YAOGUAI NETWORK</div>
         <h1>Network <i>Essentials</i></h1>
         <p class="lede">Learn networking from zero to cybersecurity fundamentals. Read the traffic, interpret the scan, and put what you learn to work in CTF challenges.</p>
         <div class="hero-cta">
-          {% if first %}<a class="btn btn-primary" href="{{ first.url }}" data-resume>Start learning <span aria-hidden="true">â†’</span></a>{% endif %}
+          {% if first %}<a class="btn btn-primary" href="{{ first.url }}" data-resume>Start learning <span aria-hidden="true">→</span></a>{% endif %}
           <a class="btn btn-ghost" href="/network/course">Course guide</a>
         </div>
       </div>
@@ -19,7 +19,7 @@
           <img src="/network/assets/images/yaoguai-background.jpg" alt="" width="160" height="160">
           <div class="packet-path"><span>ETHERNET</span><i></i><span>IP</span><i></i><span>TCP</span></div>
         </div>
-        <div class="terminal-caption">FRAME <span>â†’</span> PACKET <span>â†’</span> SEGMENT</div>
+        <div class="terminal-caption">FRAME <span>→</span> PACKET <span>→</span> SEGMENT</div>
       </div>
     </div>
   </section>
@@ -27,7 +27,7 @@
   <section class="wrap course-grid" id="modules" aria-labelledby="modules-title">
     <div class="section-head">
       <h2 id="modules-title">Course modules</h2>
-      <span class="section-count">{{ course.modules|length }} modules Â· {{ course.modules.values()|sum(attribute='lessons', start=[])|length }} lessons &amp; final challenges</span>
+      <span class="section-count">{{ course.modules|length }} modules · {{ course.modules.values()|sum(attribute='lessons', start=[])|length }} lessons &amp; final challenges</span>
     </div>
     <div class="grid">
       {% for module in course.modules.values() %}
@@ -40,7 +40,7 @@
           <progress class="bar" value="0" max="{{ module.progress_pages|length or 1 }}" aria-label="{{ module.index.title }} progress"></progress>
           <div class="card-foot">
             <span class="card-status"><span class="dot" aria-hidden="true"></span><span data-module-count>{{ module.progress_pages|length }} course pages</span></span>
-            <span class="card-link">Open <span aria-hidden="true">â†’</span></span>
+            <span class="card-link">Open <span aria-hidden="true">→</span></span>
           </div>
         </a>
       {% endfor %}

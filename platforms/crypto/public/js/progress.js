@@ -73,9 +73,9 @@ const Progress = {
       const activities = payload.data?.platforms?.find((platform) => platform.id === 'crypto')?.modules?.flatMap((module) => module.activities) || [];
       const state = {};
       for (const activity of activities) {
-        if (!activity.completed) continue;
         const key = activity.id.replace(/^crypto\//, '');
-        state[key] = { status: 'done', sections: {}, challenge: false, pct: 100 };
+        if (activity.completed) state[key] = { status: 'done', sections: {}, challenge: false, pct: 100 };
+        else if (activity.started) state[key] = { status: 'in_progress', sections: {}, challenge: false, pct: 20 };
       }
       try { sessionStorage.setItem(GUEST_PROGRESS_KEY, JSON.stringify(state)); } catch (_) {}
       window.dispatchEvent(new CustomEvent('yaoguai:progress-synced'));
@@ -89,6 +89,19 @@ const Progress = {
 };
 
 window.Progress = Progress;
+
+window.addEventListener("yaoguai:central-progress", event => {
+  if (!window.YaoguaiAccountUser) return;
+  const activities = event.detail?.platforms?.find(platform => platform.id === "crypto")?.modules?.flatMap(module => module.activities || []) || [];
+  const state = {};
+  for (const activity of activities) {
+    const key = activity.id.replace(/^crypto\//, "");
+    if (activity.completed) state[key] = { status: "done", sections: {}, challenge: false, pct: 100 };
+    else if (activity.started) state[key] = { status: "in_progress", sections: {}, challenge: false, pct: 20 };
+  }
+  try { sessionStorage.setItem(GUEST_PROGRESS_KEY, JSON.stringify(state)); } catch (_) {}
+  window.dispatchEvent(new CustomEvent("yaoguai:progress-synced"));
+});
 
 // Auto-sync on page load if logged in
 if (typeof document !== "undefined") {

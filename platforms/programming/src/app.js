@@ -25,6 +25,17 @@ let course;
 let searchFocusIndex = -1;
 let searchResults = [];
 let pendingQuery = '';
+let centralProgress = null;
+window.addEventListener('yaoguai:central-progress', (event) => {
+  centralProgress = event.detail;
+  const last = centralProgress?.last_activity?.id;
+  if (window.YaoguaiAccountUser && last?.startsWith('programming/')) {
+    const current = readProgress();
+    current.lastLesson = last.replace(/^programming\//, '').replace(/\/exercise\/[^/]+$/, '');
+    writeProgress(current);
+  }
+  if (course) renderRoute();
+});
 
 function readProgress() {
   try {
@@ -51,7 +62,13 @@ function updateProgressChip() {
   chip.textContent = matchMedia('(max-width: 430px)').matches ? `${done}/${total} done` : `${done}/${total} lessons complete`;
   chip.title = `${done} of ${total} lessons complete`;
 }
-function isComplete(id) { return readProgress().completedLessons.includes(id); }
+function isComplete(id) {
+  if (window.YaoguaiAccountUser && centralProgress) {
+    return Boolean(centralProgress.platforms?.find(p => p.id === 'programming')?.modules
+      .flatMap(module => module.activities || []).find(activity => activity.id === `programming/${id}`)?.completed);
+  }
+  return readProgress().completedLessons.includes(id);
+}
 function encodeRoute(route) { return route.split('/').map(encodeURIComponent).join('/'); }
 function appPath(path) { return path === BASE_PATH || path.startsWith(`${BASE_PATH}/`) ? path : `${BASE_PATH}${path.startsWith('/') ? path : `/${path}`}`; }
 function go(path, { replace = false } = {}) {
@@ -157,7 +174,7 @@ function progressBar(value, label) { return `<div class="progress-track" role="p
 function courseSidebar(activeLesson = '', activeModule = '') {
   return `<aside class="course-sidebar" id="course-sidebar"><div class="sidebar-label">YOUR LEARNING PATH</div>${course.modules.map(module => {
     const finished = module.lessons.filter(lesson => isComplete(lesson.id)).length;
-    return `<section class="sidebar-module ${activeModule === module.id ? 'expanded' : ''}"><a class="sidebar-module-link ${activeModule === module.id ? 'active' : ''}" href="${moduleUrl(module.id)}" data-app-link="true"><span class="module-index">${String(module.order).padStart(2, '0')}</span><span class="sidebar-module-name">${escapeHtml(module.title)}</span><span class="sidebar-count">${finished}/${module.lessons.length}</span></a>${activeModule === module.id || activeLesson ? `<div class="sidebar-lessons">${module.lessons.map(lesson => `<a class="sidebar-lesson ${activeLesson === lesson.id ? 'active' : ''} ${isComplete(lesson.id) ? 'is-done' : ''}" href="${lessonUrl(lesson.id)}" data-app-link="true"><span class="lesson-state" aria-label="${isComplete(lesson.id) ? 'Completed' : 'Not completed'}">${isComplete(lesson.id) ? 'âœ“' : 'Â·'}</span>${escapeHtml(lesson.title)}</a>`).join('')}</div>` : ''}</section>`;
+    return `<section class="sidebar-module ${activeModule === module.id ? 'expanded' : ''}"><a class="sidebar-module-link ${activeModule === module.id ? 'active' : ''}" href="${moduleUrl(module.id)}" data-app-link="true"><span class="module-index">${String(module.order).padStart(2, '0')}</span><span class="sidebar-module-name">${escapeHtml(module.title)}</span><span class="sidebar-count">${finished}/${module.lessons.length}</span></a>${activeModule === module.id || activeLesson ? `<div class="sidebar-lessons">${module.lessons.map(lesson => `<a class="sidebar-lesson ${activeLesson === lesson.id ? 'active' : ''} ${isComplete(lesson.id) ? 'is-done' : ''}" href="${lessonUrl(lesson.id)}" data-app-link="true"><span class="lesson-state" aria-label="${isComplete(lesson.id) ? 'Completed' : 'Not completed'}">${isComplete(lesson.id) ? '✓' : '·'}</span>${escapeHtml(lesson.title)}</a>`).join('')}</div>` : ''}</section>`;
   }).join('')}<button class="text-button reset-button" id="reset-progress">Reset local progress</button></aside>`;
 }
 function bindCommon() {
@@ -194,11 +211,11 @@ function homePage() {
   if (!continueLesson) continueLesson = lessons.find(lesson => !isComplete(lesson.id));
   if (!continueLesson) continueLesson = lessons[0];
   const firstModule = course.modules[0];
-  app.innerHTML = `<main><section class="hero"><div class="hero-lines" aria-hidden="true"></div><div class="hero-content wrap"><div class="eyebrow"><span class="eyebrow-rule"></span> YAOGUAI LEARNING / PYTHON 3</div><h1>Turn curiosity<br>into <em>working code.</em></h1><p class="hero-lede">A practical path from your first Python statement to useful scripts for files, networks, and security analysis.</p><div class="hero-actions">${routeLink(done ? 'Continue learning <span aria-hidden="true">â†’</span>' : 'Begin the course <span aria-hidden="true">â†’</span>', lessonUrl(continueLesson.id), 'button button-primary')}${routeLink('Explore course path', '#course-path', 'button button-outline')}</div><div class="hero-footnote"><span class="status-pip"></span> NO ACCOUNT REQUIRED <span class="foot-separator">/</span> PROGRESS SAVED FOR THIS SESSION</div><div class="hero-sigil" aria-hidden="true">å¦–</div></div></section><section class="wrap dashboard"><div class="overview-grid"><div><div class="section-kicker">THE TRAINING GROUND</div><h2>Python, from first principles.</h2><p class="body-copy">${escapeHtml(course.modules.length)} modules. ${escapeHtml(total)} lessons. One clear progression into practical programming, debugging, and safe cybersecurity automation.</p><div class="learning-outcomes">${routeLink('Read the course overview', '/resources#course-overview', 'inline-link')}<span class="muted">Â·</span>${routeLink('Browse learning resources', '/resources', 'inline-link')}</div></div><div class="progress-card"><div class="card-label">YOUR COURSE PROGRESS</div><div class="progress-number">${percent}<span>%</span></div>${progressBar(percent, 'Overall course progress')}<div class="progress-caption"><span>${done} of ${total} lessons complete</span><span>${course.modules.length} modules</span></div>${done === total && total ? '<div class="completion-note">Course complete. Keep building.</div>' : ''}</div></div><div class="section-heading" id="course-path"><div><div class="section-kicker">THE LEARNING PATH</div><h2>Choose your next step.</h2></div><span class="section-count">${String(course.modules.length).padStart(2, '0')} MODULES</span></div><div class="module-grid">${course.modules.map(module => {
+  app.innerHTML = `<main><section class="hero"><div class="hero-lines" aria-hidden="true"></div><div class="hero-content wrap"><div class="eyebrow"><span class="eyebrow-rule"></span> YAOGUAI LEARNING / PYTHON 3</div><h1>Turn curiosity<br>into <em>working code.</em></h1><p class="hero-lede">A practical path from your first Python statement to useful scripts for files, networks, and security analysis.</p><div class="hero-actions">${routeLink(done ? 'Continue learning <span aria-hidden="true">→</span>' : 'Begin the course <span aria-hidden="true">→</span>', lessonUrl(continueLesson.id), 'button button-primary')}${routeLink('Explore course path', '#course-path', 'button button-outline')}</div><div class="hero-footnote"><span class="status-pip"></span> NO ACCOUNT REQUIRED <span class="foot-separator">/</span> PROGRESS SAVED FOR THIS SESSION</div><div class="hero-sigil" aria-hidden="true">Y</div></div></section><section class="wrap dashboard"><div class="overview-grid"><div><div class="section-kicker">THE TRAINING GROUND</div><h2>Python, from first principles.</h2><p class="body-copy">${escapeHtml(course.modules.length)} modules. ${escapeHtml(total)} lessons. One clear progression into practical programming, debugging, and safe cybersecurity automation.</p><div class="learning-outcomes">${routeLink('Read the course overview', '/resources#course-overview', 'inline-link')}<span class="muted">·</span>${routeLink('Browse learning resources', '/resources', 'inline-link')}</div></div><div class="progress-card"><div class="card-label">YOUR COURSE PROGRESS</div><div class="progress-number">${percent}<span>%</span></div>${progressBar(percent, 'Overall course progress')}<div class="progress-caption"><span>${done} of ${total} lessons complete</span><span>${course.modules.length} modules</span></div>${done === total && total ? '<div class="completion-note">Course complete. Keep building.</div>' : ''}</div></div><div class="section-heading" id="course-path"><div><div class="section-kicker">THE LEARNING PATH</div><h2>Choose your next step.</h2></div><span class="section-count">${String(course.modules.length).padStart(2, '0')} MODULES</span></div><div class="module-grid">${course.modules.map(module => {
     const moduleDone = module.lessons.filter(lesson => isComplete(lesson.id)).length;
     const pct = module.lessons.length ? Math.round(moduleDone / module.lessons.length * 100) : 0;
     const next = module.lessons.find(lesson => !isComplete(lesson.id)) || module.lessons[0];
-    return `<a class="module-card" href="${moduleUrl(module.id)}" data-app-link="true"><div class="module-card-top"><span class="module-index">${String(module.order).padStart(2, '0')}</span><span class="module-completion">${pct === 100 ? 'COMPLETE' : `${moduleDone}/${module.lessons.length} LESSONS`}</span></div><h3>${escapeHtml(module.title)}</h3><p>${escapeHtml(module.description.replace(/^\*\*[^*]+\*\*\s*/, '').split(/\n/)[0] || 'Explore the lessons in this module.')}</p>${progressBar(pct, `${module.title} progress`)}<div class="module-card-bottom"><span>${module.lessons.length} lessons</span><span>Open module <b aria-hidden="true">â†—</b></span></div><span class="sr-only">Start with ${escapeHtml(next.title)}</span></a>`;
+    return `<a class="module-card" href="${moduleUrl(module.id)}" data-app-link="true"><div class="module-card-top"><span class="module-index">${String(module.order).padStart(2, '0')}</span><span class="module-completion">${pct === 100 ? 'COMPLETE' : `${moduleDone}/${module.lessons.length} LESSONS`}</span></div><h3>${escapeHtml(module.title)}</h3><p>${escapeHtml(module.description.replace(/^\*\*[^*]+\*\*\s*/, '').split(/\n/)[0] || 'Explore the lessons in this module.')}</p>${progressBar(pct, `${module.title} progress`)}<div class="module-card-bottom"><span>${module.lessons.length} lessons</span><span>Open module <b aria-hidden="true">↗</b></span></div><span class="sr-only">Start with ${escapeHtml(next.title)}</span></a>`;
   }).join('')}</div></section></main>`;
   bindCommon();
 }
@@ -206,7 +223,7 @@ function modulePage(module) {
   const done = module.lessons.filter(lesson => isComplete(lesson.id)).length;
   const pct = module.lessons.length ? Math.round(done / module.lessons.length * 100) : 0;
   const first = module.lessons.find(lesson => !isComplete(lesson.id)) || module.lessons[0];
-  app.innerHTML = `<main class="wrap page-wrap"><div class="breadcrumb">${routeLink('Course', '/', '')}<span>/</span><span>${escapeHtml(module.title)}</span></div><div class="module-page-head"><div class="section-kicker">MODULE ${String(module.order).padStart(2, '0')} / ${String(course.modules.length).padStart(2, '0')}</div><h1>${escapeHtml(module.title)}</h1><div class="module-description prose">${renderMarkdown(module.description, module.sourcePath)}</div><div class="module-progress-row"><div>${progressBar(pct, `${module.title} progress`)}</div><span>${done} / ${module.lessons.length} complete</span></div>${routeLink(isComplete(first.id) ? 'Review first lesson â†’' : done ? 'Continue module â†’' : 'Start this module â†’', lessonUrl(first.id), 'button button-primary')}</div><div class="lesson-list">${module.lessons.map((lesson, index) => `<a class="lesson-list-item" href="${lessonUrl(lesson.id)}" data-app-link="true"><span class="lesson-list-number">${String(index + 1).padStart(2, '0')}</span><span class="lesson-list-title">${escapeHtml(lesson.title)}<small>${isComplete(lesson.id) ? 'Completed' : 'Lesson'}</small></span><span class="lesson-list-state ${isComplete(lesson.id) ? 'done' : ''}" aria-label="${isComplete(lesson.id) ? 'Completed' : 'Not completed'}">${isComplete(lesson.id) ? 'âœ“' : 'â†’'}</span></a>`).join('')}</div>${moduleNavigation(module)}</main>`;
+  app.innerHTML = `<main class="wrap page-wrap"><div class="breadcrumb">${routeLink('Course', '/', '')}<span>/</span><span>${escapeHtml(module.title)}</span></div><div class="module-page-head"><div class="section-kicker">MODULE ${String(module.order).padStart(2, '0')} / ${String(course.modules.length).padStart(2, '0')}</div><h1>${escapeHtml(module.title)}</h1><div class="module-description prose">${renderMarkdown(module.description, module.sourcePath)}</div><div class="module-progress-row"><div>${progressBar(pct, `${module.title} progress`)}</div><span>${done} / ${module.lessons.length} complete</span></div>${routeLink(isComplete(first.id) ? 'Review first lesson →' : done ? 'Continue module →' : 'Start this module →', lessonUrl(first.id), 'button button-primary')}</div><div class="lesson-list">${module.lessons.map((lesson, index) => `<a class="lesson-list-item" href="${lessonUrl(lesson.id)}" data-app-link="true"><span class="lesson-list-number">${String(index + 1).padStart(2, '0')}</span><span class="lesson-list-title">${escapeHtml(lesson.title)}<small>${isComplete(lesson.id) ? 'Completed' : 'Lesson'}</small></span><span class="lesson-list-state ${isComplete(lesson.id) ? 'done' : ''}" aria-label="${isComplete(lesson.id) ? 'Completed' : 'Not completed'}">${isComplete(lesson.id) ? '✓' : '→'}</span></a>`).join('')}</div>${moduleNavigation(module)}</main>`;
   const guide = document.createElement('details');
   guide.className = 'module-guide';
   guide.innerHTML = `<summary>Module guide, objectives, and practice notes</summary><div class="prose">${renderMarkdown(module.readme, module.sourcePath)}</div>`;
@@ -217,7 +234,7 @@ function moduleNavigation(module) {
   const index = course.modules.indexOf(module);
   const previous = course.modules[index - 1];
   const next = course.modules[index + 1];
-  return `<div class="module-pagination">${previous ? routeLink(`â† ${escapeHtml(previous.title)}`, moduleUrl(previous.id), 'inline-link') : '<span></span>'}${next ? routeLink(`${escapeHtml(next.title)} â†’`, moduleUrl(next.id), 'inline-link') : '<span></span>'}</div>`;
+  return `<div class="module-pagination">${previous ? routeLink(`← ${escapeHtml(previous.title)}`, moduleUrl(previous.id), 'inline-link') : '<span></span>'}${next ? routeLink(`${escapeHtml(next.title)} →`, moduleUrl(next.id), 'inline-link') : '<span></span>'}</div>`;
 }
 function lessonPage(lesson) {
   const all = flatLessons();
@@ -231,9 +248,14 @@ function lessonPage(lesson) {
   progress.lastLesson = lesson.id;
   progress.lastModule = module.id;
   writeProgress(progress);
-  app.innerHTML = `<main class="lesson-layout">${courseSidebar(lesson.id, module.id)}<article class="lesson-article"><div class="lesson-topline">${routeLink(`MODULE ${String(module.order).padStart(2, '0')}`, moduleUrl(module.id), 'lesson-module-link')}<span>/</span><span>${escapeHtml(module.title)}</span></div><header class="lesson-header"><div class="lesson-number">LESSON ${String(lesson.order).padStart(2, '0')} <span>Â·</span> ${module.lessons.length} IN MODULE</div><h1>${escapeHtml(lesson.title)}</h1><div class="lesson-meta"><span class="completion-pill ${checked ? 'completed' : ''}"><span class="completion-symbol">${checked ? 'âœ“' : 'â—‹'}</span> ${checked ? 'COMPLETED' : 'IN YOUR LEARNING PATH'}</span><span>${escapeHtml(module.title)}</span></div><button class="button ${checked ? 'button-complete' : 'button-primary'} complete-button" id="complete-lesson" aria-pressed="${checked}">${checked ? 'âœ“ Lesson complete' : 'Mark lesson complete'}</button></header><nav class="mobile-toc" aria-label="On this page"><label for="toc-select">ON THIS PAGE</label><select id="toc-select"><option value="">Jump to sectionâ€¦</option>${headings.map(heading => `<option value="${slug(heading.title)}">${escapeHtml(heading.title)}</option>`).join('')}</select></nav><div class="lesson-prose prose">${renderMarkdown(lesson.content, lesson.sourcePath)}</div><nav class="lesson-pagination" aria-label="Lesson navigation">${previous ? routeLink(`<span class="pagination-label">â† PREVIOUS</span><strong>${escapeHtml(previous.title)}</strong>`, lessonUrl(previous.id), 'pagination-card') : '<div></div>'}${next ? routeLink(`<span class="pagination-label">NEXT LESSON â†’</span><strong>${escapeHtml(next.title)}</strong>`, lessonUrl(next.id), 'pagination-card next') : moduleNavigation(module)}</nav></article><aside class="lesson-toc"><div class="toc-title">ON THIS PAGE</div><nav>${headings.map(heading => `<a class="toc-link depth-${heading.level}" href="#${slug(heading.title)}">${escapeHtml(heading.title)}</a>`).join('')}</nav><div class="toc-module-progress"><span>MODULE PROGRESS</span><strong>${module.lessons.filter(item => isComplete(item.id)).length} / ${module.lessons.length}</strong>${progressBar(Math.round(module.lessons.filter(item => isComplete(item.id)).length / module.lessons.length * 100), `${module.title} progress`)}</div></aside></main>`;
+  app.innerHTML = `<main class="lesson-layout">${courseSidebar(lesson.id, module.id)}<article class="lesson-article"><div class="lesson-topline">${routeLink(`MODULE ${String(module.order).padStart(2, '0')}`, moduleUrl(module.id), 'lesson-module-link')}<span>/</span><span>${escapeHtml(module.title)}</span></div><header class="lesson-header"><div class="lesson-number">LESSON ${String(lesson.order).padStart(2, '0')} <span>·</span> ${module.lessons.length} IN MODULE</div><h1>${escapeHtml(lesson.title)}</h1><div class="lesson-meta"><span class="completion-pill ${checked ? 'completed' : ''}"><span class="completion-symbol">${checked ? '✓' : '○'}</span> ${checked ? 'COMPLETED' : 'IN YOUR LEARNING PATH'}</span><span>${escapeHtml(module.title)}</span></div><button class="button ${checked ? 'button-complete' : 'button-primary'} complete-button" id="complete-lesson" aria-pressed="${checked}">${checked ? '✓ Lesson complete' : 'Mark lesson complete'}</button></header><nav class="mobile-toc" aria-label="On this page"><label for="toc-select">ON THIS PAGE</label><select id="toc-select"><option value="">Jump to section…</option>${headings.map(heading => `<option value="${slug(heading.title)}">${escapeHtml(heading.title)}</option>`).join('')}</select></nav><div class="lesson-prose prose">${renderMarkdown(lesson.content, lesson.sourcePath)}</div><nav class="lesson-pagination" aria-label="Lesson navigation">${previous ? routeLink(`<span class="pagination-label">← PREVIOUS</span><strong>${escapeHtml(previous.title)}</strong>`, lessonUrl(previous.id), 'pagination-card') : '<div></div>'}${next ? routeLink(`<span class="pagination-label">NEXT LESSON →</span><strong>${escapeHtml(next.title)}</strong>`, lessonUrl(next.id), 'pagination-card next') : moduleNavigation(module)}</nav></article><aside class="lesson-toc"><div class="toc-title">ON THIS PAGE</div><nav>${headings.map(heading => `<a class="toc-link depth-${heading.level}" href="#${slug(heading.title)}">${escapeHtml(heading.title)}</a>`).join('')}</nav><div class="toc-module-progress"><span>MODULE PROGRESS</span><strong>${module.lessons.filter(item => isComplete(item.id)).length} / ${module.lessons.length}</strong>${progressBar(Math.round(module.lessons.filter(item => isComplete(item.id)).length / module.lessons.length * 100), `${module.title} progress`)}</div></aside></main>`;
   bindCommon();
-  document.querySelector('#complete-lesson').addEventListener('click', () => {
+  document.querySelector('#complete-lesson').addEventListener('click', async () => {
+    if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
+      if (!await window.YaoguaiTraining.complete(`programming/${lesson.id}`)) return;
+      renderRoute();
+      return;
+    }
     const current = readProgress();
     const completed = new Set(current.completedLessons);
     if (completed.has(lesson.id)) completed.delete(lesson.id); else completed.add(lesson.id);
@@ -275,13 +297,13 @@ function search(query) {
     if (terms.some(term => !normalized.includes(term))) return null;
     const at = normalized.indexOf(terms[0]);
     const snippet = content.slice(Math.max(0, at - 90), at + 190).replace(/\s+/g, ' ').trim();
-    return { ...lesson, score, snippet: `${at > 90 ? 'â€¦' : ''}${snippet}${at + 190 < content.length ? 'â€¦' : ''}` };
+    return { ...lesson, score, snippet: `${at > 90 ? '…' : ''}${snippet}${at + 190 < content.length ? '…' : ''}` };
   }).filter(Boolean).sort((a, b) => b.score - a.score || a.moduleId.localeCompare(b.moduleId, undefined, { numeric: true }) || a.order - b.order);
 }
 function searchPage(query = '') {
   searchResults = query.trim() ? search(query) : [];
   searchFocusIndex = -1;
-  app.innerHTML = `<main class="wrap page-wrap search-page"><div class="section-kicker">SEARCH THE COURSE</div><h1>Find your next answer.</h1><form class="search-form" id="search-form"><span aria-hidden="true">âŒ•</span><input id="search-input" type="search" autocomplete="off" placeholder="Try â€œlistsâ€, â€œsocketâ€, or â€œdebuggingâ€â€¦" aria-label="Search Python course content" value="${escapeHtml(query)}"><button class="button button-primary" type="submit">Search</button></form><div class="search-hint">Searches titles, headings, and the complete lesson text.</div><div id="search-output" aria-live="polite">${renderSearchResults(query)}</div></main>`;
+  app.innerHTML = `<main class="wrap page-wrap search-page"><div class="section-kicker">SEARCH THE COURSE</div><h1>Find your next answer.</h1><form class="search-form" id="search-form"><span aria-hidden="true">⌕</span><input id="search-input" type="search" autocomplete="off" placeholder="Try “lists”, “socket”, or “debugging”…" aria-label="Search Python course content" value="${escapeHtml(query)}"><button class="button button-primary" type="submit">Search</button></form><div class="search-hint">Searches titles, headings, and the complete lesson text.</div><div id="search-output" aria-live="polite">${renderSearchResults(query)}</div></main>`;
   bindCommon();
   const input = document.querySelector('#search-input');
   document.querySelector('#search-form').addEventListener('submit', event => { event.preventDefault(); pendingQuery = input.value.trim(); go(`/search${pendingQuery ? `?q=${encodeURIComponent(pendingQuery)}` : ''}`); });
@@ -296,9 +318,9 @@ function searchPage(query = '') {
   if (!query) input.focus({ preventScroll: true });
 }
 function renderSearchResults(query) {
-  if (!query.trim()) return '<div class="search-empty"><div class="empty-glyph">âŒ•</div><p>Search all lessons, modules, and headings.</p></div>';
-  if (!searchResults.length) return `<div class="search-empty"><div class="empty-glyph">âˆ…</div><p>No results for â€œ${escapeHtml(query)}â€. Try a broader term.</p></div>`;
-  return `<div class="search-summary">${searchResults.length} ${searchResults.length === 1 ? 'RESULT' : 'RESULTS'} <span>FROM THE COURSE</span></div><div class="search-results">${searchResults.map(result => `<a class="search-result" href="${lessonUrl(result.id)}" data-app-link="true"><span class="search-result-module">${escapeHtml(result.moduleTitle)} Â· LESSON ${String(result.order).padStart(2, '0')}</span><strong>${escapeHtml(result.title)}</strong><p>${escapeHtml(result.snippet)}</p><span class="result-arrow" aria-hidden="true">â†—</span></a>`).join('')}</div>`;
+  if (!query.trim()) return '<div class="search-empty"><div class="empty-glyph">⌕</div><p>Search all lessons, modules, and headings.</p></div>';
+  if (!searchResults.length) return `<div class="search-empty"><div class="empty-glyph">∅</div><p>No results for “${escapeHtml(query)}”. Try a broader term.</p></div>`;
+  return `<div class="search-summary">${searchResults.length} ${searchResults.length === 1 ? 'RESULT' : 'RESULTS'} <span>FROM THE COURSE</span></div><div class="search-results">${searchResults.map(result => `<a class="search-result" href="${lessonUrl(result.id)}" data-app-link="true"><span class="search-result-module">${escapeHtml(result.moduleTitle)} · LESSON ${String(result.order).padStart(2, '0')}</span><strong>${escapeHtml(result.title)}</strong><p>${escapeHtml(result.snippet)}</p><span class="result-arrow" aria-hidden="true">↗</span></a>`).join('')}</div>`;
 }
 function bindSearchResults() {
   document.querySelectorAll('.search-result[data-app-link="true"]').forEach((anchor, index) => anchor.addEventListener('click', event => {
@@ -336,17 +358,18 @@ function renderRoute() {
   if (!course) return;
   updateProgressChip();
   const route = activeRoute();
+  window.dispatchEvent(new CustomEvent('yaoguai:route', { detail: { activityId: route.type === 'lesson' ? `programming/${route.id}` : '' } }));
   if (route.type === 'lesson') {
     const lesson = flatLessons().find(item => item.id === route.id);
-    if (lesson) { document.title = `${lesson.title} â€” Yaoguai Programming`; lessonPage(lesson); }
+    if (lesson) { document.title = `${lesson.title} — Yaoguai Programming`; lessonPage(lesson); }
     else notFound();
   } else if (route.type === 'module') {
     const module = course.modules.find(item => item.id === route.id);
-    if (module) { document.title = `${module.title} â€” Yaoguai Programming`; modulePage(module); }
+    if (module) { document.title = `${module.title} — Yaoguai Programming`; modulePage(module); }
     else notFound();
-  } else if (route.type === 'resources') { document.title = 'Resources â€” Yaoguai Programming'; resourcesPage(); }
-  else if (route.type === 'search') { document.title = 'Search â€” Yaoguai Programming'; searchPage(route.query); }
-  else { document.title = 'Yaoguai Programming â€” Python Essentials'; homePage(); }
+  } else if (route.type === 'resources') { document.title = 'Resources — Yaoguai Programming'; resourcesPage(); }
+  else if (route.type === 'search') { document.title = 'Search — Yaoguai Programming'; searchPage(route.query); }
+  else { document.title = 'Yaoguai Programming — Python Essentials'; homePage(); }
 }
 function notFound() {
   app.innerHTML = `<main class="wrap page-wrap not-found"><div class="section-kicker">404 / LESSON NOT FOUND</div><h1>This path is lost.</h1><p>The lesson may have moved when the course content changed.</p>${routeLink('Return to the course', '/', 'button button-primary')}</main>`;

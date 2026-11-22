@@ -46,8 +46,11 @@ function renderDashboard() {
 
   const continueBtn = document.getElementById("continue-btn");
   if (continueBtn){
+    const last = window.YaoguaiTraining?.snapshot?.last_activity?.id;
+    const lastId = last?.startsWith("crypto/") ? last.replace(/^crypto\//, "").replace(/\/exercise\/[^/]+$/, "") : "";
+    const resumed = courseById(lastId);
     const firstUnfinished = courseOrdered().find(c => c.implemented && Progress.getLesson(c.id).status !== "done");
-    const target = firstUnfinished || courseOrdered().find(c => c.implemented);
+    const target = (resumed?.implemented && Progress.getLesson(resumed.id).status !== "done" ? resumed : null) || firstUnfinished || courseOrdered().find(c => c.implemented);
     if (target) continueBtn.href = `lessons/${target.id}.html`;
   }
 }

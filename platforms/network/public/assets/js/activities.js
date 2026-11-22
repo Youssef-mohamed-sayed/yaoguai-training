@@ -32,6 +32,7 @@ export function bindActivities(page, progress) {
           return;
         }
         if (result.correct) {
+          window.dispatchEvent(new Event("yaoguai:network-check-complete"));
           if (isFlag) {
             feedback.textContent = "Flag accepted. Challenge solved.";
           } else {
