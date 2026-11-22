@@ -47,9 +47,6 @@ function update() {
   }
   if (!current) return;
   const lesson = state.lessons[current];
-  const complete = document.querySelector("[data-complete]");
-  complete.textContent = lesson?.done ? "✓ Complete · undo" : "Mark complete";
-  complete.setAttribute("aria-pressed", String(Boolean(lesson?.done)));
   for (const button of document.querySelectorAll("[data-review]")) {
     button.dataset.label ??= button.textContent;
     const reviewed = Boolean(lesson?.exercises?.[button.dataset.review]);
@@ -89,14 +86,6 @@ for (const button of document.querySelectorAll("[data-copy]")) {
 window.addEventListener("yaoguai-progress", update);
 if (current) {
   bindActivities(current, progress);
-  document.querySelector("[data-completion]").hidden = false;
-  document.querySelector("[data-complete]").addEventListener("click", async () => {
-    if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
-      if (await window.YaoguaiTraining.complete(`network/${current.replace(/^\/network\//, '')}`)) progress.toggleLesson(current);
-      return;
-    }
-    progress.toggleLesson(current);
-  });
   progress.visit(current);
 } else {
   update();

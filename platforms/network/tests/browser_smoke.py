@@ -82,6 +82,13 @@ class BrowserFlow(unittest.TestCase):
         self.assert_status(challenge, "Flag accepted")
         self.assertEqual(self.page.locator("details.solution[open]").count(), 0)
 
+        for activity, answers in (("check-2", ["1", "3", "2", "7"]), ("check-3", ["2", "3", "3/4"])):
+            task_form = self.page.locator(f'[data-grade="{activity}"]')
+            for control, value in zip(task_form.locator("input").all(), answers):
+                control.fill(value)
+            task_form.locator("button").click()
+            self.assert_status(task_form, "Correct.")
+
         hints = self.page.locator(".hint").first
         hints.locator("summary").first.click()
         self.assertEqual(hints.locator(".hint-step").count(), 3)
@@ -91,10 +98,9 @@ class BrowserFlow(unittest.TestCase):
         self.assertTrue(solution.locator("p").first.is_visible())
         solution.locator("summary").click()
 
-        self.page.locator("[data-complete]").click()
+        self.assertEqual(self.page.locator("[data-complete]").count(), 0)
         self.page.reload()
         self.page.wait_for_load_state("networkidle")
-        self.assertEqual(self.page.locator("[data-complete]").get_attribute("aria-pressed"), "true")
         self.assertIn("1/34", self.page.locator("[data-progress-count]").inner_text())
         self.page.screenshot(path=str(self.output / "lesson-desktop.png"), full_page=True)
         self.page.locator('a[rel="next"]').click()
@@ -159,8 +165,8 @@ class BrowserFlow(unittest.TestCase):
             });
         """)
         self.visit("/network/networking-fundamentals/osi-model")
-        self.page.locator("[data-complete]").click()
-        self.assertEqual(self.page.locator("[data-complete]").get_attribute("aria-pressed"), "true")
+        self.assertEqual(self.page.locator("[data-complete]").count(), 0)
+        self.assertTrue(self.page.locator("article.markdown").is_visible())
         self.assertEqual(self.errors, [])
 
 

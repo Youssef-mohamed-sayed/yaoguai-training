@@ -39,6 +39,19 @@ export function bindActivities(page, progress) {
             feedback.textContent = "Correct. Open Check Your Answer for the explanation.";
           }
           progress.activity(page, activity, form.dataset.kind);
+          const tasks = [...document.querySelectorAll("[data-grade]")];
+          const state = progress.read().lessons[page];
+          const allTasksSolved = tasks.length > 0 && tasks.every(task => {
+            const results = state?.[task.dataset.kind === "challenge" ? "challenges" : "exercises"];
+            return Boolean(results?.[task.dataset.grade]);
+          });
+          if (allTasksSolved) {
+            if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
+              await window.YaoguaiTraining.complete(`network/${page.replace(/^\/network\//, "")}`);
+            } else {
+              progress.completeFromTasks(page);
+            }
+          }
         } else {
           feedback.textContent = isFlag ? "Flag not accepted. Check the format and try again."
             : `${result.fields.filter(Boolean).length}/${fields.length} correct. Review the highlighted answers and try again.`;

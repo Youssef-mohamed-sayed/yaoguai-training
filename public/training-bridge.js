@@ -120,12 +120,6 @@
     await refresh();
     activeId = identify();
     await visit(activeId);
-    document.addEventListener('click', async event => {
-      if (event.target.closest('[data-complete], #complete-lesson, #complete-btn')) {
-        // The course-specific handler owns the action and may enforce its own completion rules.
-        setTimeout(refresh, 500);
-      }
-    }, true);
     window.addEventListener('yaoguai:route', event => visit(event.detail?.activityId || identify()));
     window.addEventListener('yaoguai:network-check-complete', refresh);
   })();

@@ -39,6 +39,7 @@ async function checkTask(btn, expected, inputSelector){
     const sectionId = task.closest(".lsec")?.id;
     if (lessonId && sectionId) Progress.setSectionSeen(lessonId, sectionId);
     updateProgressUI();
+    await _completeIfTasksSolved();
   }
 }
 
@@ -63,6 +64,7 @@ async function pickMC(optEl, correctId){
     const sectionId = task.closest(".lsec")?.id;
     if (lessonId && sectionId) Progress.setSectionSeen(lessonId, sectionId);
     updateProgressUI();
+    await _completeIfTasksSolved();
   }
 }
 
@@ -87,7 +89,22 @@ async function checkFlag(btn, expectedFlag){
     if (lessonId) Progress.setChallengeSolved(lessonId);
     updateProgressUI();
     input.style.borderColor = "var(--ok)";
+    await _completeIfTasksSolved();
   }
+}
+
+async function _completeIfTasksSolved(){
+  const feedback = [...document.querySelectorAll(".task .task-fb, .ctf .task-fb, .ctf .ctf-fb")];
+  if (!feedback.length || feedback.some(item => !item.classList.contains("ok"))) return;
+  const lessonId = document.body.dataset.lesson;
+  if (!lessonId) return;
+  if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
+    const activityId = `crypto/${lessonId}`;
+    if (!window.YaoguaiTraining.isComplete(activityId)) await window.YaoguaiTraining.complete(activityId);
+  } else {
+    Progress.markComplete(lessonId);
+  }
+  updateProgressUI();
 }
 
 function updateProgressUI(){
@@ -97,21 +114,4 @@ function updateProgressUI(){
   const pct = Progress.computePct(lessonId, totalSections);
   const chip = document.querySelector(".progress-chip");
   if (chip) chip.textContent = `progress: ${pct}%`;
-}
-
-async function markLessonComplete(){
-  if (!await _checkAuth("Please log in or create an account to mark modules complete and record your progress.")) {
-    return;
-  }
-
-  const lessonId = document.body.dataset.lesson;
-  if (!lessonId) return;
-  if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
-    const saved = await window.YaoguaiTraining.complete(`crypto/${lessonId}`);
-    if (!saved) return;
-  }
-  Progress.markComplete(lessonId);
-  updateProgressUI();
-  const btn = document.getElementById("complete-btn");
-  if (btn){ btn.textContent = "✓ marked complete"; btn.disabled = true; }
 }

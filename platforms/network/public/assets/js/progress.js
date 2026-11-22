@@ -35,11 +35,11 @@ export const progress = {
       lesson(data, url).started = true;
     });
   },
-  toggleLesson(url) {
+  completeFromTasks(url) {
     update(data => {
       const entry = lesson(data, url);
-      if (window.YaoguaiAccountUser && entry.done) return;
-      entry.done = !entry.done;
+      entry.started = true;
+      entry.done = true;
     });
   },
   activity(url, id, kind, toggle = false) {
