@@ -1,0 +1,21 @@
+# Historical course source copies are not part of the unified deployment.
+Yaoguai-Crypto/
+Yaoguai-Linux/
+Yaoguai-Network/
+Yaoguai-Programming/
+
+# Build dependencies are installed by the Vercel build command.
+node_modules/
+**/node_modules/
+backend/.venv/
+**/.venv/
+.git/
+.vercel/
+.pytest_cache/
+**/__pycache__/
+tests/
+backend/tests/
+
+# Local configuration and the source archive are never deployment inputs.
+.env.local
+platforms/crypto/Yaoguai-Crypto.rar
