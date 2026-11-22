@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from ..extensions import db
 from ..models import LearningActivity, Module, Platform
@@ -9,7 +10,9 @@ catalog_bp = Blueprint("catalog", __name__)
 
 @catalog_bp.get("/platforms")
 def platforms():
-    rows = db.session.execute(select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)).scalars()
+    query = (select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)
+             .options(selectinload(Platform.modules).selectinload(Module.activities)))
+    rows = db.session.execute(query).scalars()
     return jsonify(data=[{"id": row.id, "name": row.name, "description": row.description,
                           "modules_count": len(row.modules),
                           "activities_count": sum(len(module.activities) for module in row.modules)} for row in rows])
@@ -17,9 +20,10 @@ def platforms():
 
 @catalog_bp.get("/platforms/<platform_id>/modules")
 def platform_modules(platform_id):
-    rows = db.session.execute(select(Module).where(
+    query = select(Module).where(
         Module.platform_id == platform_id, Module.is_active.is_(True)
-    ).order_by(Module.sort_order)).scalars()
+    ).order_by(Module.sort_order).options(selectinload(Module.activities))
+    rows = db.session.execute(query).scalars()
     return jsonify(data=[{"id": row.id, "title": row.title, "description": row.description,
                           "activity_count": sum(activity.is_required for activity in row.activities)} for row in rows])
 

@@ -75,6 +75,37 @@ def test_progress_dashboard_reads_member_activity_progress_in_one_batch(app, cli
     assert len(progress_reads) == 1
 
 
+def test_catalog_endpoints_batch_module_activity_queries(app, client):
+    with app.app_context():
+        platform = Platform(id="programming", name="Programming", sort_order=1)
+        db.session.add(platform)
+        for index in range(20):
+            module_id = f"programming/catalog-{index}"
+            module = Module(id=module_id, platform=platform, title=f"Module {index}", sort_order=index)
+            activity = LearningActivity(id=f"{module_id}/lesson", module=module,
+                                        stable_key="lesson", title="Lesson", activity_type="lesson",
+                                        sort_order=1, is_required=True)
+            db.session.add_all([module, activity])
+        db.session.commit()
+
+    statements = []
+    def capture(_conn, _cursor, statement, *_args):
+        statements.append(statement)
+    with app.app_context():
+        event.listen(db.engine, "before_cursor_execute", capture)
+    try:
+        catalog = client.get("/api/platforms")
+        catalog_reads = list(statements)
+        statements.clear()
+        modules = client.get("/api/platforms/programming/modules")
+    finally:
+        with app.app_context():
+            event.remove(db.engine, "before_cursor_execute", capture)
+    assert catalog.status_code == modules.status_code == 200
+    assert len([sql for sql in catalog_reads if "from learning_activities" in sql.lower()]) == 1
+    assert len([sql for sql in statements if "from learning_activities" in sql.lower()]) == 1
+
+
 def test_guest_can_read_catalog_but_cannot_read_personal_progress(app, client):
     make_lesson(app)
     assert client.get("/api/platforms").status_code == 200
