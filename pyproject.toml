@@ -3,6 +3,26 @@ name = "yaoguai-training"
 version = "1.0.0"
 requires-python = ">=3.12,<3.16"
 description = "Unified cybersecurity learning platform"
+dependencies = [
+    "Flask>=3.1,<4",
+    "Flask-Login>=0.6.3,<1",
+    "Flask-Migrate>=4.1,<5",
+    "Flask-SQLAlchemy>=3.1,<4",
+    "Flask-WTF>=1.2,<2",
+    "argon2-cffi>=23.1,<26",
+    "bcrypt>=4,<6",
+    "beautifulsoup4>=4.13,<5",
+    "email-validator>=2.2,<3",
+    "gunicorn>=23,<24",
+    "markdown-it-py>=4,<5",
+    "nh3>=0.3,<0.4",
+    "psycopg[binary]>=3.2,<4",
+    "Pygments>=2.19,<3",
+    "PyJWT>=2.8,<3",
+    "python-dotenv>=1,<2",
+    "requests>=2.31,<3",
+    "SQLAlchemy>=2,<3",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "backend/tests"]
