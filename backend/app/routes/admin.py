@@ -3,13 +3,14 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify
 from flask_login import current_user
 from sqlalchemy import func, select
+from sqlalchemy.orm import joinedload, selectinload
 
 from ..extensions import db
 from ..models import (LearningActivity, LearningTask, MemberGroup, MemberLevel, Module,
                       Platform, TaskAssignment, TaskRequirement, TaskSubmission, User,
                       UserActivityProgress, now_utc)
 from ..security import admin_required, error, json_object
-from ..services.progress import module_status, task_status
+from ..services.progress import module_statuses, task_status
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -41,25 +42,51 @@ def member_json(user):
 def overview():
     total_members = db.session.scalar(select(func.count()).select_from(User).where(User.is_admin.is_(False))) or 0
     cutoff = now_utc().replace(hour=0, minute=0, second=0, microsecond=0)
-    active = db.session.scalar(select(func.count()).select_from(User).where(User.last_seen_at >= cutoff)) or 0
+    active = db.session.scalar(select(func.count()).select_from(User).where(
+        User.is_admin.is_(False), User.last_seen_at >= cutoff
+    )) or 0
     groups = db.session.scalar(select(func.count()).select_from(MemberGroup).where(MemberGroup.is_active.is_(True))) or 0
-    completed_modules = 0
+    platforms = db.session.execute(
+        select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)
+        .options(selectinload(Platform.modules))
+    ).scalars().all()
+    required_counts = dict(db.session.execute(
+        select(LearningActivity.module_id, func.count(LearningActivity.id))
+        .join(Module, Module.id == LearningActivity.module_id)
+        .where(LearningActivity.is_required.is_(True), LearningActivity.is_active.is_(True),
+               Module.is_active.is_(True), Module.platform_id.in_([platform.id for platform in platforms]))
+        .group_by(LearningActivity.module_id)
+    ).all())
+    per_member_module = (
+        select(UserActivityProgress.user_id.label("user_id"), LearningActivity.module_id.label("module_id"),
+               func.count(LearningActivity.id).label("completed_count"))
+        .join(LearningActivity, LearningActivity.id == UserActivityProgress.activity_id)
+        .join(Module, Module.id == LearningActivity.module_id)
+        .join(User, User.id == UserActivityProgress.user_id)
+        .where(User.is_admin.is_(False), User.is_active.is_(True),
+               UserActivityProgress.completed_at.is_not(None),
+               LearningActivity.is_required.is_(True), LearningActivity.is_active.is_(True),
+               Module.is_active.is_(True), Module.platform_id.in_([platform.id for platform in platforms]))
+        .group_by(UserActivityProgress.user_id, LearningActivity.module_id)
+        .subquery()
+    )
+    completion_counts = {}
+    for module_id, _user_id, completed_count in db.session.execute(select(
+        per_member_module.c.module_id, per_member_module.c.user_id, per_member_module.c.completed_count
+    )).all():
+        if completed_count == required_counts.get(module_id, 0):
+            completion_counts[module_id] = completion_counts.get(module_id, 0) + 1
     platform_stats = []
-    for platform in db.session.execute(select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)).scalars():
-        module_count = 0
-        completion_count = 0
-        for module in platform.modules:
-            if not module.is_active:
-                continue
-            module_count += 1
-            # Aggregate calculated from actual required activities, not a client flag.
-            users = db.session.execute(select(User.id).where(User.is_admin.is_(False), User.is_active.is_(True))).scalars()
-            completion_count += sum(module_status(uid, module)["completed"] for uid in users)
-        completed_modules += completion_count
+    for platform in platforms:
+        active_modules = [module for module in platform.modules if module.is_active]
+        completion_count = sum(completion_counts.get(module.id, 0) for module in active_modules)
         platform_stats.append({"id": platform.id, "name": platform.name,
-                               "modules": module_count, "member_module_completions": completion_count})
-    tasks = db.session.execute(select(LearningTask).where(LearningTask.is_active.is_(True))).scalars().all()
-    overdue = sum(bool(task.deadline_at and task.deadline_at < now_utc()) for task in tasks)
+                               "modules": len(active_modules), "member_module_completions": completion_count})
+    completed_modules = sum(item["member_module_completions"] for item in platform_stats)
+    overdue = db.session.scalar(select(func.count()).select_from(LearningTask).where(
+        LearningTask.is_active.is_(True), LearningTask.deadline_at.is_not(None),
+        LearningTask.deadline_at < now_utc(),
+    )) or 0
     submissions = db.session.scalar(select(func.count()).select_from(TaskSubmission).where(TaskSubmission.status == "submitted")) or 0
     return jsonify(data={"members": total_members, "active_today": active, "groups": groups,
                          "completed_modules": completed_modules, "outstanding_tasks": submissions,
@@ -69,7 +96,8 @@ def overview():
 @admin_bp.get("/members")
 @admin_required
 def members():
-    query = select(User).where(User.is_admin.is_(False)).order_by(User.created_at.desc()).limit(200)
+    query = (select(User).where(User.is_admin.is_(False)).order_by(User.created_at.desc()).limit(200)
+             .options(joinedload(User.level), selectinload(User.groups)))
     search = (request_arg("q") or "").strip()
     level_id = request_arg("level_id")
     if search:
@@ -93,13 +121,23 @@ def member_detail(user_id):
     if not user:
         return error("member_not_found", "Member not found", 404)
     progress = []
-    platforms = db.session.execute(select(Platform).order_by(Platform.sort_order)).scalars()
+    platforms = db.session.execute(
+        select(Platform).order_by(Platform.sort_order)
+        .options(selectinload(Platform.modules).selectinload(Module.activities))
+    ).scalars().all()
+    all_modules = [module for platform in platforms for module in platform.modules]
+    statuses = module_statuses(user.id, all_modules)
     for platform in platforms:
         for module in platform.modules:
             progress.append({"platform": platform.id, "module": module.id, "title": module.title,
-                             **module_status(user.id, module)})
+                             **statuses[module.id]})
     group_ids = {group.id for group in user.groups}
-    tasks = [task for task in db.session.execute(select(LearningTask)).scalars()
+    task_query = select(LearningTask).options(
+        selectinload(LearningTask.assignments).selectinload(TaskAssignment.user),
+        selectinload(LearningTask.assignments).selectinload(TaskAssignment.group),
+        selectinload(LearningTask.requirements),
+    )
+    tasks = [task for task in db.session.execute(task_query).scalars()
              if any(assignment.user_id == user.id or assignment.group_id in group_ids
                     for assignment in task.assignments)]
     now = now_utc()
@@ -287,7 +325,13 @@ def create_task():
 @admin_bp.get("/tasks")
 @admin_required
 def admin_tasks():
-    rows = db.session.execute(select(LearningTask).order_by(LearningTask.created_at.desc()).limit(200)).scalars()
+    query = (select(LearningTask).order_by(LearningTask.created_at.desc()).limit(200)
+             .options(
+                 selectinload(LearningTask.assignments).selectinload(TaskAssignment.user),
+                 selectinload(LearningTask.assignments).selectinload(TaskAssignment.group),
+                 selectinload(LearningTask.requirements),
+             ))
+    rows = db.session.execute(query).scalars()
     return jsonify(data=[{"id": task.id, "title": task.title,
                           "deadline_at": task.deadline_at.isoformat() if task.deadline_at else None,
                           "assignments": len(task.assignments), "requirements": len(task.requirements),

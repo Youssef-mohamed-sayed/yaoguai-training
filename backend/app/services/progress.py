@@ -5,30 +5,45 @@ from ..models import LearningActivity, Module, TaskRequirement, TaskSubmission, 
 
 
 def module_status(user_id, module):
-    required = [activity for activity in module.activities if activity.is_required and activity.is_active]
-    if not required:
-        return {"completed": False, "completed_count": 0, "required_count": 0, "activities": []}
+    return module_statuses(user_id, [module])[module.id]
+
+
+def module_statuses(user_id, modules):
+    """Build progress for a module set with one progress query, not one per module."""
+    required_by_module = {
+        module.id: [activity for activity in module.activities if activity.is_required and activity.is_active]
+        for module in modules
+    }
+    activity_ids = [activity.id for activities in required_by_module.values() for activity in activities]
+    if not activity_ids:
+        return {module_id: {"completed": False, "completed_count": 0,
+                            "required_count": 0, "activities": []}
+                for module_id in required_by_module}
     progress = {
         row.activity_id: row
         for row in db.session.execute(
             select(UserActivityProgress).where(
                 UserActivityProgress.user_id == user_id,
-                UserActivityProgress.activity_id.in_([activity.id for activity in required]),
+                UserActivityProgress.activity_id.in_(activity_ids),
             )
         ).scalars()
     }
-    items = []
-    for activity in required:
-        record = progress.get(activity.id)
-        is_done = bool(record and record.completed_at)
-        items.append({"id": activity.id, "title": activity.title, "type": activity.activity_type,
-                      "completed": is_done, "started": bool(record and (record.time_spent_seconds or record.attempt_count or record.last_heartbeat_at)),
-                      "time_spent_seconds": record.time_spent_seconds if record else 0,
-                      "score": record.score if record else None,
-                      "attempts": record.attempt_count if record else 0})
-    completed_count = sum(item["completed"] for item in items)
-    return {"completed": completed_count == len(required), "completed_count": completed_count,
-            "required_count": len(required), "activities": items}
+    result = {}
+    for module_id, activities in required_by_module.items():
+        items = []
+        for activity in activities:
+            record = progress.get(activity.id)
+            is_done = bool(record and record.completed_at)
+            items.append({"id": activity.id, "title": activity.title, "type": activity.activity_type,
+                          "completed": is_done, "started": bool(record and (record.time_spent_seconds or record.attempt_count or record.last_heartbeat_at)),
+                          "time_spent_seconds": record.time_spent_seconds if record else 0,
+                          "score": record.score if record else None,
+                          "attempts": record.attempt_count if record else 0})
+        completed_count = sum(item["completed"] for item in items)
+        result[module_id] = {"completed": completed_count > 0 and completed_count == len(activities),
+                             "completed_count": completed_count,
+                             "required_count": len(activities), "activities": items}
+    return result
 
 
 def task_status(user_id, task):

@@ -60,7 +60,9 @@ def create_app(test_config=None):
 
     @app.before_request
     def api_rate_limit():
-        if request.path.startswith("/api/") and not allow_auth_attempt("api", 240, 60):
+        if (request.path.startswith("/api/") and request.method not in {"GET", "HEAD", "OPTIONS"}
+                and not request.path.startswith("/api/auth/")
+                and not allow_auth_attempt("api-write", 240, 60)):
             return jsonify(error={"code": "rate_limited", "message": "Too many requests. Try again shortly."}), 429
 
     @app.get("/admin")

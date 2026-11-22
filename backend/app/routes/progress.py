@@ -1,11 +1,12 @@
 from flask import Blueprint, jsonify
 from flask_login import current_user
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from ..extensions import db
 from ..models import ActivityVisit, LearningActivity, Module, Platform, UserActivityProgress, now_utc
 from ..security import authenticated_required, error, json_object
-from ..services.progress import module_status, task_status
+from ..services.progress import module_status, module_statuses, task_status
 
 progress_bp = Blueprint("progress", __name__)
 
@@ -127,7 +128,12 @@ def submit_attempt(activity_id):
 @progress_bp.get("/progress")
 @authenticated_required
 def dashboard_progress():
-    platforms = db.session.execute(select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)).scalars()
+    platforms = db.session.execute(
+        select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)
+        .options(selectinload(Platform.modules).selectinload(Module.activities))
+    ).scalars().all()
+    all_modules = [module for platform in platforms for module in platform.modules if module.is_active]
+    statuses = module_statuses(current_user.id, all_modules)
     result = []
     total_required = total_complete = 0
     for platform in platforms:
@@ -135,7 +141,7 @@ def dashboard_progress():
         for module in platform.modules:
             if not module.is_active:
                 continue
-            status = module_status(current_user.id, module)
+            status = statuses[module.id]
             total_required += status["required_count"]
             total_complete += status["completed_count"]
             modules.append({"id": module.id, "title": module.title, **status})

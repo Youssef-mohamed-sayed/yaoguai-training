@@ -1,6 +1,7 @@
 import hashlib
 from datetime import datetime, timedelta, timezone
 import pytest
+from sqlalchemy import event
 
 from app import create_app
 from app.extensions import db
@@ -45,6 +46,33 @@ def test_lesson_requires_authenticated_open_and_module_progress_is_derived(app, 
     assert response.json["data"]["module"]["completed"] is True
     progress = client.get("/api/progress").json["data"]
     assert progress["overall"]["completion_percent"] == 100
+
+
+def test_progress_dashboard_reads_member_activity_progress_in_one_batch(app, client):
+    make_lesson(app)
+    with app.app_context():
+        for index in range(20):
+            module_id = f"programming/module-{index}"
+            module = Module(id=module_id, platform_id="programming", title=f"Module {index}", sort_order=index + 2)
+            activity = LearningActivity(id=f"{module_id}/lesson", module=module,
+                                        stable_key="lesson", title="Lesson", activity_type="lesson",
+                                        sort_order=1, is_required=True)
+            db.session.add_all([module, activity])
+        db.session.commit()
+    register(client)
+    statements = []
+    def capture(_conn, _cursor, statement, *_args):
+        statements.append(statement)
+    with app.app_context():
+        event.listen(db.engine, "before_cursor_execute", capture)
+    try:
+        response = client.get("/api/progress")
+    finally:
+        with app.app_context():
+            event.remove(db.engine, "before_cursor_execute", capture)
+    assert response.status_code == 200
+    progress_reads = [sql for sql in statements if "user_activity_progress" in sql.lower()]
+    assert len(progress_reads) == 1
 
 
 def test_guest_can_read_catalog_but_cannot_read_personal_progress(app, client):
@@ -211,6 +239,7 @@ def test_admin_dashboard_shows_member_progress_and_private_assigned_deadlines(ap
     module = next(row for row in record["progress"] if row["module"] == "programming/basics")
     assert module["completed_count"] == module["required_count"] == 1
     assert record["progress"]
+    assert client.get("/api/admin/overview").json["data"]["completed_modules"] == 1
     assigned = next(row for row in record["tasks"] if row["id"] == task["id"])
     assert assigned["deadline_at"] is not None
     assert assigned["completed_count"] == 1
