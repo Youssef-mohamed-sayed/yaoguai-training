@@ -69,7 +69,7 @@ def overview():
 @admin_bp.get("/members")
 @admin_required
 def members():
-    query = select(User).order_by(User.created_at.desc()).limit(200)
+    query = select(User).where(User.is_admin.is_(False)).order_by(User.created_at.desc()).limit(200)
     search = (request_arg("q") or "").strip()
     level_id = request_arg("level_id")
     if search:
@@ -98,13 +98,30 @@ def member_detail(user_id):
         for module in platform.modules:
             progress.append({"platform": platform.id, "module": module.id, "title": module.title,
                              **module_status(user.id, module)})
+    group_ids = {group.id for group in user.groups}
     tasks = [task for task in db.session.execute(select(LearningTask)).scalars()
-             if user.id in {assignment.user_id for assignment in task.assignments}
-             or any(user in assignment.group.members for assignment in task.assignments if assignment.group)]
+             if any(assignment.user_id == user.id or assignment.group_id in group_ids
+                    for assignment in task.assignments)]
+    now = now_utc()
+    task_rows = []
+    for task in tasks:
+        completion = task_status(user.id, task)
+        if completion["completed"]:
+            status = "completed"
+        elif task.deadline_at and task.deadline_at < now:
+            status = "overdue"
+        elif completion["completed_count"]:
+            status = "in_progress"
+        else:
+            status = "pending"
+        task_rows.append({"id": task.id, "title": task.title, "description": task.description,
+                          "instructions": task.instructions,
+                          "deadline_at": task.deadline_at.isoformat() if task.deadline_at else None,
+                          "status": status, **completion})
     submissions = db.session.execute(select(TaskSubmission).where(TaskSubmission.user_id == user.id)
                                      .order_by(TaskSubmission.submitted_at.desc())).scalars()
     return jsonify(data={"member": member_json(user), "progress": progress,
-                         "tasks": [{"id": task.id, "title": task.title, **task_status(user.id, task)} for task in tasks],
+                         "tasks": task_rows,
                          "submissions": [{"id": item.id, "task_id": item.task_id, "status": item.status,
                                           "content": item.content, "feedback": item.feedback,
                                           "submitted_at": item.submitted_at.isoformat()} for item in submissions]})
@@ -159,6 +176,8 @@ def groups():
     return jsonify(data=[{"id": row.id, "name": row.name, "description": row.description,
                           "platform_id": row.platform_id, "level_id": row.level_id,
                           "member_count": len(row.members), "is_active": row.is_active,
+                          "members": [{"id": user.id, "username": user.username, "email": user.email}
+                                      for user in row.members],
                           "created_at": row.created_at.isoformat()} for row in rows])
 
 
@@ -272,6 +291,12 @@ def admin_tasks():
     return jsonify(data=[{"id": task.id, "title": task.title,
                           "deadline_at": task.deadline_at.isoformat() if task.deadline_at else None,
                           "assignments": len(task.assignments), "requirements": len(task.requirements),
+                          "targets": [{"type": "member", "id": assignment.user.id,
+                                       "name": assignment.user.username}
+                                      if assignment.user else
+                                      {"type": "group", "id": assignment.group.id,
+                                       "name": assignment.group.name}
+                                      for assignment in task.assignments],
                           "active": task.is_active} for task in rows])
 
 

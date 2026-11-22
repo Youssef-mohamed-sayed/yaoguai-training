@@ -6,7 +6,7 @@ from sqlalchemy import or_, select
 
 from ..extensions import db
 from ..models import LearningTask, MemberGroup, TaskAssignment, TaskSubmission, User, now_utc
-from ..security import authenticated_required, error, json_object
+from ..security import admin_required, error, json_object
 from ..services.progress import task_status
 
 assignments_bp = Blueprint("assignments", __name__)
@@ -57,13 +57,13 @@ def task_json(task, user_id):
 
 
 @assignments_bp.get("/assignments")
-@authenticated_required
+@admin_required
 def list_assignments():
     return jsonify(data=[task_json(task, current_user.id) for task in assigned_to(current_user.id)])
 
 
 @assignments_bp.get("/assignments/<task_id>")
-@authenticated_required
+@admin_required
 def assignment_detail(task_id):
     task = next((task for task in assigned_to(current_user.id) if task.id == task_id), None)
     if not task:
@@ -72,7 +72,7 @@ def assignment_detail(task_id):
 
 
 @assignments_bp.post("/assignments/<task_id>/submissions")
-@authenticated_required
+@admin_required
 def submit_task(task_id):
     task = next((task for task in assigned_to(current_user.id) if task.id == task_id), None)
     if not task:

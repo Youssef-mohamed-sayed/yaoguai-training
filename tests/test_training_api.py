@@ -1,4 +1,5 @@
 import hashlib
+from datetime import datetime, timedelta, timezone
 import pytest
 
 from app import create_app
@@ -161,3 +162,57 @@ def test_admin_can_manage_levels_groups_assignments_and_submission_review(app, c
         assert db.session.get(MemberGroup, group_id).members[0].id == admin["id"]
         assert db.session.get(LearningTask, task_id).title == "Review the lesson"
         assert db.session.get(TaskSubmission, submission_id).status == "approved"
+
+
+def test_admin_dashboard_shows_member_progress_and_private_assigned_deadlines(app, client):
+    activity_id = make_lesson(app)
+    admin = register(client, "dashboard-admin")
+    with app.app_context():
+        db.session.get(User, admin["id"]).is_admin = True
+        db.session.commit()
+    client.post("/api/auth/logout", json={})
+    learner = register(client, "dashboard-learner")
+    client.post("/api/auth/logout", json={})
+    other = register(client, "unassigned-learner")
+
+    # Task definitions and deadlines are private to the administrator.
+    client.post("/api/auth/logout", json={})
+    client.post("/api/auth/login", json={"username": admin["username"], "password": "a-strong-test-password"})
+    assert client.get("/api/admin/members").status_code == 200
+    assert all(row["id"] != admin["id"] for row in client.get("/api/admin/members").json["data"])
+    group = client.post("/api/admin/groups", json={"name": "Dashboard cohort"}).json["data"]
+    assert client.put(f"/api/admin/groups/{group['id']}/members/{learner['id']}", json={}).status_code == 200
+    deadline = (datetime.now(timezone.utc) + timedelta(days=3)).isoformat()
+    task = client.post("/api/admin/tasks", json={
+        "title": "Complete the first program", "instructions": "Work through the activity",
+        "platform_id": "programming", "module_id": "programming/basics",
+        "group_ids": [group["id"]], "deadline_at": deadline,
+        "requirements": [{"activity_id": activity_id}],
+    }).json["data"]
+
+    client.post("/api/auth/logout", json={})
+    client.post("/api/auth/login", json={"username": learner["username"], "password": "a-strong-test-password"})
+    assert client.post("/api/progress/visits", json={"activity_id": activity_id}).status_code == 201
+    assert client.post(f"/api/progress/activities/{activity_id}/complete", json={}).status_code == 200
+    assert client.get("/api/assignments").status_code == 403
+    assert client.get(f"/api/assignments/{task['id']}").status_code == 403
+
+    client.post("/api/auth/logout", json={})
+    client.post("/api/auth/login", json={"username": other["username"], "password": "a-strong-test-password"})
+    assert client.get("/api/assignments").status_code == 403
+    assert client.get(f"/api/assignments/{task['id']}").status_code == 403
+    assert client.get(f"/api/admin/members/{learner['id']}").status_code == 403
+
+    client.post("/api/auth/logout", json={})
+    client.post("/api/auth/login", json={"username": admin["username"], "password": "a-strong-test-password"})
+    detail = client.get(f"/api/admin/members/{learner['id']}")
+    assert detail.status_code == 200
+    record = detail.json["data"]
+    module = next(row for row in record["progress"] if row["module"] == "programming/basics")
+    assert module["completed_count"] == module["required_count"] == 1
+    assert record["progress"]
+    assigned = next(row for row in record["tasks"] if row["id"] == task["id"])
+    assert assigned["deadline_at"] is not None
+    assert assigned["completed_count"] == 1
+    admin_tasks = client.get("/api/admin/tasks").json["data"]
+    assert any(target["name"] == "Dashboard cohort" for target in next(row for row in admin_tasks if row["id"] == task["id"])["targets"])
