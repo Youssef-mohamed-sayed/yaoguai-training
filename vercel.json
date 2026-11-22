@@ -13,15 +13,16 @@
     { "source": "/crypto", "destination": "/crypto/", "permanent": false }
   ],
   "rewrites": [
-    { "source": "/network", "destination": "/api/site/network" },
-    { "source": "/network/:path*", "destination": "/api/site/network/:path*" },
-    { "source": "/linux", "destination": "/api/site/linux" },
-    { "source": "/linux/:path*", "destination": "/api/site/linux/:path*" },
-    { "source": "/programming", "destination": "/api/site/programming" },
-    { "source": "/programming/:path*", "destination": "/api/site/programming/:path*" },
-    { "source": "/crypto", "destination": "/api/site/crypto" },
-    { "source": "/crypto/:path*", "destination": "/api/site/crypto/:path*" },
-    { "source": "/admin", "destination": "/api/site/admin" },
-    { "source": "/reset-password", "destination": "/api/site/reset-password" }
+    { "source": "/api/:path*", "destination": "/api?route=/api/:path*" },
+    { "source": "/network", "destination": "/api?route=/network" },
+    { "source": "/network/:path*", "destination": "/api?route=/network/:path*" },
+    { "source": "/linux", "destination": "/api?route=/linux" },
+    { "source": "/linux/:path*", "destination": "/api?route=/linux/:path*" },
+    { "source": "/programming", "destination": "/api?route=/programming" },
+    { "source": "/programming/:path*", "destination": "/api?route=/programming/:path*" },
+    { "source": "/crypto", "destination": "/api?route=/crypto" },
+    { "source": "/crypto/:path*", "destination": "/api?route=/crypto/:path*" },
+    { "source": "/admin", "destination": "/api?route=/admin" },
+    { "source": "/reset-password", "destination": "/api?route=/reset-password" }
   ]
 }
