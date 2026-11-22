@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Encoding â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="url">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding" class="active">Encoding</a>
+      <a href="../index.html#encryption">Encryption</a>
+      <a href="../index.html#hashing">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">ENCODING Â· MODULE 04</div>
+      <h1>URL Encoding</h1>
+      <div class="native">ç™¾åˆ†ç¬¦å·åŒ– â€” percent-encoding</div>
+      <div class="lesson-meta">
+        <span class="badge easy">Easy</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>Why URLs can't contain arbitrary characters, and what percent-encoding fixes</li>
+          <li>How to read and produce <code>%XX</code> escapes by hand</li>
+          <li>How this plugs into Python's <code>urllib.parse</code></li>
+          <li>Why double-encoding is a real class of web security bug, not just a curiosity</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>URLs can only safely contain a small, restricted set of characters. The moment your data includes a space, an ampersand, or a non-English letter, it has to be escaped first â€” that escaping is URL encoding (also called "percent-encoding"). It's the last encoding module before the course moves into real encryption, closing out the "representation, not protection" theme one more time.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>URL encoding comes from the URI specification (RFC 1738, 1994, later refined by RFC 3986), which had to define exactly which characters were "safe" to appear literally in a web address and which weren't â€” because characters like <code>&amp;</code>, <code>?</code>, <code>=</code>, and space have special meaning in a URL's own structure (separating parameters, marking the start of a query string, etc.). Any data placed inside a URL that might contain those characters needs percent-encoding so the URL still parses correctly. It's still exactly as necessary today as it was in the 1990s, every time user input ends up in a query string.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define"><span class="term">DEFINITION</span><p>URL encoding replaces any character that isn't safe for a URL with <code>%</code> followed by its byte value in hex. A literal space becomes <code>%20</code> (or sometimes <code>+</code> in query strings specifically).</p></div>
+      <p>Notice the hex you already know is doing the actual work here â€” <code>%20</code> is just "%", then the hex byte value of a space (32 decimal = 0x20).</p>
+      <table class="cmp">
+        <tr><th>Character</th><th>Encoded</th></tr>
+        <tr><td>space</td><td><code>%20</code></td></tr>
+        <tr><td><code>&amp;</code></td><td><code>%26</code></td></tr>
+        <tr><td><code>/</code></td><td><code>%2F</code></td></tr>
+        <tr><td><code>Ã©</code></td><td><code>%C3%A9</code> (2 UTF-8 bytes)</td></tr>
+      </table>
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">identify</span></div>
+        <div class="task-body">
+          <p>What hex byte value does <code>%26</code> represent, and which character is that?</p>
+          <input type="text" placeholder="character">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'&')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” 0x26 = 38 decimal = '&amp;'."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How it works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Text</span><i>â†’</i><span>UTF-8 bytes</span><i>â†’</i><span>Unsafe byte?</span><i>â†’</i><span>"%" + 2 hex digits</span><i>â†’</i><span>Safe URL string</span></div>
+      <p>Letters, digits, and a small set of punctuation (<code>- _ . ~</code>) pass through unchanged â€” everything else gets converted byte-by-byte to its hex value, prefixed with <code>%</code>. A non-ASCII character like <code>Ã©</code> is first turned into its multi-byte UTF-8 representation, and <em>each</em> of those bytes gets percent-encoded separately â€” which is why it took two <code>%XX</code> groups above.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">predict output</span></div>
+        <div class="task-body">
+          <p>What would <code>url_encode("a b")</code> return?</p>
+          <input type="text" placeholder="encoded string">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'a%20b')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” only the space needs encoding."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="URL encoding in Python">
+      <h2><span class="mk"></span>URL encoding in Python</h2>
+      <span class="code-label">encoding.py</span>
+      <pre class="code"><span class="kw">from</span> urllib.parse <span class="kw">import</span> quote, unquote
+
+<span class="kw">def</span> url_encode(data: str) -> str:
+    <span class="kw">return</span> quote(data, safe=<span class="str">""</span>)
+
+<span class="kw">def</span> url_decode(data: str) -> str:
+    <span class="kw">return</span> unquote(data)</pre>
+      <pre class="code">encoded = url_encode(<span class="str">"hello world!"</span>)
+<span class="kw">print</span>(encoded)              <span class="cmt"># hello%20world%21</span>
+<span class="kw">print</span>(url_decode(encoded))  <span class="cmt"># hello world!</span></pre>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">complete the code</span></div>
+        <div class="task-body">
+          <p>Fill in the missing call so this round-trips:</p>
+          <pre class="code">e = url_encode("a&b")
+d = ______(e)
+assert d == "a&b"</pre>
+          <input type="text" placeholder="function name">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'url_decode')">Check</button></div>
+          <div class="task-fb" data-ok="Correct."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 04</b><span class="task-type">decode</span></div>
+        <div class="task-body">
+          <p>Decode: <code>flag%7Bpercent_encode%7D</code></p>
+          <input type="text" placeholder="decoded text">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'flag{percent_encode}')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” %7B and %7D are '{' and '}'."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>Keeps URLs parseable</strong> â€” guarantees structural characters in a URL mean what the URL spec expects, not arbitrary user data.</li>
+        <li><strong>Lossless and standardized</strong> (RFC 3986) â€” every web framework implements it identically.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger"><p><strong>Zero confidentiality</strong> â€” same theme one more time: no key, instantly reversible. A URL-encoded parameter is not a hidden or protected value.</p></div>
+      <div class="callout warn"><p><strong>Implementation weakness â€” double encoding and encoding confusion:</strong> if a value gets URL-encoded twice (once by mistake), or a server decodes input at the wrong layer, attackers can sometimes smuggle characters past security filters that only checked the raw (undecoded) input â€” a real class of web vulnerability called <strong>encoding/parsing confusion</strong>.</p></div>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>URL encoding shows up constantly in web security: reading intercepted HTTP requests/responses (Burp Suite, browser dev tools), understanding query-string parameters in web CTF challenges, and recognizing encoding-based filter bypasses (e.g. encoding a quote or angle bracket to slip past a naive input filter that only checks for the literal character, not its encoded form). This closes out the encoding category â€” everything from here on uses a real key.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· QUERY STRING</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A captured request has a query parameter: <code>?msg=flag%7Burl%5Fencoding%5Fhides%5Fnothing%7D</code></p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Decode the <code>msg</code> parameter's value.</p></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code></p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p><code>%5F</code> is one specific punctuation character â€” look up 0x5F.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{url_encoding_hides_nothing}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>PYTHON</h5>
+              <pre class="code"><span class="kw">from</span> urllib.parse <span class="kw">import</span> unquote
+<span class="kw">print</span>(unquote(<span class="str">"flag%7Burl%5Fencoding%5Fhides%5Fnothing%7D"</span>))</pre>
+              <h5>FLAG</h5>
+              <p><code>flag{url_encoding_hides_nothing}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>URL encoding escapes unsafe characters as <code>%</code> + hex byte value, so URLs stay structurally valid.</li>
+        <li>No key, no secrecy â€” it's representation only, same as every encoding module.</li>
+        <li>Double-encoding or decode/parse mismatches are a real web-security bug class, not a strength of the format.</li>
+        <li>This is the last encoding module â€” from here, every module introduces a real key.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

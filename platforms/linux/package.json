@@ -1,0 +1,21 @@
+{
+  "name": "yaoguai-linux",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/build-course.js && vite build --base=/linux/",
+    "pretest": "node scripts/build-course.js",
+    "test": "node --test",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.6",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.12"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}

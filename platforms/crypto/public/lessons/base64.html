@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base64 â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="base64">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding" class="active">Encoding</a>
+      <a href="../index.html#encryption">Encryption</a>
+      <a href="../index.html#hashing">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">ENCODING Â· MODULE 02</div>
+      <h1>Base64</h1>
+      <div class="native">åŸºæ•°64 â€” binary-to-text</div>
+      <div class="lesson-meta">
+        <span class="badge beginner">Beginner</span>
+        <div class="diffmeter"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>Why binary data can't just be dropped into text formats like JSON or email</li>
+          <li>How Base64 packs bytes into a 64-character alphabet, 6 bits at a time</li>
+          <li>Why Base64 output is ~33% longer than the original data, and what the <code>=</code> padding means</li>
+          <li>Why a Base64 string "looking encrypted" is a beginner trap, not a security property</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>You've seen Base64 even if you didn't know its name: image data embedded in HTML (<code>data:image/png;base64,...</code>), JWT tokens, email attachments, API keys. Base64 exists to answer one problem: how do you put arbitrary binary bytes somewhere that only expects plain, printable text?</p>
+      <p>Following hex, this is the second encoding you need fluent recognition of â€” in CTFs, a block of letters/digits/<code>+ /</code> ending in <code>=</code> or <code>==</code> is almost always Base64 on sight.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>Base64 grew out of early email: the original internet mail standard (SMTP) only guaranteed safe delivery of 7-bit ASCII text, so attaching a binary file (an image, a zip) directly would corrupt it in transit. MIME (Multipurpose Internet Mail Extensions, early 1990s) standardized Base64 as the way to encode binary attachments as safe text. The same problem â€” "I need to put bytes somewhere that only likes text" â€” still exists today in JSON, URLs and config files, which is why Base64 never went away.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define">
+        <span class="term">DEFINITION</span>
+        <p>Base64 represents binary data using a fixed alphabet of 64 printable characters: <code>A-Z a-z 0-9 + /</code> (and <code>=</code> for padding). Each output character encodes 6 bits, so every 3 bytes (24 bits) of input become exactly 4 Base64 characters.</p>
+      </div>
+      <p>Why 6 bits? Because 2â¶ = 64 â€” exactly the size of the alphabet. This is the same idea as hex (2â´ = 16 symbols, 4 bits per digit), just with a bigger alphabet and fewer characters needed per byte.</p>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How it works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Bytes</span><i>â†’</i><span>Group into 3-byte (24-bit) chunks</span><i>â†’</i><span>Split into four 6-bit groups</span><i>â†’</i><span>Look up each in the 64-char table</span></div>
+      <p>Take the letter "M" (byte value 77 = binary <code>01001101</code>). Base64 needs 3 bytes at a time (24 bits) to divide evenly into four 6-bit groups, so "Man" (3 bytes) is the classic textbook example:</p>
+      <pre class="code">M       a       n
+01001101 01100001 01101110   (24 bits)
+
+010011 010110 000101 101110   (regrouped into four 6-bit chunks)
+ 19     22      5     46
+ T      W       F      u       (looked up in the Base64 table)
+
+"Man" -> "TWFu"</pre>
+      <p>When the input length isn't a multiple of 3 bytes, the last group is padded with zero bits and the output is padded with <code>=</code> characters so the length still comes out even â€” that's what those trailing equals signs mean.</p>
+
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">identify</span></div>
+        <div class="task-body">
+          <p>Which of these two strings is Base64, and which is hex?</p>
+          <p><code>A:</code> <code>666c6167</code> &nbsp;&nbsp; <code>B:</code> <code>ZmxhZw==</code></p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">A is Base64, B is hex</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">B is Base64 (note the == padding and mixed-case letters), A is hex (only 0-9, a-f)</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” hex never uses capital letters beyond a-f or '=' padding; Base64 does."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="Base64 in Python">
+      <h2><span class="mk"></span>Base64 in Python</h2>
+      <span class="code-label">encoding.py</span>
+      <pre class="code"><span class="kw">import</span> base64
+
+<span class="kw">def</span> base64_encode(data: str) -> str:
+    <span class="kw">return</span> base64.b64encode(data.encode(<span class="str">"utf-8"</span>)).decode(<span class="str">"ascii"</span>)
+
+<span class="kw">def</span> base64_decode(data: str) -> str:
+    <span class="kw">return</span> base64.b64decode(data).decode(<span class="str">"utf-8"</span>, errors=<span class="str">"replace"</span>)</pre>
+      <p>Python's standard library does the bit-regrouping for you â€” <code>base64.b64encode</code> takes raw bytes and returns Base64 bytes, so we decode those to a normal string with <code>.decode("ascii")</code> since Base64 output is always plain ASCII.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">complete the code</span></div>
+        <div class="task-body">
+          <p>Fill in the blank so this prints the encoded form of "hack":</p>
+          <pre class="code">encoded = ______("hack")
+print(encoded)   # aGFjaw==</pre>
+          <input type="text" placeholder="function name">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'base64_encode')">Check</button></div>
+          <div class="task-fb" data-ok="Correct."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">decode</span></div>
+        <div class="task-body">
+          <p>Decode this Base64 string:</p>
+          <pre class="code">Q1RGe2Jhc2U2NH0=</pre>
+          <input type="text" placeholder="decoded text">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'CTF{base64}')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” CTF{base64}"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>Safe for text-only channels</strong> â€” guaranteed to survive email, JSON, URLs (with minor variants), XML.</li>
+        <li><strong>Deterministic and lossless</strong> â€” always reversible, exactly.</li>
+        <li><strong>Standardized</strong> â€” every language's standard library implements it the same way.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger">
+        <p><strong>Base64 provides zero confidentiality</strong> â€” same trap as hex. It is encoding, not encryption: no key, instantly reversible by anyone, including an attacker. Developers sometimes "hide" API keys or passwords in Base64 in config files or source code, which is a false sense of security â€” a one-line decode recovers them.</p>
+      </div>
+      <p>It's also ~33% less space-efficient than raw binary, since 3 bytes always become 4 characters â€” a real but minor cost, not a security issue.</p>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>Base64 shows up in HTTP Basic Auth headers, JWTs, cookies, malware configuration blobs, and leaked credential dumps. In forensics and malware analysis, spotting Base64 â€” and immediately decoding it rather than treating it as "encrypted" â€” is a reflex you need. In web security, Base64-encoded parameters are a common place to find hidden serialized objects, IDs, or even embedded SQL/command injection payloads once decoded.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· DOUBLE WRAPPED</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>An intercepted cookie value turned out to be Base64 â€” but decoding it once still doesn't look like plaintext.</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Fully recover the flag. You may need to decode more than once, and in more than one encoding.</p></div>
+          <div class="ctf-row"><span class="k">GIVEN DATA</span><pre class="code">WlcxaGFXd2dkR2hwY3k1cGJuTjBZV3hzSUhSb1pTQmhJbVoxWW14ZllYbHRkWFJsZWNnPQ==</pre></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code></p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>Decode it once with Base64. Look closely at the result â€” is it readable text, or does it look like another encoding?</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>The first decode gives you a hex string. Decode that hex too.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{layers_are_not_security}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>REASONING</h5>
+              <p>Base64-decoding the given string produces a hex string; hex-decoding that recovers the flag. Stacking encodings is still zero security â€” each layer peels off with no key.</p>
+              <h5>PYTHON</h5>
+              <pre class="code">step1 = base64_decode(<span class="str">"WlcxaGFX..."</span>)   <span class="cmt"># -> a hex string</span>
+flag  = hex_decode(step1)
+<span class="kw">print</span>(flag)</pre>
+              <h5>FLAG</h5>
+              <p><code>flag{layers_are_not_security}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>Base64 maps every 3 bytes of input to 4 printable characters from a 64-symbol alphabet.</li>
+        <li><code>=</code> padding appears when the input length isn't a multiple of 3 bytes.</li>
+        <li>It is encoding, not encryption â€” never a substitute for a cipher.</li>
+        <li>Encodings can be stacked (Base64 of hex, etc.) â€” always peel off one layer at a time.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

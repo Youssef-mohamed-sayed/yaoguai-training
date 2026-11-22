@@ -1,5 +1,27 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "functions": {
+    "api/**/*.py": {
+      "includeFiles": "{backend/**,platforms/**,dist/**,requirements.txt,pyproject.toml}",
+      "excludeFiles": "{**/node_modules/**,**/.venv/**,**/__pycache__/**,**/tests/**,platforms/crypto/Yaoguai-Crypto.rar,**/*.db,**/*.sqlite,**/*.sqlite3}"
+    }
+  },
+  "redirects": [
+    { "source": "/crypto", "destination": "/crypto/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/network", "destination": "/api/site/network" },
+    { "source": "/network/:path*", "destination": "/api/site/network/:path*" },
+    { "source": "/linux", "destination": "/api/site/linux" },
+    { "source": "/linux/:path*", "destination": "/api/site/linux/:path*" },
+    { "source": "/programming", "destination": "/api/site/programming" },
+    { "source": "/programming/:path*", "destination": "/api/site/programming/:path*" },
+    { "source": "/crypto", "destination": "/api/site/crypto" },
+    { "source": "/crypto/:path*", "destination": "/api/site/crypto/:path*" },
+    { "source": "/admin", "destination": "/api/site/admin" },
+    { "source": "/reset-password", "destination": "/api/site/reset-password" }
+  ]
 }

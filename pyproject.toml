@@ -1,0 +1,9 @@
+[project]
+name = "yaoguai-training"
+version = "1.0.0"
+requires-python = ">=3.12,<3.16"
+description = "Unified cybersecurity learning platform"
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "backend/tests"]
+python_files = ["test_*.py"]

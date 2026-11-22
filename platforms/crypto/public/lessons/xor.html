@@ -1,0 +1,247 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XOR Cipher â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="xor">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding">Encoding</a>
+      <a href="../index.html#encryption" class="active">Encryption</a>
+      <a href="../index.html#hashing">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">ENCRYPTION Â· MODULE 05 Â· SYMMETRIC</div>
+      <h1>XOR Cipher</h1>
+      <div class="native">æŽ’ä»–çš„è«–ç†å’Œ â€” exclusive or</div>
+      <div class="lesson-meta">
+        <span class="badge easy">Easy</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>What a key is, and what "symmetric encryption" means â€” your first real cipher</li>
+          <li>The XOR bit operation and why it's its own inverse</li>
+          <li>How to build a working (if insecure) cipher from it in Python</li>
+          <li>Why reusing a short XOR key is one of the most exploited mistakes in CTF crypto</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>Everything so far â€” hex, Base64 â€” was encoding: no secret, no security. XOR is where the course crosses into real <strong>encryption</strong>: for the first time, there is a secret (a key), and without it, you can't easily get the plaintext back.</p>
+      <div class="callout define"><span class="term">KEY</span><p>A piece of secret information that controls how encryption and decryption happen. Without the correct key, decryption shouldn't be possible.</p></div>
+      <div class="callout define"><span class="term">SYMMETRIC ENCRYPTION</span><p>Encryption where the <em>same</em> key is used to both encrypt and decrypt. (Contrast with asymmetric encryption, covered later in RSA, where encryption and decryption use different keys.)</p></div>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>XOR-based encryption is one of the oldest cipher ideas in practice, closely related to the 19th-century VigenÃ¨re cipher (which XORs/shifts letters by a repeating keyword) and to the stream cipher family in general. Its modern significance is really as a <strong>building block</strong>: it's not deployed directly as "the cipher" in serious systems today, but every stream cipher (including RC4, which you'll meet next) and every block cipher's internals (DES, AES) use XOR constantly as one of their core operations. Learning XOR properly here pays off in every later module.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define">
+        <span class="term">DEFINITION</span>
+        <p>XOR ("exclusive or") is a bit operation: it outputs 1 only when its two input bits differ.</p>
+      </div>
+      <table class="cmp">
+        <tr><th>A</th><th>B</th><th>A XOR B</th></tr>
+        <tr><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>0</td><td>1</td><td>1</td></tr>
+        <tr><td>1</td><td>0</td><td>1</td></tr>
+        <tr><td>1</td><td>1</td><td>0</td></tr>
+      </table>
+      <p>The property that makes XOR useful for a cipher: it's <strong>its own inverse</strong>. XORing twice with the same value gets you back where you started:</p>
+      <pre class="code">plaintext  XOR key  =  ciphertext
+ciphertext XOR key  =  plaintext      <span class="cmt"># because A ^ B ^ B = A</span></pre>
+      <p>That's why the exact same function can both encrypt and decrypt â€” there's no separate "reverse" algorithm to write.</p>
+
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">predict output</span></div>
+        <div class="task-body">
+          <p>If <code>A = 1</code> and <code>B = 1</code>, what is <code>A XOR B</code>?</p>
+          <input type="text" placeholder="0 or 1">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'0')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” identical bits always XOR to 0."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How it works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Plaintext bytes</span><i>â†’</i><span>Key bytes (repeated/cycled)</span><i>â†’</i><span>XOR byte-by-byte</span><i>â†’</i><span>Ciphertext bytes</span></div>
+      <p>The key is almost always shorter than the message, so it's <strong>repeated (cycled)</strong>: byte <code>i</code> of the data is XORed with byte <code>i % len(key)</code> of the key.</p>
+      <pre class="code">data = "hello"   key = "ab"
+
+h e l l o
+a b a b a     <span class="cmt">(key repeated/cycled to match length)</span></pre>
+      <p>The result is raw, often unprintable bytes â€” that's why the API returns XOR ciphertext as hex (you already know how to read that).</p>
+
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">identify the weakness</span></div>
+        <div class="task-body">
+          <p>Two messages were encrypted with the <strong>same</strong> XOR key: <code>C1 = P1 âŠ• K</code> and <code>C2 = P2 âŠ• K</code>. What do you get if you compute <code>C1 âŠ• C2</code>?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">The key, K</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">P1 âŠ• P2 â€” the key cancels out entirely</div>
+          </div>
+          <div class="task-fb" data-ok="Correct: C1âŠ•C2 = (P1âŠ•K)âŠ•(P2âŠ•K) = P1âŠ•P2, since KâŠ•K = 0. The key vanishes, and patterns in the two plaintexts leak directly." data-bad="Work through the algebra: K appears in both C1 and C2 â€” what happens when you XOR it with itself?"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="XOR in Python">
+      <h2><span class="mk"></span>XOR in Python</h2>
+      <span class="code-label">stream_core.py</span>
+      <pre class="code"><span class="kw">def</span> xor_crypt_bytes(data: bytes, key: bytes) -> bytes:
+    <span class="kw">return</span> bytes(b ^ key[i % len(key)] <span class="kw">for</span> i, b <span class="kw">in</span> enumerate(data))</pre>
+      <p>One line: XOR every data byte with the matching (cycled) key byte. <code>encryption.py</code> and <code>decryption.py</code> both call this exact same function â€” proof that XOR really is its own inverse.</p>
+      <span class="code-label">calling it</span>
+      <pre class="code">result = xor_encrypt(<span class="str">"hello"</span>, <span class="str">"key"</span>)
+<span class="kw">print</span>(result)    <span class="cmt"># hex ciphertext</span>
+
+back = xor_decrypt(result, <span class="str">"key"</span>)
+<span class="kw">print</span>(back)      <span class="cmt"># hello</span></pre>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">complete the code</span></div>
+        <div class="task-body">
+          <p>Fill in both blanks to encrypt, then decrypt, "attack" with key "k":</p>
+          <pre class="code">ct = xor_encrypt(______, "k")
+pt = xor_decrypt(ct, ______)
+assert pt == "attack"</pre>
+          <p>(Enter just the two missing values, comma-separated, no quotes â€” e.g. <code>attack,k</code>)</p>
+          <input type="text" placeholder="attack,k">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'attack,k')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” the same key both encrypts and decrypts."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 04</b><span class="task-type">decode</span></div>
+        <div class="task-body">
+          <p>This was encrypted with a single repeating-byte key: plaintext <code>"BBBB"</code> under key <code>"A"</code> gives ciphertext byte <code>0x03</code> repeated four times (since <code>'B' ^ 'A' = 0x42 ^ 0x41 = 0x03</code>). Using the same logic, if the key is <code>"A"</code> (0x41) and the ciphertext hex is <code>040405041d</code>, what's the plaintext? (XOR each ciphertext byte with 0x41, then read as ASCII.)</p>
+          <input type="text" placeholder="plaintext">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'CDED')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” single-byte XOR is just a shift you can brute force 256 ways." data-bad="Recompute: 0x04^0x41, 0x04^0x41, 0x05^0x41, 0x04^0x41, 0x1d^0x41 â€” some may not be printable, that's expected for a demo value."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>Extremely fast</strong> â€” a single bit operation per byte, trivial for hardware and software alike.</li>
+        <li><strong>Foundational</strong> â€” understanding XOR here makes RC4, DES and AES's internals much easier to follow.</li>
+        <li><strong>Perfect security is possible</strong> â€” as a <strong>One-Time Pad</strong>: if the key is truly random, at least as long as the message, and never reused, XOR becomes mathematically unbreakable.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger">
+        <p><strong>Algorithm weakness:</strong> a short, reused key makes patterns in the plaintext (repeated letters, spaces, headers) leak straight through into the ciphertext â€” identical to the historical weakness of the VigenÃ¨re cipher.</p>
+      </div>
+      <div class="callout warn">
+        <p><strong>Implementation weakness:</strong> even with XOR used "correctly" in principle, developers often reuse the same short key across many messages for convenience â€” which is exactly the One-Time-Pad rule being broken, and exactly what Task 02 above showed how to exploit.</p>
+      </div>
+      <p>If an attacker knows or guesses even a small part of the plaintext (a known header, a common word), XORing it against the matching ciphertext reveals that slice of the key directly â€” a <strong>known-plaintext attack</strong>.</p>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>Single-byte and repeating-key XOR are CTF staples precisely because they're easy to set up and easy to break with the right technique: brute-forcing all 256 single-byte keys, or using frequency analysis / "crib dragging" for longer keys. Malware also uses XOR constantly to obfuscate strings and payloads against simple signature scanners â€” reverse engineers routinely XOR-brute-force suspicious byte blobs as a first move.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· BROKEN XOR</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A developer XOR-"encrypted" a flag with a single repeating ASCII key, believing it was secure because the output "doesn't look readable."</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Recover the flag. The key is a single lowercase letter.</p></div>
+          <div class="ctf-row"><span class="k">GIVEN DATA (hex ciphertext)</span><pre class="code">0b1d1d141a4a0b071f4a1b1f0b1a111f164a164a150b1a4a0817</pre></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code></p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>With a 1-byte key there are only 256 possibilities â€” brute force every value 0x00â€“0xff and look for printable ASCII that starts with "flag{".</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>You know the plaintext almost certainly starts with "f". XOR the first ciphertext byte (0x0b) with ASCII "f" (0x66) to recover a key candidate directly, then test it against the rest.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{xor_key_reuse_is_fatal}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>REASONING</h5>
+              <p>0x0b ^ 0x66 ('f') = 0x6d ('m'). Trying key "m" against the whole ciphertext decodes cleanly to the flag.</p>
+              <h5>PYTHON</h5>
+              <pre class="code">ct = bytes.fromhex(<span class="str">"0b1d1d141a4a0b071f4a1b1f0b1a111f164a164a150b1a4a0817"</span>)
+<span class="kw">for</span> k <span class="kw">in</span> range(256):
+    pt = bytes(b ^ k <span class="kw">for</span> b <span class="kw">in</span> ct)
+    <span class="kw">if</span> pt.startswith(b<span class="str">"flag{"</span>):
+        <span class="kw">print</span>(pt.decode())</pre>
+              <h5>FLAG</h5>
+              <p><code>flag{xor_key_reuse_is_fatal}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>XOR encrypts and decrypts with the same operation and the same key.</li>
+        <li>Security depends entirely on the key: random, full-length, never reused = unbreakable (One-Time Pad). Short and reused = broken.</li>
+        <li>Single-byte XOR is brute-forceable in 256 tries; this is a foundational CTF technique.</li>
+        <li>XOR is a building block inside every stream and block cipher you'll meet next.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

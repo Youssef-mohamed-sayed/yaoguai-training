@@ -1,0 +1,257 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AES â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="aes">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding">Encoding</a>
+      <a href="../index.html#encryption" class="active">Encryption</a>
+      <a href="../index.html#hashing">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">ENCRYPTION Â· MODULE 09 Â· SYMMETRIC BLOCK CIPHER</div>
+      <h1>AES</h1>
+      <div class="native">é«˜åº¦æš—å·æ¨™æº– â€” Advanced Encryption Standard</div>
+      <div class="lesson-meta">
+        <span class="badge advanced">Advanced</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>What a block cipher is, and why AES replaced DES</li>
+          <li>How AES organizes a block into a state matrix, and its four round operations</li>
+          <li>How the key schedule expands one key into eleven round keys</li>
+          <li>How AES is used in Python, and why the <em>mode</em> (ECB vs. GCM/CBC) matters as much as the cipher itself</li>
+          <li>How AES-related CTF challenges typically work (ECB pattern leakage, weak key reuse)</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>AES is the block cipher behind almost everything that needs real confidentiality today: HTTPS, disk encryption, VPNs, messaging apps, password managers. After XOR (a single bit operation) this is a much bigger step up â€” AES processes data in fixed-size <strong>blocks</strong> and runs multiple <strong>rounds</strong> of structured, reversible scrambling, all driven by a secret key.</p>
+      <div class="callout define"><span class="term">BLOCK CIPHER</span><p>A cipher that encrypts data in fixed-size chunks ("blocks") rather than bit-by-bit or byte-by-byte like a stream cipher. AES's block size is always 128 bits (16 bytes), regardless of key size.</p></div>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>AES didn't appear in isolation â€” it directly replaced <strong>DES</strong> (which you'll study next in the course, but is worth naming here): DES's 56-bit key became brute-forceable by the late 1990s as hardware got cheaper. In 1997 the US National Institute of Standards and Technology (NIST) ran an open, public competition for DES's replacement; the winning design, submitted by Belgian cryptographers Joan Daemen and Vincent Rijmen under the name <strong>Rijndael</strong>, was standardized as AES in 2001. It remains the global standard today, with no practical break of the full algorithm found in over two decades of public scrutiny.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define">
+        <span class="term">DEFINITION</span>
+        <p>AES is a <strong>symmetric block cipher</strong> that encrypts fixed 128-bit blocks of data using a secret key, through a fixed number of structured rounds of substitution and permutation.</p>
+      </div>
+      <p>This project implements <strong>AES-128</strong>: a 128-bit (16-byte) key, a 128-bit (16-byte) block, and <strong>10 rounds</strong>. (AES-192 and AES-256 just use longer keys and more rounds â€” 12 and 14 â€” the per-round steps are identical.)</p>
+      <div class="callout define"><span class="term">CIPHER</span><p>An algorithm for encrypting and decrypting data.</p></div>
+      <div class="callout define"><span class="term">ROUND</span><p>One repetition of a fixed sequence of transformations, applied multiple times to increase security. AES-128 repeats its round 10 times.</p></div>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How AES works">
+      <h2><span class="mk"></span>How AES works</h2>
+      <p>Explained step by step, from the simplest view down to the actual operations.</p>
+      <div class="flow"><span>16-byte block</span><i>â†’</i><span>4Ã—4 state grid</span><i>â†’</i><span>10 rounds of mixing</span><i>â†’</i><span>16-byte ciphertext</span></div>
+
+      <h3>The "state"</h3>
+      <p>AES treats each 16-byte block as a <strong>4Ã—4 grid of bytes</strong> (the "state"), filled column by column. Every round operation works on this grid, not on a flat row of bits like DES does.</p>
+
+      <h3>Key expansion</h3>
+      <p>The single 128-bit key is expanded into <strong>11 round keys</strong> (one for the initial step, plus one per round), each 16 bytes, using a schedule that mixes in a substitution table and a round constant so every round key is different from the raw key and from each other.</p>
+
+      <h3>The four round operations</h3>
+      <p>Every round (except special-cased first/last steps) applies these four operations, in order:</p>
+      <ol>
+        <li><strong>SubBytes</strong> â€” every byte in the state is replaced by looking it up in a fixed 256-entry substitution table (the S-box). This is the non-linear step that resists algebraic attacks.</li>
+        <li><strong>ShiftRows</strong> â€” row 0 of the grid is untouched; row 1 shifts left by 1 byte, row 2 by 2, row 3 by 3. This spreads each byte's influence across columns.</li>
+        <li><strong>MixColumns</strong> â€” each column of 4 bytes is multiplied by a fixed matrix using finite-field (GF(2â¸)) arithmetic, mixing bytes within a column so every output byte depends on every input byte of that column. (Skipped in the final round.)</li>
+        <li><strong>AddRoundKey</strong> â€” the state is XORed with that round's 16-byte round key. (Yes â€” the XOR you just learned is doing real work here.)</li>
+      </ol>
+
+      <span class="code-label">full flow</span>
+      <pre class="code">AddRoundKey (round 0 key)
+for rounds 1..9:
+    SubBytes -> ShiftRows -> MixColumns -> AddRoundKey
+round 10 (final, no MixColumns):
+    SubBytes -> ShiftRows -> AddRoundKey</pre>
+
+      <p>Decryption runs the <strong>inverse</strong> of every step in reverse order â€” inverse S-box, inverse ShiftRows (shift right), inverse MixColumns (a different fixed matrix) â€” applying round keys starting from the last one.</p>
+
+      <div class="callout">
+        <p><strong>Why SubBytes/MixColumns matter:</strong> Claude Shannon described two properties every good cipher needs â€” <strong>confusion</strong> (the key-to-ciphertext relationship should be as complex as possible; SubBytes' non-linear lookup provides this) and <strong>diffusion</strong> (one changed input bit should affect many output bits; ShiftRows + MixColumns spread influence across the whole block). After a couple of rounds, every output byte depends on every input byte and every key byte.</p>
+      </div>
+
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">arrange the steps</span></div>
+        <div class="task-body">
+          <p>Put these into the correct order for one normal AES round (not the final round): <code>MixColumns</code>, <code>AddRoundKey</code>, <code>SubBytes</code>, <code>ShiftRows</code>.</p>
+          <input type="text" placeholder="e.g. SubBytes, ShiftRows, MixColumns, AddRoundKey">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'subbytes,shiftrows,mixcolumns,addroundkey')">Check</button></div>
+          <div class="task-fb" data-ok="Correct order â€” substitute, shift, mix, then add the round key."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="AES in Python">
+      <h2><span class="mk"></span>AES in Python</h2>
+      <p>This project's <code>aes_core.py</code> implements AES-128 from scratch and was verified against the official FIPS-197 test vector (key <code>000102030405060708090a0b0c0d0e0f</code>, plaintext <code>00112233445566778899aabbccddeeff</code> â†’ ciphertext <code>69c4e0d86a7b0430d8cdb78070b4c55a</code>).</p>
+      <span class="code-label">aes_core.py (shape of the implementation)</span>
+      <pre class="code"><span class="kw">def</span> _encrypt_block(block, round_keys):
+    state = _add_round_key(block, round_keys[0])
+    <span class="kw">for</span> rnd <span class="kw">in</span> range(1, 10):
+        state = _sub_bytes(state)
+        state = _shift_rows(state)
+        state = _mix_columns(state)
+        state = _add_round_key(state, round_keys[rnd])
+    state = _sub_bytes(state)
+    state = _shift_rows(state)
+    state = _add_round_key(state, round_keys[10])
+    <span class="kw">return</span> state</pre>
+      <span class="code-label">calling it (encryption.py)</span>
+      <pre class="code">ciphertext = aes_encrypt(<span class="str">"attack at dawn"</span>, <span class="str">"0123456789abcdef"</span>)
+<span class="kw">print</span>(ciphertext)   <span class="cmt"># base64, PKCS7-padded, ECB mode</span>
+
+plaintext = aes_decrypt(ciphertext, <span class="str">"0123456789abcdef"</span>)
+<span class="kw">print</span>(plaintext)    <span class="cmt"># attack at dawn</span></pre>
+      <div class="callout define"><span class="term">PADDING</span><p>Real data is rarely an exact multiple of 16 bytes. PKCS7 padding adds bytes to round the plaintext up to the next full block before encrypting, and strips them back off after decrypting.</p></div>
+
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">complete the code</span></div>
+        <div class="task-body">
+          <p>Fill in the missing key so this decrypts correctly with the same 16-byte key used to encrypt:</p>
+          <pre class="code">ct = aes_encrypt("top secret", "mysixteenbytekey")
+pt = aes_decrypt(ct, ______)
+assert pt == "top secret"</pre>
+          <input type="text" placeholder="the key">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'mysixteenbytekey')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” AES is symmetric: the same key both encrypts and decrypts."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">multiple choice</span></div>
+        <div class="task-body">
+          <p>What happens if you try to AES-encrypt a 16-byte key against a 10-byte key string?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">It silently truncates and works fine</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">It should raise an error â€” AES-128 keys must be exactly 16 bytes</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” a well-implemented AES wrapper validates key length rather than silently truncating or padding it, since that would quietly weaken the key." data-bad="Think about what 'AES-128' is actually naming â€” the key length isn't a suggestion."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>No practical cryptanalytic break</strong> of the full algorithm exists after 20+ years of public attack attempts.</li>
+        <li><strong>Fast</strong> â€” modern CPUs have dedicated AES instructions (AES-NI), making it fast enough for full-disk and full-traffic encryption.</li>
+        <li><strong>Flexible key sizes</strong> â€” 128/192/256-bit, letting you trade a little speed for a larger security margin.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger">
+        <p><strong>Implementation weakness â€” ECB mode:</strong> this project applies AES directly block-by-block (ECB) to teach the algorithm's internals clearly. <strong>ECB is insecure for real use</strong>: identical plaintext blocks always produce identical ciphertext blocks, visibly leaking structure. The classic demonstration is an ECB-encrypted bitmap image where you can still make out the original picture's outline in the ciphertext.</p>
+      </div>
+      <p>Real systems use a mode such as <strong>AES-GCM</strong> or <strong>AES-CBC with a random IV</strong> (Initialization Vector) specifically to prevent this. This is a mode/implementation issue, not a flaw in the AES algorithm itself â€” the distinction matters: AES the cipher is sound; AES used in ECB mode is not.</p>
+      <div class="callout define"><span class="term">IV (Initialization Vector)</span><p>A random value mixed in before encryption so that encrypting the same plaintext twice (with the same key) produces different ciphertext each time.</p></div>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>"Spot the ECB" is one of the most common AES CTF categories: given a ciphertext, look for repeated 16-byte blocks, which only happen in ECB mode with repeated plaintext. AES challenges also frequently target key management mistakes â€” hardcoded keys found in a binary, keys reused across unrelated messages, or keys derived predictably from something public (a timestamp, a username) â€” rather than attacking the math of AES itself, which is exactly why "the algorithm vs. the implementation" distinction from the weaknesses section is a core cybersecurity skill, not just trivia.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· SPOT THE ECB</b><span class="badge intermediate">Intermediate</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A login form encrypts a session blob with AES-ECB. The blob is built by concatenating known fields, and one of them repeats across the ciphertext.</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Without the key, identify which 16-byte ciphertext block repeats, proving ECB mode is in use (the real flag is about recognizing the structural leak, not decrypting).</p></div>
+          <div class="ctf-row"><span class="k">GIVEN DATA (hex, 16-byte blocks separated by spaces)</span><pre class="code">1f2a3b4c5d6e7f80 9a0b1c2d3e4f5061 1f2a3b4c5d6e7f80 72839405a6b7c8d9</pre></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code> â€” the flag text itself (not the repeated block hex)</p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>Compare each 16-byte block to every other block. ECB guarantees identical plaintext blocks become identical ciphertext blocks.</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>Blocks 1 and 3 are identical â€” that repetition is only possible in ECB mode.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{ecb_leaks_structure}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>REASONING</h5>
+              <p>Block 1 (<code>1f2a3b4c5d6e7f80</code>) and block 3 are byte-for-byte identical. Under ECB, that's only possible if the corresponding 16-byte plaintext chunks were identical too â€” a direct structural leak with zero cryptanalysis required.</p>
+              <h5>PYTHON</h5>
+              <pre class="code">blocks = [ct[i:i+16] <span class="kw">for</span> i <span class="kw">in</span> range(0, len(ct), 16)]
+<span class="kw">print</span>(len(blocks) != len(set(blocks)))  <span class="cmt"># True -> ECB mode detected</span></pre>
+              <h5>FLAG</h5>
+              <p><code>flag{ecb_leaks_structure}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>AES-128 encrypts 16-byte blocks through 10 rounds of SubBytes, ShiftRows, MixColumns, AddRoundKey.</li>
+        <li>The algorithm itself has no known practical break after decades of scrutiny.</li>
+        <li>Real-world security depends just as much on the <strong>mode</strong> (never ECB) and on key management as on the cipher itself.</li>
+        <li>CTF AES challenges usually target the implementation, not the math.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

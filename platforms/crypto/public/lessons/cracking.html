@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cracking Hashes â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="cracking">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding">Encoding</a>
+      <a href="../index.html#encryption">Encryption</a>
+      <a href="../index.html#hashing" class="active">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">HASHING Â· MODULE 16 Â· CRACKING & CTF</div>
+      <h1>Cracking Hashes</h1>
+      <div class="native">ç·å½“ãŸã‚Šæ”»æ’ƒ â€” brute force & wordlists</div>
+      <div class="lesson-meta">
+        <span class="badge ctf">CTF</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>The actual tools behind every 'crack this hash' task in this course: John the Ripper, Hashcat, wordlists</li>
+          <li>Why wordlist/dictionary attacks work so well against human-chosen passwords</li>
+          <li>Why cracking speed depends on the target's hash choice, not the cracking tool</li>
+          <li>How this ties every hashing module in the course together into one practical workflow</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>Every CTF challenge in this course so far that ended with "crack this hash" quietly assumed you'd write a small Python loop over a wordlist. This final module makes that process explicit and names the real tools professionals and CTF players actually use: <strong>John the Ripper</strong> and <strong>Hashcat</strong>, plus the wordlists and lookup services (like Hashes.com) that make cracking fast at scale. This closes the course by tying every hashing lesson together into one practical skill.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p><strong>John the Ripper</strong> ("John") was first released in 1996, originally to audit Unix password security, and has grown to support hundreds of hash and cipher formats. <strong>Hashcat</strong>, released in 2009, took a different angle: built from the ground up to exploit GPU parallelism, making it dramatically faster for hash types GPUs are good at (fast, unsalted hashes like raw MD5/SHA-1/SHA-256). <strong>rockyou.txt</strong> â€” the wordlist this course's CTF challenges have quietly relied on â€” comes from a real 2009 data breach of the company RockYou, which stored 32 million user passwords in plaintext; the leaked password list became (and remains) one of the most widely used wordlists in security testing, precisely because it reflects real human password choices.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define"><span class="term">DEFINITION</span><p>"Cracking" a hash means finding an input that produces a given digest by guessing candidates and hashing each one â€” never by mathematically reversing the hash function itself, which (as every hashing module in this course established) isn't possible.</p></div>
+      <div class="callout define"><span class="term">WORDLIST ATTACK (DICTIONARY ATTACK)</span><p>Trying every entry in a list of likely candidates (real leaked passwords, common words, name/date patterns) rather than every possible string.</p></div>
+      <div class="callout define"><span class="term">BRUTE FORCE</span><p>Trying every possible combination of characters up to a given length â€” exhaustive, and only practical when the keyspace is small (short passwords, or a cipher with a weak key like the DES-from-PIN example earlier in this course).</p></div>
+      <table class="cmp">
+        <tr><th>Method</th><th>Good for</th><th>Cost</th></tr>
+        <tr><td>Wordlist / dictionary</td><td>Human-chosen passwords</td><td>Fast â€” only as many guesses as the list has</td></tr>
+        <tr><td>Rule-based (mutate wordlist entries)</td><td>Passwords close to a dictionary word</td><td>Moderate</td></tr>
+        <tr><td>Brute force</td><td>Short or random strings</td><td>Explodes exponentially with length</td></tr>
+        <tr><td>Precomputed lookup (rainbow table / Hashes.com)</td><td>Unsalted common hashes</td><td>Instant, if the hash was precomputed</td></tr>
+      </table>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How it works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Target hash</span><i>â†’</i><span>Candidate password</span><i>â†’</i><span>Hash the candidate (same algorithm)</span><i>â†’</i><span>Compare to target</span><i>â†’</i><span>Match found = cracked</span></div>
+      <p>This is exactly the loop you ran by hand in the MD5, SHA-1, and SHA-256 challenges â€” John and Hashcat just do it at massive scale, with the correct hash-format parsing, and (for Hashcat especially) GPU-accelerated hashing that can try billions of candidates per second for fast algorithms like raw MD5.</p>
+      <div class="callout warn"><p><strong>Why bcrypt resists this so much better:</strong> recall the bcrypt module â€” its deliberately slow cost factor directly multiplies the time every single guess in this loop takes. A wordlist attack that takes seconds against unsalted MD5 can take hours or days against the same wordlist hashed with bcrypt at a high cost factor. This is the entire practical point of that lesson, made concrete.</p></div>
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">identify</span></div>
+        <div class="task-body">
+          <p>A target hash is unsalted MD5. Which factor matters most for how long cracking it takes: the hash algorithm's design, or the password's predictability?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">The algorithm's design â€” MD5 being 'broken' is what matters here</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">The password's predictability â€” MD5's 'brokenness' (collisions) is unrelated to cracking speed; it's MD5's raw speed plus a guessable password that matters</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” don't conflate MD5's collision weakness with why it's crackable fast. It's crackable fast because it's a fast, unsalted hash, and guessable because the password itself is common." data-bad="MD5's collision weakness (two inputs, same hash) is a completely different property from how fast a single hash can be computed and compared â€” re-read the MD5 module's distinction."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="Cracking via the API">
+      <h2><span class="mk"></span>Cracking in this project</h2>
+      <span class="code-label">crack.py / hashescom.py</span>
+      <pre class="code"><span class="kw">def</span> crack_with_john(hash_value: str, hash_type: str = <span class="str">"md5"</span>, wordlist: str = <span class="kw">None</span>):
+    <span class="cmt"># shells out to the real `john` binary with the given hash + wordlist</span>
+    ...
+
+<span class="kw">def</span> crack_with_hashcat(hash_value: str, hash_type: str = <span class="str">"md5"</span>, wordlist: str = <span class="kw">None</span>):
+    <span class="cmt"># shells out to the real `hashcat` binary, GPU-accelerated</span>
+    ...
+
+<span class="kw">def</span> hashescom_lookup(hash_value: str, api_key: str):
+    <span class="cmt"># queries Hashes.com's real, documented API (hashes.com/en/api) --</span>
+    <span class="cmt"># a crowd-sourced database of hashes already cracked by other users</span>
+    ...</pre>
+      <p>Unlike every other module in this course, these three functions don't reimplement anything from scratch â€” they wrap real, external, purpose-built tools (<code>john</code>, <code>hashcat</code> binaries) or an external lookup service, because cracking performance depends entirely on tool maturity and, for Hashcat, actual GPU hardware â€” nothing a from-scratch Python reimplementation could compete with.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">predict output</span></div>
+        <div class="task-body">
+          <p>If you call <code>hashescom_lookup(hash, api_key)</code> for a hash that was never leaked anywhere, what would you expect?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">It will always find it eventually, given enough time</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No match â€” lookup services only find hashes of passwords already in their precomputed database</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” a lookup service isn't cracking in real time, it's checking a precomputed table; anything not already in that table won't be found this way."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">multiple choice</span></div>
+        <div class="task-body">
+          <p>Which single change to a login system would most reduce the effectiveness of all the techniques in this module at once?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Switching the hash algorithm from MD5 to SHA-256</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">Switching from a fast general-purpose hash to bcrypt/Argon2 with per-user salts</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” this directly attacks the one thing every cracking technique here depends on: being able to test guesses quickly." data-bad="Swapping one fast, unsalted hash for another fast, unsalted hash doesn't change the cracking math at all â€” review the SHA-256 module's challenge."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths (of these as defensive/auditing tools)">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>Legitimate defensive use</strong> â€” security teams run John/Hashcat against their own (authorized) password hashes to find weak passwords before attackers do.</li>
+        <li><strong>Mature, broadly supported</strong> â€” both tools handle hundreds of hash/cipher formats, actively maintained for decades.</li>
+        <li><strong>Transparent cost model</strong> â€” cracking speed is measurable, which is exactly what lets you demonstrate (as in Task 03) that a defensive change actually worked.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses / limits of cracking"> 
+      <h2><span class="mk"></span>Weaknesses â€” limits of these techniques</h2>
+      <div class="callout warn"><p><strong>Implementation-dependent, not algorithm-dependent:</strong> these tools succeed or fail based entirely on the <em>target's</em> implementation choices (fast vs. slow hash, salted vs. unsalted, predictable vs. random password) â€” not on any flaw in John/Hashcat themselves. A well-configured bcrypt setup with genuinely random passwords can make all of this impractically slow, which is the intended, correct outcome.</p></div>
+      <p>Lookup-table services like Hashes.com only ever "know" hashes someone has already computed and indexed â€” they provide zero uplift against a hash of a password that's never appeared in a known breach or wordlist.</p>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>Cracking is one of the most hands-on, high-signal skills in both offensive security (penetration testing, red teaming) and CTF competition â€” nearly every "crypto" or "misc" category challenge involving a leaked hash database eventually routes through exactly this workflow. On the defensive side, understanding cracking cost is how security teams justify (and measure) password policy and hashing-algorithm decisions to non-technical stakeholders: "bcrypt cost 12 makes a breach take years to exploit instead of hours" is a concrete, demonstrable claim, not a hand-wave.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· THE FULL CHAIN</b><span class="badge ctf">CTF</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A capstone chain pulling together the whole course: a leaked record was Base64-encoded, then the inner value is a hex string, which decodes to an MD5 hash of the real flag's password component.</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Peel every layer, then crack the final hash to recover the password, and submit it in the flag format.</p></div>
+          <div class="ctf-row"><span class="k">GIVEN DATA</span><pre class="code">NWY0ZGNjM2I1YWE3NjVkNjFkODMyN2RlYjg4MmNmOTk=</pre></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{the_password}</code></p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>Base64-decode the given string first. Look at what comes out â€” is it readable, or does it look like another encoding (hex, this time already in ASCII form â€” no further decode needed beyond that)?</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>The Base64-decoded result is itself the hex-formatted MD5 digest â€” you've seen this exact digest before, in an earlier module.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{password}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>REASONING</h5>
+              <p>Base64-decoding <code>NWY0ZGNjM2I1YWE3NjVkNjFkODMyN2RlYjg4MmNmOTk=</code> yields the literal text <code>5f4dcc3b5aa765d61d8327deb882cf99</code> â€” the exact MD5 digest from the MD5 module's own CTF challenge. Cracking it the same way (wordlist attack) recovers the same password.</p>
+              <h5>PYTHON</h5>
+              <pre class="code">b64 = <span class="str">"NWY0ZGNjM2I1YWE3NjVkNjFkODMyN2RlYjg4MmNmOTk="</span>
+hex_digest = base64_decode(b64)   <span class="cmt"># "5f4dcc3b5aa765d61d8327deb882cf99"</span>
+
+<span class="kw">import</span> hashlib
+<span class="kw">for</span> candidate <span class="kw">in</span> open(<span class="str">"rockyou.txt"</span>, encoding=<span class="str">"latin-1"</span>):
+    candidate = candidate.strip()
+    <span class="kw">if</span> hashlib.md5(candidate.encode()).hexdigest() == hex_digest:
+        <span class="kw">print</span>(candidate)   <span class="cmt"># password</span>
+        <span class="kw">break</span></pre>
+              <h5>FLAG</h5>
+              <p><code>flag{password}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>Cracking is guessing-and-checking at scale â€” John the Ripper and Hashcat automate exactly the loop you wrote by hand in earlier CTF challenges.</li>
+        <li>Lookup services (Hashes.com) only find hashes already in a precomputed database â€” no uplift beyond that.</li>
+        <li>Cracking speed is dominated by the target's hash choice and the password's predictability, not by which cracking tool you use.</li>
+        <li>This closes the course: encoding (representation) â†’ encryption (confidentiality, symmetric then asymmetric) â†’ hashing (integrity, then passwords) â†’ cracking (what happens when any of the above is misconfigured).</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

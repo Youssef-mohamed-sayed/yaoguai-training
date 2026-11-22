@@ -1,0 +1,20 @@
+{
+  "name": "yaoguai-programming",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Yaoguai Python Programming Essentials learning platform",
+  "scripts": {
+    "build": "node scripts/build-course.mjs && esbuild src/app.js --bundle --format=esm --minify --outfile=public/app.bundle.js",
+    "dev": "npm run build && node scripts/serve.mjs",
+    "preview": "node scripts/serve.mjs",
+    "check:content": "node scripts/check-content.mjs"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.6",
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5"
+  }
+}

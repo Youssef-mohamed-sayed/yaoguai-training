@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tools â€” YAOGUAI</title>
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/images/favicon-180.png">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">
+      <img class="brand-mark" src="assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="index.html#encoding">Encoding</a>
+      <a href="index.html#encryption">Encryption</a>
+      <a href="index.html#hashing">Hashing</a>
+      <a href="tools.html" class="active">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip" id="api-status">API: checkingâ€¦</span></div>
+  </div>
+</div>
+
+<div class="tools-shell">
+  <aside class="tools-list" id="tools-list" aria-label="Algorithms"></aside>
+
+  <main class="tools-main">
+    <div class="tools-head">
+      <h1 id="tool-title">â€”</h1>
+      <p id="tool-desc"></p>
+    </div>
+
+    <div class="mode-switch" id="mode-switch" role="tablist"></div>
+
+    <label class="tool-label" for="input" id="input-label">Input</label>
+    <textarea id="input" spellcheck="false" placeholder="Type or paste text hereâ€¦"></textarea>
+
+    <div class="params" id="params"></div>
+
+    <div class="tool-actions">
+      <button class="btn btn-primary" id="run-btn">Run</button>
+      <button class="btn btn-ghost" id="use-btn" title="Copy the output into the input box">Output â†’ Input</button>
+      <button class="btn btn-ghost" id="clear-btn">Clear</button>
+      <span class="tool-endpoint" id="endpoint"></span>
+    </div>
+
+    <div class="out-head">
+      <label class="tool-label" for="output">Output</label>
+      <button class="btn btn-ghost btn-sm" id="copy-btn">Copy</button>
+    </div>
+    <textarea id="output" readonly spellcheck="false" placeholder="Result appears here"></textarea>
+    <div class="tool-msg" id="msg" role="status"></div>
+
+    <div class="continue-elsewhere">
+      <p>Stuck, or need a real wordlist? Copies your current input, then opens one of these in a new tab:</p>
+      <div class="continue-links">
+        <a class="continue-link" target="_blank" rel="noopener" href="https://hashes.com/en/decrypt/hash" data-copy>
+          <strong>Hashes.com</strong><span>crowd-sourced hash lookup &amp; identifier</span></a>
+        <a class="continue-link" target="_blank" rel="noopener" href="assets/user-manual.md">
+          <strong>User Manual</strong><span>how to run &amp; use this app</span></a>
+        <a class="continue-link" target="_blank" rel="noopener" href="https://crackstation.net/" data-copy>
+          <strong>CrackStation</strong><span>precomputed hash lookup</span></a>
+        <a class="continue-link" target="_blank" rel="noopener" href="https://www.dcode.fr/" data-copy>
+          <strong>dCode</strong><span>hundreds of ciphers &amp; identifiers</span></a>
+        <a class="continue-link" target="_blank" rel="noopener" href="https://gchq.github.io/CyberChef/" data-copy>
+          <strong>CyberChef</strong><span>chain operations visually</span></a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="js/api.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/training-bridge.js"></script>
+</body>
+</html>

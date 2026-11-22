@@ -1,0 +1,65 @@
+﻿{% extends "base.html" %}
+{% block body %}
+<div class="lesson-shell">
+  <aside class="lesson-toc" aria-label="Course navigation">
+    <details class="course-menu" data-course-menu open>
+      <summary>Course navigation</summary>
+      <div class="menu-content">
+        <a class="lesson-toc-head" href="/network/course"{% if page.kind == 'overview' %} aria-current="page"{% endif %}>NETWORK ESSENTIALS</a>
+        {% for item in course.modules.values() %}
+          <details class="module-menu"{% if item.slug == page.module %} open{% endif %}>
+            <summary><span>{{ item.number }}</span> {{ item.index.title }}</summary>
+            <ul>
+              <li><a href="{{ item.index.url }}"{% if page.url == item.index.url %} aria-current="page"{% endif %}>
+                {% if item.index.url in course.positions %}<span data-status-for="{{ item.index.url }}" aria-hidden="true">â—‹</span>{% endif %}
+                Module overview</a></li>
+              {% for lesson in item.lessons %}
+              <li><a href="{{ lesson.url }}"{% if page.url == lesson.url %} aria-current="page"{% endif %}><span data-status-for="{{ lesson.url }}" aria-hidden="true">â—‹</span>{{ lesson.title }}</a></li>
+              {% endfor %}
+            </ul>
+          </details>
+        {% endfor %}
+      </div>
+    </details>
+  </aside>
+  <main id="main" class="lesson-main">
+    <header class="lesson-head">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/network">Network</a>
+        <span aria-hidden="true">/</span>
+        <a href="/network/course">Course guide</a>
+        {% if module and page.kind != 'module' %}<span aria-hidden="true">/</span><a href="{{ module.index.url }}">{{ module.index.title }}</a>{% endif %}
+      </nav>
+      {% if module %}<div class="cat-tag">MODULE {{ module.number }}{% if page.module == 'final-challenges' %} Â· CTF{% endif %}</div>{% endif %}
+      <h1>{{ page.title }}</h1>
+      {% if page.kind == 'module' and module.lessons %}
+        <a class="btn btn-primary btn-sm" href="{{ module.lessons[0].url }}">Open first {{ 'challenge' if module.slug == 'final-challenges' else 'lesson' }} â†’</a>
+      {% endif %}
+    </header>
+
+    {% if page.outline %}
+    <details class="page-outline">
+      <summary>On this page</summary>
+      <ol>{% for anchor, label, level in page.outline %}<li class="outline-{{ level }}"><a href="#{{ anchor }}">{{ label }}</a></li>{% endfor %}</ol>
+    </details>
+    {% endif %}
+
+    <article class="markdown{% if page.module == 'final-challenges' and page.kind == 'lesson' %} final-ctf{% endif %}">
+      {{ page.html|safe }}
+    </article>
+
+    {% if page.url in course.positions %}
+    <div class="lesson-completion" data-completion hidden>
+      <div><strong>Page progress</strong><p>Saved in this browser.</p></div>
+      <button class="btn btn-primary" type="button" data-complete aria-pressed="false">Mark complete</button>
+    </div>
+    <nav class="lesson-nav" aria-label="Learning path">
+      {% if previous %}<a class="nav-link" rel="prev" href="{{ previous.url }}"><small>â† Previous</small><b>{{ previous.title }}</b></a>
+      {% else %}<a class="nav-link" href="/network/course"><small>â† Course guide</small><b>Network Essentials</b></a>{% endif %}
+      {% if following %}<a class="nav-link" rel="next" href="{{ following.url }}"><small>Next â†’</small><b>{{ following.title }}</b></a>
+      {% else %}<a class="nav-link" href="/network#modules"><small>Modules â†’</small><b>Back to dashboard</b></a>{% endif %}
+    </nav>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

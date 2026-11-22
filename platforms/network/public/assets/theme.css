@@ -1,0 +1,236 @@
+﻿/* Yaoguai family fonts, palette and core components adapted from Yaoguai Crypto. */
+/* Fonts are bundled locally in assets/fonts (no external requests). */
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/shippori-mincho-latin-500-normal.woff2') format('woff2');}
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/shippori-mincho-japanese-500-normal.woff2') format('woff2');unicode-range:U+3000-9FFF,U+FF00-FFEF;}
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/shippori-mincho-latin-700-normal.woff2') format('woff2');}
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/shippori-mincho-japanese-700-normal.woff2') format('woff2');unicode-range:U+3000-9FFF,U+FF00-FFEF;}
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:800;font-display:swap;src:url('fonts/shippori-mincho-latin-800-normal.woff2') format('woff2');}
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:800;font-display:swap;src:url('fonts/shippori-mincho-japanese-800-normal.woff2') format('woff2');unicode-range:U+3000-9FFF,U+FF00-FFEF;}
+@font-face{font-family:'Zen Kaku Gothic New';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/zen-kaku-gothic-new-latin-400-normal.woff2') format('woff2');}
+@font-face{font-family:'Zen Kaku Gothic New';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/zen-kaku-gothic-new-latin-500-normal.woff2') format('woff2');}
+@font-face{font-family:'Zen Kaku Gothic New';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/zen-kaku-gothic-new-latin-700-normal.woff2') format('woff2');}
+@font-face{font-family:'Zen Kaku Gothic New';font-style:normal;font-weight:900;font-display:swap;src:url('fonts/zen-kaku-gothic-new-latin-900-normal.woff2') format('woff2');}
+@font-face{font-family:'Zen Kaku Gothic New';font-style:normal;font-weight:400 500;font-display:swap;src:url('fonts/zen-kaku-gothic-new-japanese-500-normal.woff2') format('woff2');unicode-range:U+3000-9FFF,U+FF00-FFEF;}
+@font-face{font-family:'Zen Kaku Gothic New';font-style:normal;font-weight:600 900;font-display:swap;src:url('fonts/zen-kaku-gothic-new-japanese-700-normal.woff2') format('woff2');unicode-range:U+3000-9FFF,U+FF00-FFEF;}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2');}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2');}
+
+:root{
+  --ink:        #0a0909;
+  --ink-raise:  #130f10;
+  --ink-card:   #171213;
+  --line:       #2c2224;
+  --line-soft:  #1d1718;
+  --paper:      #ece7e2;
+  --paper-dim:  #b9b0a9;
+  --paper-faint:#7d716b;
+  --red:        #8e2a2e;
+  --red-bright: #b0474b;
+  --red-deep:   #4a1b1d;
+  --red-wash:   rgba(142,42,46,0.12);
+  --ok:         #5a7f62;
+  --warn:       #a8884a;
+
+  --serif:  'Shippori Mincho', serif;
+  --sans:   'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif;
+  --mono:   'IBM Plex Mono', monospace;
+
+  --maxw: 1180px;
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(142,42,46,0.025) 0 1px, transparent 1px 3px);
+  mix-blend-mode:screen;
+}
+
+a{ color:inherit; text-decoration:none; }
+img{ max-width:100%; display:block; }
+code, pre{ font-family:var(--mono); }
+
+::selection{ background:var(--red); color:#fff; }
+
+/* ---------- layout shells ---------- */
+.wrap{ max-width:var(--maxw); margin:0 auto; padding:0 28px; position:relative; z-index:1; }
+.wrap-narrow{ max-width:860px; margin:0 auto; padding:0 28px; position:relative; z-index:1; }
+
+/* ---------- topbar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:rgba(10,9,9,0.92);
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-inner{
+  max-width:var(--maxw); margin:0 auto; padding:14px 28px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+}
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand-mark{ width:36px; height:36px; flex:none; display:block; object-fit:contain; }
+.brand-text{ display:flex; flex-direction:column; line-height:1.1; }
+.brand-text b{ font-family:var(--serif); font-size:17px; letter-spacing:0.02em; }
+.brand-text span{ font-size:11px; color:var(--paper-faint); letter-spacing:0.08em; }
+
+.topnav{ display:flex; gap:26px; font-size:14px; }
+.topnav a{ color:var(--paper-dim); padding:6px 0; border-bottom:2px solid transparent; }
+.topnav a:hover, .topnav a.active{ color:var(--paper); border-color:var(--red); }
+
+.topbar-tools{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+/* Auth topbar wrapper â€” sits alongside progress-chip */
+.progress-chip{
+  font-family:var(--mono); font-size:12px; color:var(--paper-faint);
+  border:1px solid var(--line); padding:5px 10px;
+}
+
+/* ---------- hero / dashboard ---------- */
+.hero{
+  position:relative;
+  padding:84px 0 56px;
+  border-bottom:1px solid var(--line);
+  overflow:hidden;
+}
+.hero-static{
+  position:absolute; inset:0; opacity:0.5;
+  background-image: linear-gradient(to bottom, transparent 60%, var(--ink) 100%),
+    repeating-linear-gradient(100deg, rgba(142,42,46,0.05) 0 2px, transparent 2px 46px);
+}
+.hero-inner{ position:relative; z-index:2; }
+.hero-kicker{
+  font-family:var(--mono); font-size:12.5px; color:var(--red-bright);
+  display:flex; align-items:center; gap:10px; margin-bottom:18px;
+}
+.hero-kicker .rule{ width:40px; height:1px; background:var(--red-bright); }
+.hero h1{
+  font-family:var(--serif); font-weight:700;
+  font-size:clamp(38px,6vw,64px); line-height:1.05; margin:0 0 20px;
+  max-width:760px;
+}
+.hero h1 i{ font-style:normal; color:var(--red-bright); }
+.hero p.lede{
+  max-width:560px; color:var(--paper-dim); font-size:17px; margin:0 0 30px;
+}
+.hero-cta{ display:flex; gap:14px; flex-wrap:wrap; }
+
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 22px; font-size:14.5px; font-weight:500;
+  border:1px solid var(--paper); background:transparent; color:var(--paper);
+  cursor:pointer; font-family:var(--sans);
+}
+.btn:hover{ background:var(--paper); color:var(--ink); }
+.btn-primary{ background:var(--red); border-color:var(--red); color:#fff; }
+.btn-primary:hover{ background:var(--red-bright); border-color:var(--red-bright); color:#fff; }
+.btn-ghost{ border-color:var(--line); color:var(--paper-dim); }
+.btn-ghost:hover{ background:var(--ink-card); color:var(--paper); }
+.btn-sm{ padding:8px 16px; font-size:13px; }
+
+/* ---------- section headers ---------- */
+.section-head{
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin:64px 0 26px; gap:20px; flex-wrap:wrap;
+}
+.section-head h2{
+  font-family:var(--serif); font-size:28px; margin:0; display:flex; align-items:center; gap:14px;
+}
+.section-head h2 small{ font-family:var(--mono); font-size:13px; color:var(--paper-faint); font-weight:400; }
+.section-count{ font-family:var(--mono); font-size:13px; color:var(--paper-faint); }
+
+/* ---------- algorithm card grid ---------- */
+.grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-bottom:10px; }
+
+.card{
+  background:var(--ink-card); border:1px solid var(--line);
+  padding:22px; position:relative; transition:border-color .15s, transform .15s;
+}
+.card:hover{ border-color:var(--red-deep); }
+.card-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
+.card-id{ font-family:var(--mono); font-size:12px; color:var(--paper-faint); }
+.card h3{ font-family:var(--serif); font-size:22px; margin:0 0 4px; }
+.card .cat{ font-size:12.5px; color:var(--paper-faint); margin-bottom:14px; }
+.badge{
+  font-size:11px; padding:3px 9px; border:1px solid var(--line); color:var(--paper-dim);
+  font-family:var(--mono); letter-spacing:.02em;
+}
+.badge.beginner{ border-color:#3f5744; color:#8fb398; }
+.badge.easy{ border-color:#3f5744; color:#8fb398; }
+.badge.intermediate{ border-color:#5f5533; color:var(--warn); }
+.badge.advanced{ border-color:var(--red-deep); color:#c49092; }
+.badge.ctf{ border-color:var(--red); color:var(--red-bright); background:var(--red-wash); }
+
+.bar{ height:4px; background:var(--line-soft); margin:16px 0 14px; position:relative; }
+.bar i{ position:absolute; inset:0; width:var(--p,0%); background:var(--red); }
+.card-foot{ display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+.card-status{ display:flex; align-items:center; gap:6px; color:var(--paper-faint); font-family:var(--mono); font-size:12px; }
+.dot{ width:7px; height:7px; border-radius:50%; background:var(--paper-faint); flex:none; }
+.dot.done{ background:var(--ok); }
+.dot.active{ background:var(--red-bright); }
+.card.locked{ opacity:0.45; }
+.card.locked:hover{ border-color:var(--line); }
+/* ---------- footer ---------- */
+footer{ border-top:1px solid var(--line); padding:40px 0; margin-top:80px; }
+footer .wrap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; font-size:13px; color:var(--paper-faint); }
+.lesson-shell{ display:grid; grid-template-columns:260px 1fr; gap:48px; max-width:var(--maxw); margin:0 auto; padding:36px 28px 100px; }
+@media (max-width:920px){ .lesson-shell{ grid-template-columns:1fr; } }
+
+.lesson-toc{ position:sticky; top:84px; align-self:start; max-height:calc(100vh - 110px); overflow:auto; }
+.lesson-toc-head{ font-family:var(--mono); font-size:12px; color:var(--paper-faint); margin-bottom:14px; }
+.lesson-main{ min-width:0; }
+.lesson-head{ margin-bottom:38px; padding-bottom:28px; border-bottom:1px solid var(--line); }
+.lesson-head .cat-tag{ font-family:var(--mono); font-size:12.5px; color:var(--red-bright); margin-bottom:10px; }
+.lesson-head h1{ font-family:var(--serif); font-size:clamp(32px,5vw,46px); margin:0 0 8px; }
+.lesson-head .native{ font-size:16px; color:var(--paper-faint); margin-bottom:18px; }
+.lesson-meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:22px; }
+.lesson-learn{
+  background:var(--ink-card); border:1px solid var(--line); padding:18px 20px; font-size:14.5px;
+}
+.lesson-learn p{ margin:0 0 8px; color:var(--paper-dim); }
+.lesson-learn ul{ margin:0; padding-left:18px; }
+.lesson-learn li{ margin-bottom:4px; }
+
+.lsec{ margin:0 0 56px; scroll-margin-top:90px; }
+.lsec h2{ font-family:var(--serif); font-size:25px; margin:0 0 18px; display:flex; align-items:center; gap:12px; }
+.lsec h2 .mk{ width:8px; height:8px; background:var(--red); flex:none; }
+.lsec h3{ font-family:var(--sans); font-weight:700; font-size:16px; margin:26px 0 10px; color:var(--paper); }
+.lsec p{ color:var(--paper-dim); margin:0 0 14px; max-width:70ch; }
+.lsec p strong{ color:var(--paper); font-weight:600; }
+.lsec ul, .lsec ol{ color:var(--paper-dim); max-width:70ch; padding-left:20px; margin:0 0 14px; }
+.lsec li{ margin-bottom:6px; }
+
+table.cmp td{ color:var(--paper-dim); }
+
+pre.code{
+  background:#000; border:1px solid var(--line); padding:18px 20px; overflow:auto;
+  font-size:13.5px; line-height:1.55; max-width:70ch; position:relative; color:#e8e2dc;
+}
+pre.code .cmt{ color:#6c6460; }
+pre.code .kw{ color:var(--red-bright); }
+pre.code .str{ color:#c9b37a; }
+.mc-opts{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+.mc-opt{ border:1px solid var(--line); padding:10px 14px; cursor:pointer; font-size:14px; }
+.mc-opt:hover{ border-color:var(--paper-faint); }
+.mc-opt.picked{ border-color:var(--red-bright); }
+
+.ctf{
+  border:1px solid var(--red-deep); max-width:70ch; background:
+    linear-gradient(180deg, rgba(142,42,46,0.06), transparent 40%), var(--ink-card);
+}
+/* ---------- lesson nav ---------- */
+.lesson-nav{ display:flex; justify-content:space-between; margin-top:50px; border-top:1px solid var(--line); padding-top:24px; }
+.nav-link{ max-width:46%; }

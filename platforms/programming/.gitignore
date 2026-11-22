@@ -1,0 +1,12 @@
+node_modules/
+public/course-manifest.json
+public/course-assets/
+public/app.bundle.js
+.vercel/
+.browser-profile/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db

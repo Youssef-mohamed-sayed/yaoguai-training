@@ -1,12 +1,16 @@
 {
-  "name": "yaoguai-essentials-training",
+  "name": "yaoguai-training",
   "version": "1.0.0",
-  "description": "",
+  "description": "Unified cybersecurity learning platform",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "node scripts/copy-bridge.mjs && npm run build:linux && npm run build:programming && vite build && node scripts/package-platforms.mjs",
+    "build:linux": "npm --prefix platforms/linux run build",
+    "build:programming": "npm --prefix platforms/programming run build",
+    "check:programming": "npm --prefix platforms/programming run check:content",
+    "test:linux": "npm --prefix platforms/linux test",
     "preview": "vite preview --host 0.0.0.0"
   },
   "keywords": [],

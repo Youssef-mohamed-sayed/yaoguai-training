@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHA-1 â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="sha1">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding">Encoding</a>
+      <a href="../index.html#encryption">Encryption</a>
+      <a href="../index.html#hashing" class="active">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">HASHING Â· MODULE 13</div>
+      <h1>SHA-1</h1>
+      <div class="native">å®‰å…¨ãªæ—§å¼ãƒãƒƒã‚·ãƒ¥ â€” deprecated secure hash</div>
+      <div class="lesson-meta">
+        <span class="badge easy">Easy</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>How SHA-1 compares structurally to MD5 (wider digest, more steps, same one-way principle)</li>
+          <li>What the 2017 SHAttered collision actually demonstrated, and why it matters</li>
+          <li>Why digest width alone doesn't make a hash suitable for passwords</li>
+          <li>How to identify a hash type from its digest length alone</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>SHA-1 is MD5's sturdier sibling â€” same purpose (a one-way digest), same general shape of algorithm (padding, working buffers, rounds of mixing), but a wider output. It had a longer security life than MD5, but met the identical fate: practical collisions, eventually found, retired it for anything security-critical.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>SHA-1 ("Secure Hash Algorithm 1") was designed by the US National Security Agency and published by NIST in 1995, as part of the SHA family succeeding the earlier SHA-0. For over a decade it was the default secure hash â€” used in TLS certificates, Git commit hashes, and software signing. Cryptanalysts chipped away at it theoretically for years, and in 2017 Google and CWI Amsterdam published "SHAttered," the first practical SHA-1 collision â€” two different PDF files with identical SHA-1 hashes. Major browsers and certificate authorities phased it out shortly after.</p>
+      <div class="badge advanced" style="display:inline-block;margin:6px 0 10px;">Status today: Educational / Legacy / Insecure for security purposes</div>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define"><span class="term">DEFINITION</span><p>SHA-1 is a hash function producing a 160-bit (20-byte, 40 hex character) digest from an input of any length â€” one-way, deterministic, no key, same as MD5 but with a wider output and a different internal mixing schedule.</p></div>
+      <table class="cmp">
+        <tr><th></th><th>Digest size</th><th>Status</th></tr>
+        <tr><td>MD5</td><td>128 bits</td><td>Broken (fast, practical collisions)</td></tr>
+        <tr><td>SHA-1</td><td>160 bits</td><td>Broken (slower, but now practical collisions exist)</td></tr>
+        <tr><td>SHA-256</td><td>256 bits</td><td>Currently considered secure (next module)</td></tr>
+      </table>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How SHA-1 works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Message</span><i>â†’</i><span>Pad to 512-bit multiple</span><i>â†’</i><span>5 working buffers (A-E)</span><i>â†’</i><span>4 rounds Ã— 20 steps per 512-bit block</span><i>â†’</i><span>160-bit digest</span></div>
+      <p>Structurally close to MD5 but not identical: SHA-1 keeps <strong>five</strong> 32-bit buffers (not four), and each 512-bit block is processed through <strong>80 steps</strong> (4 rounds of 20), each step rotating and mixing the buffers with a round-specific nonlinear function, a message-derived word, and a round constant. Like MD5, every step is one-way mixing â€” there's no algebraic inverse that recovers the input from the digest.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">predict output</span></div>
+        <div class="task-body">
+          <p>How many hex characters is a SHA-1 digest, given it's 160 bits and each hex digit is 4 bits?</p>
+          <input type="text" placeholder="number">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'40')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” 160 / 4 = 40 hex characters."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="SHA-1 in Python">
+      <h2><span class="mk"></span>SHA-1 in Python</h2>
+      <span class="code-label">hashing.py</span>
+      <pre class="code"><span class="kw">def</span> sha1_hash(data: str) -> str:
+    <span class="kw">return</span> sha1_core.sha1_hexdigest(data.encode(<span class="str">"utf-8"</span>))</pre>
+      <p><code>sha1_core.py</code> implements SHA-1's padding, 80-step mixing, and digest assembly from scratch, verified against Python's built-in <code>hashlib</code>.</p>
+      <pre class="code">digest = sha1_hash(<span class="str">"password123"</span>)
+<span class="kw">print</span>(digest)   <span class="cmt"># cbfdac6008f9cab4083784cbd1874f76618d2a97</span></pre>
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">multiple choice</span></div>
+        <div class="task-body">
+          <p>Would you use SHA-1 to store user passwords today?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Yes â€” 160 bits is plenty wide</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No â€” it's fast and unsalted by default, same password-storage problem MD5 has, use bcrypt instead</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” digest width doesn't fix the speed problem; use a purpose-built password hash."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">identify</span></div>
+        <div class="task-body">
+          <p>Given only a hex digest string's length (40 hex characters, no other context), which of MD5/SHA-1/SHA-256 is it most likely to be?</p>
+          <input type="text" placeholder="MD5, SHA-1, or SHA-256">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'sha-1')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” 40 hex chars = 160 bits = SHA-1 (MD5 is 32 chars, SHA-256 is 64)."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>Wider digest than MD5</strong> (160 vs. 128 bits), which resisted collision attacks longer.</li>
+        <li><strong>Still fine for non-security uses</strong> â€” Git, for instance, still uses SHA-1 for commit identifiers, where the threat model (detecting accidental corruption, not resisting a deliberate attacker) is different from a security boundary.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger"><p><strong>Algorithm weakness:</strong> SHA-1 has known, practical collision attacks (the 2017 "SHAttered" demonstration) â€” two different inputs engineered to produce the identical digest. <strong>SHA-1 has known collision weaknesses</strong> and should not be used anywhere a security guarantee depends on uniqueness (certificates, signatures, integrity against a deliberate attacker).</p></div>
+      <div class="callout warn"><p><strong>Implementation weakness â€” speed, for passwords:</strong> exactly as with MD5, SHA-1 is fast, making it unsuitable for password storage regardless of its collision status â€” GPUs compute SHA-1 nearly as fast as MD5.</p></div>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>Finding SHA-1 in a modern system (an old certificate, an outdated signing process, a legacy git-based integrity check used as a security boundary) is itself a finding in a security audit. In CTFs, SHA-1 challenges mirror MD5's â€” cracking unsalted digests via wordlists â€” plus occasionally referencing the SHAttered-style collision concept directly (recognizing why "same hash" no longer proves "same file").</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· CRACK THE OTHER DIGEST</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>Another leaked account, this time with an unsalted SHA-1 password hash.</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Recover the password â€” another extremely common one.</p></div>
+          <div class="ctf-row"><span class="k">GIVEN DATA</span><pre class="code">7c6a61c68ef8b9b6b061b28c348bc1ed7921cb53</pre></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{the_password}</code></p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>Same approach as the MD5 challenge â€” wordlist attack, just a different hash function.</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>It's "letmein" â€” another top-10 common password.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{letmein}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>PYTHON</h5>
+              <pre class="code"><span class="kw">import</span> hashlib
+<span class="kw">for</span> candidate <span class="kw">in</span> open(<span class="str">"rockyou.txt"</span>, encoding=<span class="str">"latin-1"</span>):
+    candidate = candidate.strip()
+    <span class="kw">if</span> hashlib.sha1(candidate.encode()).hexdigest() == <span class="str">"7c6a61c68ef8b9b6b061b28c348bc1ed7921cb53"</span>:
+        <span class="kw">print</span>(candidate)   <span class="cmt"># letmein</span>
+        <span class="kw">break</span></pre>
+              <h5>FLAG</h5>
+              <p><code>flag{letmein}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>SHA-1 produces a 160-bit digest through 80 steps of mixing across 5 working buffers.</li>
+        <li>Practical collisions (SHAttered, 2017) retired it for integrity/signature use.</li>
+        <li>Still fast â€” still wrong for passwords, same as MD5.</li>
+        <li>SHA-256 (next module) is the modern, currently-trusted replacement.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Network Essentials, the Yaoguai cybersecurity course on networking, Nmap, Wireshark, and CTF analysis.">
+  <title>{{ title }} Â· Yaoguai Network</title>
+  <link rel="icon" href="/network/assets/images/favicon.ico" sizes="any">
+  <link rel="icon" href="/network/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/network/assets/theme.css">
+  <link rel="stylesheet" href="/network/assets/network.css">
+  <script src="/network/assets/js/training-bridge.js"></script>
+  <script type="module" src="/network/assets/js/site.js"></script>
+</head>
+<body{% if page and page.url in course.positions %} data-current="{{ page.url }}"{% endif %}>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/network">
+        <img class="brand-mark" src="/network/assets/images/logo-emblem.png" alt="" width="36" height="36">
+        <span class="brand-text"><b>YAOGUAI</b><span>NETWORK TRAINING GROUND</span></span>
+      </a>
+      <nav class="topnav" aria-label="Main navigation">
+        <a href="/network#modules">Modules</a>
+        <a href="/network/course">Course guide</a>
+        {% if 'final-challenges' in course.modules %}<a href="/network/final-challenges">Challenges</a>{% endif %}
+      </nav>
+      <div class="topbar-tools">
+        <a class="nav-search" href="/network/search" aria-label="Search course"><span aria-hidden="true">âŒ•</span> Search</a>
+        <span class="progress-chip" data-progress-count title="Progress is saved in this browser">0/{{ course.sequence|length }} complete</span>
+      </div>
+    </div>
+  </header>
+  {% block body %}{% endblock %}
+  <footer class="site-footer">
+    <div class="wrap">
+      <img class="footer-logo" src="/network/assets/images/yaoguai-logo.jpg" width="48" height="48" alt="">
+      <span>YAOGUAI NETWORK <span aria-hidden="true">/</span> å¦–æ€ª</span>
+      <a href="/network/course">Course guide</a>
+    </div>
+  </footer>
+  <template id="course-pages">{% for item in course.sequence %}<span data-url="{{ item.url }}" data-title="{{ item.title }}" data-module="{{ item.module }}"></span>{% endfor %}</template>
+</body>
+</html>

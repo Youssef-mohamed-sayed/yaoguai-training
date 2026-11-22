@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RSA â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="rsa">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding">Encoding</a>
+      <a href="../index.html#encryption" class="active">Encryption</a>
+      <a href="../index.html#hashing">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">ENCRYPTION Â· MODULE 11 Â· ASYMMETRIC</div>
+      <h1>RSA</h1>
+      <div class="native">éžå¯¾ç§°æš—å· â€” public-key encryption</div>
+      <div class="lesson-meta">
+        <span class="badge advanced">Advanced</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>What a public key and a private key actually are, and why they're different</li>
+          <li>How RSA's key generation ties together primes, Ï†(n), e, and d</li>
+          <li>Why RSA needs proper padding, and what breaks without it</li>
+          <li>Classic RSA CTF attack patterns: factoring a weak n, small-exponent attacks</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>RSA is the other half of public-key cryptography: where Diffieâ€“Hellman agrees on a shared secret, RSA lets anyone encrypt a message using a key that's completely public â€” and only the holder of a matching private key can decrypt it. This is the biggest conceptual jump in the course: for the first time, encryption and decryption use <strong>different</strong> keys.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>RSA was published in 1977 by Ron Rivest, Adi Shamir, and Leonard Adleman (its name is their initials), shortly after Diffieâ€“Hellman introduced the idea of public-key cryptography but before anyone had a practical public-key <em>encryption</em> scheme (Diffie-Hellman only does key exchange). RSA filled that gap, and (separately discovered a few years earlier but classified at UK intelligence agency GCHQ) remains one of the two or three most widely deployed public-key systems in the world â€” behind HTTPS certificates, SSH, PGP email, and code-signing.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define"><span class="term">DEFINITION</span><p>RSA is a public-key (asymmetric) encryption scheme: a public key (e, n) can encrypt, but only the matching private key (d, n) can decrypt â€” built on the difficulty of factoring the product of two large primes.</p></div>
+      <div class="callout define"><span class="term">PUBLIC KEY / PRIVATE KEY</span><p>The public key is shared with anyone â€” it provides no way to decrypt. The private key is kept secret by its owner and is the only thing that can reverse an RSA encryption.</p></div>
+      <p>RSA's security rests on a different hard problem than Diffieâ€“Hellman's: given a very large number <code>n</code> that's the product of two large primes <code>p</code> and <code>q</code>, finding <code>p</code> and <code>q</code> (factoring <code>n</code>) is believed to be computationally infeasible for large enough numbers â€” even though multiplying <code>p Ã— q</code> in the first place is trivial.</p>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How RSA works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Pick primes p, q</span><i>â†’</i><span>n = pÃ—q, compute Ï†(n)</span><i>â†’</i><span>Choose public e, derive private d</span><i>â†’</i><span>Encrypt: c = m^e mod n</span><i>â†’</i><span>Decrypt: m = c^d mod n</span></div>
+      <h3>Key generation</h3>
+      <ol>
+        <li>Pick two large random primes, <code>p</code> and <code>q</code>. Compute <code>n = p Ã— q</code> â€” this becomes part of both keys.</li>
+        <li>Compute <code>Ï†(n) = (p-1)(q-1)</code> (Euler's totient â€” a value tied to how many numbers below n share no common factor with it).</li>
+        <li>Choose a public exponent <code>e</code> (commonly 65537) that shares no common factor with <code>Ï†(n)</code>.</li>
+        <li>Compute the private exponent <code>d</code>, the modular inverse of <code>e</code> mod <code>Ï†(n)</code> â€” the one number satisfying <code>(e Ã— d) mod Ï†(n) = 1</code>.</li>
+      </ol>
+      <p>Public key: <code>(e, n)</code>. Private key: <code>(d, n)</code>. <code>p</code>, <code>q</code>, and <code>Ï†(n)</code> are discarded/kept secret â€” if anyone recovers them from <code>n</code> (by factoring it), they can compute <code>d</code> themselves and break the key entirely.</p>
+      <h3>Encrypt / decrypt</h3>
+      <p>Treating the message <code>m</code> as a number smaller than <code>n</code>: <code>ciphertext c = m^e mod n</code>, and <code>plaintext m = c^d mod n</code>. The matching exponents <code>e</code> and <code>d</code> are mathematically constructed (via <code>Ï†(n)</code>) so this round-trips exactly.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">identify</span></div>
+        <div class="task-body">
+          <p>Which value, if an attacker recovers it, completely breaks an RSA key?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">n â€” but it's already public, so this doesn't tell us anything new</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">The prime factors p and q of n (which let them compute d)</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” everything about the private key can be rebuilt from p and q, which is exactly why factoring n is the attack that matters."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="RSA in Python">
+      <h2><span class="mk"></span>RSA in Python</h2>
+      <span class="code-label">rsa_core.py (shape of the implementation)</span>
+      <pre class="code"><span class="kw">def</span> generate_keypair(bits=512):
+    p = _generate_prime(bits // 2)
+    q = _generate_prime(bits // 2)
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    e = 65537
+    d = _modinv(e, phi)
+    <span class="kw">return</span> (e, n), (d, n)   <span class="cmt"># (public_key, private_key)</span>
+
+<span class="kw">def</span> rsa_encrypt_int(m: int, e: int, n: int) -> int:
+    <span class="kw">return</span> pow(m, e, n)
+
+<span class="kw">def</span> rsa_decrypt_int(c: int, d: int, n: int) -> int:
+    <span class="kw">return</span> pow(c, d, n)</pre>
+      <pre class="code">public_key, private_key = rsa_generate_keys(bits=512)
+e, n = public_key
+d, _ = private_key
+
+ciphertext = rsa_encrypt(<span class="str">"hi"</span>, e, n)
+<span class="kw">print</span>(ciphertext)
+
+plaintext = rsa_decrypt(ciphertext, d, n)
+<span class="kw">print</span>(plaintext)   <span class="cmt"># hi</span></pre>
+      <div class="callout warn"><p><strong>This project's RSA is "textbook RSA"</strong> (the direct <code>m^e mod n</code> math above), built for teaching the core idea. Real-world RSA always adds <strong>padding</strong> (such as OAEP) before encrypting â€” textbook RSA alone has serious practical weaknesses, covered below.</p></div>
+
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">complete the code</span></div>
+        <div class="task-body">
+          <p>Fill in the missing exponent for decryption (the public key uses e; what does the private key use?):</p>
+          <pre class="code">c = pow(m, e, n)
+m_again = pow(c, ______, n)</pre>
+          <input type="text" placeholder="which exponent?">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'d')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” d, the private exponent."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">identify the weakness</span></div>
+        <div class="task-body">
+          <p>Two different messages are encrypted with the same small public exponent e=3 and no padding, and by coincidence they encrypt to a tiny ciphertext (smaller than n). What class of attack becomes possible against textbook RSA like this?</p>
+          <input type="text" placeholder="name the attack idea">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,['cube root','root attack','low exponent'],'input,textarea')">Check</button></div>
+          <div class="task-fb" data-ok="On the right track â€” with small e and no padding, if m^e is smaller than n, you can recover m by simply taking an integer e-th root of the ciphertext â€” no factoring needed at all." data-bad="Think about what pow(m, 3) actually looks like as a plain integer if m is small and n is large â€” is there a shortcut, mathematically, to undo exponentiation?"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>True public-key encryption</strong> â€” anyone can encrypt to you using only your public key, with no prior shared secret.</li>
+        <li><strong>Also enables digital signatures</strong> â€” the roles of e and d can be flipped, letting you "sign" with your private key so anyone can verify with your public key.</li>
+        <li><strong>Decades of scrutiny</strong> â€” with proper key sizes (2048+ bits today) and proper padding, RSA remains trusted and widely deployed.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger"><p><strong>Algorithm weakness â€” textbook RSA without padding</strong> is deterministic (same message always encrypts to the same ciphertext) and malleable (an attacker can manipulate ciphertexts in predictable ways without knowing the key), plus vulnerable to small-exponent attacks like the one in Task 03. <strong>RSA should be taught and used with appropriate padding (OAEP)</strong>, never as raw textbook math in production.</p></div>
+      <div class="callout warn"><p><strong>Implementation weakness â€” small or poorly generated primes:</strong> if p and q aren't large enough, or aren't properly random (shared between unrelated keys, generated from a weak source of randomness, or close together in value), n becomes factorable â€” directly recovering the private key. This project's <code>bits=512</code> default is intentionally small for teaching speed; real RSA keys use 2048+ bits specifically because 512-bit RSA has been practically factored by researchers.</p></div>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>RSA CTF challenges are a genre of their own: factoring a deliberately small or weak <code>n</code>, exploiting a shared prime factor between two different public keys (a classic and surprisingly realistic mistake), Wiener's attack against a too-small private exponent <code>d</code>, and small-exponent/no-padding attacks like Task 03's. Tools like <code>factordb.com</code> and libraries like <code>sympy</code> or <code>RsaCtfTool</code> are standard CTF kit for exactly these scenarios. RSA is also central to real-world security work: TLS certificate analysis, SSH key auditing, and PGP/GPG all rest on these same primitives.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· TINY MODULUS</b><span class="badge advanced">Advanced</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A deliberately weak RSA key was generated for a demo: n = 3233, e = 17. You intercepted the ciphertext c = 2790 (a single small integer, no padding).</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Factor n, derive the private key, and recover the plaintext integer m.</p></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{m}</code> â€” the recovered plaintext integer</p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>3233 is small enough to factor by trial division: try every prime up to its square root (~57).</p></details>
+            <details class="hint"><summary>Hint 2</summary><p>3233 = 61 Ã— 53. Compute Ï†(n) = 60 Ã— 52, then find d as the modular inverse of 17 mod Ï†(n).</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{65}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>PYTHON</h5>
+              <pre class="code">n, e, c = 3233, 17, 2790
+p, q = 61, 53                      <span class="cmt"># 61 * 53 = 3233, found by trial division</span>
+phi = (p - 1) * (q - 1)            <span class="cmt"># 3120</span>
+d = pow(e, -1, phi)                <span class="cmt"># modular inverse of e mod phi</span>
+m = pow(c, d, n)
+<span class="kw">print</span>(m)   <span class="cmt"># 65</span></pre>
+              <h5>FLAG</h5>
+              <p><code>flag{65}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>RSA is asymmetric: a public key (e, n) encrypts, a private key (d, n) decrypts.</li>
+        <li>Security rests on the difficulty of factoring n = p Ã— q back into its prime factors.</li>
+        <li>Textbook RSA (raw, unpadded math) has real exploitable weaknesses â€” always use proper padding in practice.</li>
+        <li>This closes the encryption category: symmetric (XOR â†’ RC4 â†’ DES â†’ 3DES â†’ AES) to asymmetric (Diffie-Hellman â†’ RSA). Hashing is next.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Keep local tooling, credentials, and databases out of deployment uploads.
+.git/
+.vercel/
+.venv/
+venv/
+env/
+node_modules/
+.test-runtime
+.codex
+.agents
+.neon
+.env
+.env.*
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.db
+**/*.db-wal
+**/*.db-shm
+*.rar
+tests/

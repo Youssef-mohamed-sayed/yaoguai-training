@@ -1,0 +1,26 @@
+﻿{% extends "base.html" %}
+{% block body %}
+<main id="main" class="wrap search-page">
+  <div class="cat-tag">NETWORK ESSENTIALS</div>
+  <h1>Search the course</h1>
+  <form class="search-form" action="/network/search" method="get" role="search">
+    <label class="sr-only" for="query">Search lesson content</label>
+    <input id="query" name="q" type="search" value="{{ query }}" placeholder="Try DNS, TCP handshake, or subnetting" maxlength="120" required>
+    <button class="btn btn-primary" type="submit">Search</button>
+  </form>
+  {% if query %}
+    <p class="search-count">{{ results|length }} result{% if results|length != 1 %}s{% endif %} for â€œ{{ query }}â€</p>
+    {% if results %}
+      <ul class="search-results">
+      {% for score, item, anchor, section, snippet in results %}
+        <li><a href="{{ item.url }}{% if anchor %}#{{ anchor }}{% endif %}">
+          {% if item.module %}<span class="cat-tag">{{ course.modules[item.module].index.title }}</span>{% endif %}
+          <strong>{{ item.title }}</strong>{% if anchor %}<span class="search-section">{{ section }}</span>{% endif %}
+          {% if snippet %}<span class="search-snippet">{{ snippet }}</span>{% endif %}
+        </a></li>
+      {% endfor %}
+      </ul>
+    {% else %}<p>Try a protocol name, a command, or a shorter phrase.</p>{% endif %}
+  {% endif %}
+</main>
+{% endblock %}

@@ -1,0 +1,219 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASCII â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="ascii">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding" class="active">Encoding</a>
+      <a href="../index.html#encryption">Encryption</a>
+      <a href="../index.html#hashing">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">ENCODING Â· MODULE 03</div>
+      <h1>ASCII</h1>
+      <div class="native">æ–‡å­—ç¬¦å· â€” character codes</div>
+      <div class="lesson-meta">
+        <span class="badge beginner">Beginner</span>
+        <div class="diffmeter"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>What the ASCII table actually is, and why it only needs 128 values</li>
+          <li>How <code>ord()</code>/<code>chr()</code> convert between characters and numbers</li>
+          <li>Why this is the foundation hex, Base64, and UTF-8 all build on</li>
+          <li>How to read a CTF message given only as a list of numbers</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>You've been reading byte values since the Hex lesson ("H" = 72, "e" = 101...) without a name for why. ASCII is that name: the table that assigns every common keyboard character a number from 0 to 127. It's the smallest, oldest piece of the puzzle â€” but almost every bug, encoding trick, and obfuscation technique later in this course assumes you know it cold.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>ASCII ("American Standard Code for Information Interchange") was standardized in 1963, when different computer manufacturers each used incompatible character codes, making it hard to exchange text between machines. ASCII fixed that by agreeing, industry-wide, on one number per character. It used 7 bits (0â€“127), covering English letters, digits, punctuation, and a handful of non-printable "control characters" left over from teletype machines (like newline and tab). It's still the foundation of modern text today â€” <strong>UTF-8</strong>, the encoding behind most of the internet, was deliberately designed so that any plain ASCII text is already valid UTF-8, unchanged.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define"><span class="term">DEFINITION</span><p>ASCII is a fixed table mapping 128 characters (letters, digits, punctuation, and control characters) to the numbers 0â€“127.</p></div>
+      <table class="cmp">
+        <tr><th>Character</th><th>Decimal</th><th>Hex</th></tr>
+        <tr><td>'A'</td><td>65</td><td>0x41</td></tr>
+        <tr><td>'a'</td><td>97</td><td>0x61</td></tr>
+        <tr><td>'0'</td><td>48</td><td>0x30</td></tr>
+        <tr><td>' ' (space)</td><td>32</td><td>0x20</td></tr>
+      </table>
+      <p>Notice 'a' (97) is exactly 32 more than 'A' (65) â€” uppercase and lowercase letters are a fixed offset apart, which is why case-shifting a letter is just adding or subtracting 32.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">predict output</span></div>
+        <div class="task-body">
+          <p>'A' is 65. What ASCII decimal value is 'D'? (A, B, C, D are consecutive.)</p>
+          <input type="text" placeholder="number">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'68')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” A=65, B=66, C=67, D=68."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How it works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Character</span><i>â†’</i><span>Look up in the ASCII table</span><i>â†’</i><span>Decimal (or binary / hex) value</span></div>
+      <p>Encoding is just a table lookup in one direction; decoding is the same table read backwards. There's no computation, no key â€” it's pure, fixed correspondence, which is why it's the simplest "encoding" in this course even simpler than hex (hex is actually built on top of the byte values ASCII assigns).</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">multiple choice</span></div>
+        <div class="task-body">
+          <p>What relationship does ASCII have to Hex encoding?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">They're unrelated, competing standards</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">Hex encoding writes each character's underlying ASCII/byte value in base-16</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” hex is just a different way of writing the same byte values ASCII assigns."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="ASCII in Python">
+      <h2><span class="mk"></span>ASCII in Python</h2>
+      <span class="code-label">encoding.py</span>
+      <pre class="code"><span class="kw">def</span> ascii_encode(data: str) -> list:
+    <span class="kw">return</span> [ord(ch) <span class="kw">for</span> ch <span class="kw">in</span> data]
+
+<span class="kw">def</span> ascii_decode(codes) -> str:
+    <span class="kw">return</span> "".join(chr(c) <span class="kw">for</span> c <span class="kw">in</span> codes)</pre>
+      <p>Python's built-in <code>ord()</code> and <code>chr()</code> are the ASCII table lookup in each direction.</p>
+      <pre class="code">codes = ascii_encode(<span class="str">"hi"</span>)
+<span class="kw">print</span>(codes)              <span class="cmt"># [104, 105]</span>
+<span class="kw">print</span>(ascii_decode(codes))  <span class="cmt"># hi</span></pre>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">complete the code</span></div>
+        <div class="task-body">
+          <p>Fill in the function that reverses <code>ascii_encode</code>:</p>
+          <pre class="code">codes = ascii_encode("key")
+original = ______(codes)</pre>
+          <input type="text" placeholder="function name">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'ascii_decode')">Check</button></div>
+          <div class="task-fb" data-ok="Correct."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 04</b><span class="task-type">decode</span></div>
+        <div class="task-body">
+          <p>Decode these ASCII codes to text: <code>102 108 97 103</code></p>
+          <input type="text" placeholder="decoded text">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'flag')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” flag."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>Universal</strong> â€” every modern text encoding (UTF-8 included) agrees with ASCII for the characters it covers.</li>
+        <li><strong>Simple and fast</strong> â€” a direct table lookup, nothing to compute.</li>
+        <li><strong>Human-readable</strong> for the characters it covers (unlike, say, raw binary).</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger"><p><strong>Zero confidentiality</strong> â€” exactly like hex and Base64, this is representation, not protection. There's no key, and the table is public and fixed.</p></div>
+      <p>ASCII's other practical limitation (not a security weakness) is that 128 values aren't enough for every language's alphabet â€” accented letters, Arabic, Chinese, emoji, etc. all needed <strong>Unicode</strong>/UTF-8 to extend far beyond ASCII's original range, while staying backward-compatible with it.</p>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>Fluency in ASCII values is a background skill behind almost every other module: reading raw memory dumps, recognizing a string hidden as decimal/hex/octal byte values in a CTF challenge, understanding buffer-overflow payloads (which are built byte-by-byte), and reasoning about case-shift or Caesar-style obfuscation (which exploit ASCII's fixed letter ordering and the A/a offset you found in Task 01).</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· NUMBERS STATION</b><span class="badge beginner">Beginner</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>An intercepted message is just a list of decimal numbers.</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Recover the flag by converting each number to its ASCII character.</p></div>
+          <div class="ctf-row"><span class="k">GIVEN DATA</span><pre class="code">102 108 97 103 123 97 115 99 105 105 95 105 115 95 101 97 115 121 125</pre></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code></p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>Use <code>chr()</code> on each number, in Python or by hand with an ASCII table.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{ascii_is_easy}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>PYTHON</h5>
+              <pre class="code">codes = [102,108,97,103,123,97,115,99,105,105,95,105,115,95,101,97,115,121,125]
+<span class="kw">print</span>("".join(chr(c) <span class="kw">for</span> c <span class="kw">in</span> codes))</pre>
+              <h5>FLAG</h5>
+              <p><code>flag{ascii_is_easy}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>ASCII maps 128 characters to numbers 0â€“127 â€” a fixed, public table.</li>
+        <li><code>ord()</code>/<code>chr()</code> move between a character and its code.</li>
+        <li>No confidentiality â€” it's the foundation every other encoding in this course builds on.</li>
+        <li>UTF-8 is a superset that's backward-compatible with plain ASCII.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

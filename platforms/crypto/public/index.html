@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>å¦–æ€ª YAOGUAI â€” Cryptography Training Ground</title>
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/images/favicon-180.png">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img class="brand-mark" src="assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </div>
+    <nav class="topnav">
+      <a href="#encoding">Encoding</a>
+      <a href="#encryption">Encryption</a>
+      <a href="#hashing">Hashing</a>
+      <a href="tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools">
+      <span class="progress-chip">0/0 modules complete</span>
+    </div>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="hero-static"></div>
+  <div class="wrap hero-inner">
+    <img class="hero-art" src="assets/images/yaoguai-background.jpg" alt="Yaoguai emblem" width="300" height="300">
+        <h1>Learn cryptography <i>step by step.</i></h1>
+    <p class="lede">Short lessons on encoding, encryption and hashing, each with a hands-on task and a challenge.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" id="continue-btn" href="lessons/hex.html">Start with Hexadecimal</a>
+      <a class="btn btn-ghost" href="#encoding">View full path</a>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <div class="section-head" id="encoding">
+    <h2>Encoding <small>01 â€” representation</small></h2>
+    <span class="section-count">4 modules</span>
+  </div>
+  <div class="cat-strip">
+    <p>Changing how data looks, without a secret.</p>
+  </div>
+  <div class="grid" id="grid-encoding"></div>
+
+  <div class="section-head" id="encryption">
+    <h2>Encryption <small>02 â€” confidentiality</small></h2>
+    <span class="section-count">7 modules</span>
+  </div>
+  <div class="cat-strip">
+    <p>Protecting data with a key.</p>
+  </div>
+  <div class="grid" id="grid-encryption"></div>
+
+  <div class="section-head" id="hashing">
+    <h2>Hashing <small>03 â€” integrity &amp; passwords</small></h2>
+    <span class="section-count">5 modules</span>
+  </div>
+  <div class="cat-strip">
+    <p>One-way fingerprints for integrity and passwords.</p>
+  </div>
+  <div class="grid" id="grid-hashing"></div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <img class="footer-logo" src="assets/images/yaoguai-logo.jpg" alt="Yaoguai å¦–æ€ª" width="64" height="64">
+    <span>YAOGUAI â€” educational use only.</span>
+    <div class="barcode" aria-hidden="true">
+      <script>document.write(Array.from({length:40},()=>`<i style="height:${6+Math.random()*14}px"></i>`).join(""))</script>
+    </div>
+  </div>
+</footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="js/api.js"></script>
+<script src="js/registry.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/training-bridge.js"></script>
+</body>
+</html>

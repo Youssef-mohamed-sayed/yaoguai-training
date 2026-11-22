@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHA-256 â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="sha256">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding">Encoding</a>
+      <a href="../index.html#encryption">Encryption</a>
+      <a href="../index.html#hashing" class="active">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">HASHING Â· MODULE 14</div>
+      <h1>SHA-256</h1>
+      <div class="native">ç¾è¡Œãƒãƒƒã‚·ãƒ¥æ¨™æº– â€” current hash standard</div>
+      <div class="lesson-meta">
+        <span class="badge intermediate">Intermediate</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>How SHA-256 scales up SHA-1's idea: more state, more rounds, bigger security margin</li>
+          <li>Why it remains trusted today with no known practical collision</li>
+          <li>The most important lesson in the whole hashing category: 'secure hash' â‰  'safe for passwords'</li>
+          <li>Why a stronger algorithm alone never fixes a weak, guessable password</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>SHA-256 is where the "one-way digest" story currently lands for general-purpose hashing: no known practical collisions, a wide 256-bit output, and it's everywhere â€” TLS certificates, Git's newer hash option, Bitcoin's proof-of-work, and software/firmware signing. If MD5 and SHA-1 taught you what breaks, SHA-256 is what to actually reach for.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>SHA-256 is part of the SHA-2 family, designed by the NSA and published by NIST in 2001 as the intended replacement once SHA-1's long-term security was already being questioned (well before SHA-1's practical break actually arrived in 2017). Unlike the awkward transition from MD5 to SHA-1 (both eventually broken), SHA-256 was specifically engineered with a larger internal state and more mixing to resist the same style of attack. It remains the current standard today, over two decades on, with no practical collision or preimage attack found.</p>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define"><span class="term">DEFINITION</span><p>SHA-256 is a hash function producing a 256-bit (32-byte, 64 hex character) digest â€” currently considered cryptographically secure, with no known practical way to find a collision or reverse it.</p></div>
+      <p>Like MD5 and SHA-1, it's still deterministic, one-way, and keyless â€” the same three hashing properties carry through the whole family. What's different is scale and internal design: a bigger output, a bigger internal state, and more mixing steps, all making the brute-force and collision math dramatically harder.</p>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How SHA-256 works">
+      <h2><span class="mk"></span>How it works</h2>
+      <div class="flow"><span>Message</span><i>â†’</i><span>Pad to 512-bit multiple</span><i>â†’</i><span>8 working buffers (a-h)</span><i>â†’</i><span>64 rounds of mixing per 512-bit block</span><i>â†’</i><span>256-bit digest</span></div>
+      <p>SHA-256 keeps <strong>eight</strong> 32-bit working variables (compare: MD5 has 4, SHA-1 has 5), and processes each 512-bit block through <strong>64 rounds</strong>, each mixing in a message-derived word and a round constant (the first 32 bits of the fractional parts of the cube roots of the first 64 prime numbers â€” deliberately chosen to be "nothing up my sleeve" numbers, not secretly weakened). The larger state and more rounds are exactly what gives SHA-256 its much larger security margin over MD5/SHA-1.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">arrange / compare</span></div>
+        <div class="task-body">
+          <p>Order these three hash functions from smallest to largest digest size: SHA-256, MD5, SHA-1.</p>
+          <input type="text" placeholder="smallest to largest">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'md5,sha-1,sha-256')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” MD5 (128) < SHA-1 (160) < SHA-256 (256)."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="python" data-title="SHA-256 in Python">
+      <h2><span class="mk"></span>SHA-256 in Python</h2>
+      <span class="code-label">hashing.py</span>
+      <pre class="code"><span class="kw">def</span> sha256_hash(data: str) -> str:
+    <span class="kw">return</span> sha256_core.sha256_hexdigest(data.encode(<span class="str">"utf-8"</span>))</pre>
+      <pre class="code">digest = sha256_hash(<span class="str">"password123"</span>)
+<span class="kw">print</span>(digest)
+<span class="cmt"># ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94</span></pre>
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">predict output</span></div>
+        <div class="task-body">
+          <p>How many hex characters long is a SHA-256 digest?</p>
+          <input type="text" placeholder="number">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'64')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” 256 bits / 4 bits per hex digit = 64."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">multiple choice</span></div>
+        <div class="task-body">
+          <p>Is SHA-256 a safe choice for hashing passwords directly (no salt, no cost factor)?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Yes â€” it's currently considered cryptographically secure</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No â€” "cryptographically secure" and "safe for passwords" are different properties; SHA-256 is still fast and unsalted by default, same problem as MD5/SHA-1</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” this is the single most important distinction in this whole module: a secure general-purpose hash is still the wrong tool for passwords specifically. Use bcrypt/Argon2/scrypt for that."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>No known practical collision or preimage attack</strong> after over two decades of public cryptanalysis â€” currently trusted for integrity, signatures, and certificates.</li>
+        <li><strong>Large security margin</strong> â€” 256-bit output means brute-forcing a collision by chance (a "birthday attack") would need on the order of 2^128 attempts, astronomically infeasible.</li>
+        <li><strong>Fast and hardware-accelerated</strong> on modern CPUs, making it practical for high-throughput integrity checks (TLS, blockchain, file verification).</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <p>There's no known <strong>algorithm</strong> weakness to report for SHA-256 today â€” that's precisely why it's still the standard.</p>
+      <div class="callout warn"><p><strong>Implementation weakness â€” using it for passwords anyway:</strong> exactly like MD5 and SHA-1, SHA-256's speed (a strength for integrity-checking) becomes a liability the moment it's used to store passwords without a purpose-built, deliberately slow wrapper. Plain <code>sha256(password)</code>, even salted, is still far faster to brute-force per-guess than bcrypt â€” this is a misuse of the tool, not a flaw in SHA-256 itself.</p></div>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>SHA-256 underlies the integrity model of HTTPS certificates, code signing, and blockchain proof-of-work â€” understanding it is foundational for web security, forensics (verifying file/evidence integrity), and blockchain-adjacent security work alike. In CTFs, "crack this SHA-256 hash" challenges still work exactly like the MD5/SHA-1 wordlist attacks (the algorithm being secure doesn't stop a weak, guessable password from being found quickly) â€” the lesson repeats because it's the single most common real-world mistake: a strong hash function does not make a weak password strong.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· STRONG HASH, WEAK PASSWORD</b><span class="badge easy">Easy</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A developer proudly switched from MD5 to SHA-256 for password storage, with no salt and no slow hashing â€” believing "a stronger algorithm" alone fixed the problem.</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>Crack the password anyway, proving algorithm strength alone didn't help.</p></div>
+          <div class="ctf-row"><span class="k">GIVEN DATA</span><pre class="code">ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94</pre></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{the_password}</code></p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>Same wordlist attack as always â€” the algorithm being "stronger" doesn't matter if the password itself is common.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{password123}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>PYTHON</h5>
+              <pre class="code"><span class="kw">import</span> hashlib
+<span class="kw">for</span> candidate <span class="kw">in</span> open(<span class="str">"rockyou.txt"</span>, encoding=<span class="str">"latin-1"</span>):
+    candidate = candidate.strip()
+    <span class="kw">if</span> hashlib.sha256(candidate.encode()).hexdigest() == <span class="str">"ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94"</span>:
+        <span class="kw">print</span>(candidate)   <span class="cmt"># password123</span>
+        <span class="kw">break</span></pre>
+              <h5>THE REAL LESSON</h5>
+              <p>Switching MD5 â†’ SHA-256 changed nothing about brute-force cost here, because neither is designed to be slow. Only bcrypt/Argon2/scrypt (deliberately expensive, salted) actually fix this.</p>
+              <h5>FLAG</h5>
+              <p><code>flag{password123}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>SHA-256 produces a 256-bit digest through 64 rounds across 8 working buffers.</li>
+        <li>Currently has no known practical collision or preimage attack â€” the trusted standard today.</li>
+        <li>Still the wrong tool for passwords â€” speed makes it unsuitable regardless of its algorithmic strength.</li>
+        <li>This closes general-purpose hashing; bcrypt (next) is purpose-built for the one case SHA-256 isn't.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vercel/
+.env
+.env.*
+!.env.example
+public/course-data.json
+public/course-assets/
+.DS_Store
+Thumbs.db

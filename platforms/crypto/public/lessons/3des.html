@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triple DES â€” YAOGUAI</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+<link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/images/favicon-180.png">
+</head>
+<body data-lesson="3des">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-mark" src="../assets/images/logo-emblem.png" alt="Yaoguai" width="36" height="36">
+      <div class="brand-text"><b>YAOGUAI</b><span>CRYPTOGRAPHY TRAINING GROUND</span></div>
+    </a>
+    <nav class="topnav">
+      <a href="../index.html#encoding">Encoding</a>
+      <a href="../index.html#encryption" class="active">Encryption</a>
+      <a href="../index.html#hashing">Hashing</a>
+      <a href="../tools.html">Tools</a>
+    </nav>
+    <div class="topbar-tools"><span class="progress-chip">progress: 0%</span></div>
+  </div>
+</div>
+
+<div class="lesson-shell">
+  <aside class="lesson-toc"><div class="lesson-toc-head">ON THIS PAGE</div><ol></ol></aside>
+  <main class="lesson-main">
+    <div class="lesson-head">
+      <div class="cat-tag">ENCRYPTION Â· MODULE 08 Â· SYMMETRIC BLOCK CIPHER</div>
+      <h1>Triple DES</h1>
+      <div class="native">ä¸‰é‡æ—§ä¸–ä»£ â€” three-pass legacy cipher</div>
+      <div class="lesson-meta">
+        <span class="badge intermediate">Intermediate</span>
+        <div class="diffmeter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      </div>
+      <div class="lesson-learn">
+        <p>In this lesson you will learn:</p>
+        <ul>
+          <li>Why 3DES exists: a stopgap to stretch DES's key without a new algorithm</li>
+          <li>The Encrypt-Decrypt-Encrypt (EDE) structure, and why it collapses safely to single DES</li>
+          <li>Why its real effective strength (~112 bits) is less than naive triple-56</li>
+          <li>Why it's deprecated today â€” block size, not key size, is now the limiting flaw</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="lsec" id="intro" data-title="Introduction">
+      <h2><span class="mk"></span>Introduction</h2>
+      <p>By the 1990s, DES's 56-bit key was clearly too short, but industry had enormous amounts of hardware and software already built around DES specifically. Triple DES (3DES) was the pragmatic fix: instead of designing a new cipher, just run DES <strong>three times</strong> with (usually) different keys, stretching the effective key strength without touching the core algorithm.</p>
+    </section>
+
+    <section class="lsec" id="history" data-title="History">
+      <h2><span class="mk"></span>History</h2>
+      <p>3DES was standardized in the late 1990s as a transitional measure while AES was being developed and adopted. It let banks, payment networks, and government systems keep their existing DES-based hardware (common in hardware security modules of the era) while meaningfully raising the security bar. It's still found today in older payment systems and standards (EMV card processing, some legacy banking protocols) â€” but NIST deprecated it for new use in 2017 and disallowed it entirely from 2024 onward.</p>
+      <div class="badge advanced" style="display:inline-block;margin:6px 0 10px;">Status today: Legacy/Deprecated â€” use AES for anything new</div>
+    </section>
+
+    <section class="lsec" id="definition" data-title="Brief definition">
+      <h2><span class="mk"></span>Brief definition</h2>
+      <div class="callout define"><span class="term">DEFINITION</span><p>3DES applies DES three times in sequence â€” encrypt, decrypt, encrypt â€” using either two or three distinct 56-bit keys, to extend DES's effective security without replacing its internal algorithm.</p></div>
+      <p>The classic mode is <strong>EDE</strong> (Encrypt-Decrypt-Encrypt):</p>
+      <div class="flow"><span>Plaintext</span><i>â†’</i><span>DES encrypt (K1)</span><i>â†’</i><span>DES decrypt (K2)</span><i>â†’</i><span>DES encrypt (K3)</span><i>â†’</i><span>Ciphertext</span></div>
+      <p>Using "decrypt" in the middle step (rather than a third encrypt) is a deliberate compatibility trick: if K1 = K2 = K3, the whole thing collapses back into plain single DES â€” so 3DES hardware/software can run old single-DES data unchanged.</p>
+      <div class="task">
+        <div class="task-head"><b>TASK 01</b><span class="task-type">predict output</span></div>
+        <div class="task-body">
+          <p>If all three 3DES keys (K1, K2, K3) are set to the identical value, what effectively happens?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">You get extra-strong triple-strength DES</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">It collapses to plain single DES â€” encrypt then decrypt with the same key cancels out, leaving one net encryption</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” this backward-compatibility behavior is exactly why EDE uses decrypt in the middle step." data-bad="Think about what DES-decrypt(DES-encrypt(x, K), K) equals when the key is identical both times."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="theory" data-title="How it works">
+      <h2><span class="mk"></span>How it works &amp; keying options</h2>
+      <p>3DES comes in three keying options, offering different effective security:</p>
+      <table class="cmp">
+        <tr><th>Option</th><th>Keys</th><th>Effective strength</th></tr>
+        <tr><td>Keying option 1</td><td>K1, K2, K3 all different</td><td>~112 bits (not 168 â€” see below)</td></tr>
+        <tr><td>Keying option 2</td><td>K1 = K3, K2 different</td><td>~112 bits</td></tr>
+        <tr><td>Keying option 3</td><td>K1 = K2 = K3</td><td>56 bits (= plain DES)</td></tr>
+      </table>
+      <p>Even with three fully independent 56-bit keys (168 bits of raw key material), a known cryptanalytic technique (a "meet-in-the-middle" attack) reduces the effective security to roughly 112 bits â€” still far beyond brute-forcing single DES, but notably less than naively multiplying 56 Ã— 3.</p>
+    </section>
+
+    <section class="lsec" id="python" data-title="3DES in Python">
+      <h2><span class="mk"></span>3DES in Python</h2>
+      <span class="code-label">encryption.py / decryption.py</span>
+      <pre class="code"><span class="kw">def</span> triple_des_encrypt(data: str, key1: str, key2: str, key3: str = <span class="kw">None</span>) -> str:
+    key3 = key3 <span class="kw">or</span> key1   <span class="cmt"># 2-key variant if key3 omitted (keying option 2)</span>
+    step1 = des_core.encrypt_block(data, key1)
+    step2 = des_core.decrypt_block(step1, key2)
+    step3 = des_core.encrypt_block(step2, key3)
+    <span class="kw">return</span> _b64(step3)</pre>
+      <pre class="code">ciphertext = triple_des_encrypt(<span class="str">"8 bytes!"</span>, <span class="str">"key one1"</span>, <span class="str">"key two2"</span>, <span class="str">"key thr3"</span>)
+plaintext = triple_des_decrypt(ciphertext, <span class="str">"key one1"</span>, <span class="str">"key two2"</span>, <span class="str">"key thr3"</span>)
+<span class="kw">print</span>(plaintext)   <span class="cmt"># 8 bytes!</span></pre>
+      <div class="task">
+        <div class="task-head"><b>TASK 02</b><span class="task-type">complete the code</span></div>
+        <div class="task-body">
+          <p>Fill in what the middle DES operation is, in the EDE scheme (not the first or third):</p>
+          <pre class="code">step1 = des_encrypt(data, key1)
+step2 = des_______(step1, key2)
+step3 = des_encrypt(step2, key3)</pre>
+          <input type="text" placeholder="encrypt or decrypt">
+          <div class="task-actions"><button class="btn btn-sm" onclick="checkTask(this,'decrypt')">Check</button></div>
+          <div class="task-fb" data-ok="Correct â€” Encrypt-Decrypt-Encrypt (EDE)."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="practice" data-title="Practical tasks">
+      <h2><span class="mk"></span>Practical tasks</h2>
+      <div class="task">
+        <div class="task-head"><b>TASK 03</b><span class="task-type">multiple choice</span></div>
+        <div class="task-body">
+          <p>Should a new project choose 3DES today?</p>
+          <div class="mc-opts">
+            <div class="mc-opt" data-id="a" onclick="pickMC(this,'b')">Yes â€” it's still the most compatible, trusted option</div>
+            <div class="mc-opt" data-id="b" onclick="pickMC(this,'b')">No â€” NIST deprecated it; use AES for any new system</div>
+          </div>
+          <div class="task-fb" data-ok="Correct â€” 3DES's only real role today is reading/interoperating with old legacy systems."></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="strengths" data-title="Strengths">
+      <h2><span class="mk"></span>Strengths</h2>
+      <ul>
+        <li><strong>Backward compatible</strong> with single DES hardware and data via the EDE collapse trick.</li>
+        <li><strong>Meaningfully stronger than DES</strong> â€” ~112-bit effective security comfortably resists brute force.</li>
+        <li><strong>No new algorithm design needed</strong> â€” reused DES's already heavily-analyzed internals.</li>
+      </ul>
+    </section>
+
+    <section class="lsec" id="weaknesses" data-title="Weaknesses">
+      <h2><span class="mk"></span>Weaknesses</h2>
+      <div class="callout danger"><p><strong>Algorithm weakness â€” small block size:</strong> 3DES inherits DES's 64-bit block size, which (like the "Sweet32" attack demonstrated in 2016) becomes a real practical risk once enough data is encrypted under one key â€” regardless of how strong the key itself is. <strong>3DES is legacy/deprecated</strong> for this structural reason, not because its key can be brute-forced.</p></div>
+      <div class="callout warn"><p><strong>Implementation weakness â€” performance:</strong> running DES three times is roughly three times slower than running it once, and far slower than AES on modern hardware, which lacks dedicated 3DES acceleration the way it has AES-NI.</p></div>
+    </section>
+
+    <section class="lsec" id="ctf-perspective" data-title="Why this matters for cybersecurity">
+      <h2><span class="mk"></span>Cybersecurity &amp; CTF perspective</h2>
+      <p>3DES shows up mostly in compliance and legacy-infrastructure contexts: PCI-DSS (payment card standards) phased it out, and auditors specifically flag any system still relying on it. In CTFs, 3DES challenges typically target weak key-derivation (as in the DES module's challenge) or exploit the keying-option confusion (mistaking a 2-key setup for full 3-key strength) rather than attacking the cipher's rounds directly.</p>
+    </section>
+
+    <section class="lsec" id="challenge" data-title="CTF Challenge">
+      <h2><span class="mk"></span>CTF Challenge</h2>
+      <div class="ctf">
+        <div class="ctf-head"><b>CHALLENGE Â· ACCIDENTAL SINGLE DES</b><span class="badge intermediate">Intermediate</span></div>
+        <div class="ctf-body">
+          <div class="ctf-row"><span class="k">SCENARIO</span><p>A config file was "upgraded" to use 3DES, but whoever set it up passed the same key three times by mistake: <code>triple_des_encrypt(data, key, key, key)</code>.</p></div>
+          <div class="ctf-row"><span class="k">OBJECTIVE</span><p>State what this is actually equivalent to, security-wise.</p></div>
+          <div class="ctf-row"><span class="k">FLAG FORMAT</span><p><code>flag{...}</code>, a short phrase</p></div>
+          <div class="hint-list">
+            <details class="hint"><summary>Hint 1</summary><p>Refer back to Task 01 on this page.</p></details>
+          </div>
+          <div class="ctf-flag">
+            <input type="text" placeholder="flag{...}">
+            <button class="btn btn-primary btn-sm" onclick="checkFlag(this,'flag{plain_single_des}')">Submit</button>
+          </div>
+          <div class="task-fb"></div>
+          <details class="solution">
+            <summary>Show solution</summary>
+            <div class="sol-body">
+              <h5>REASONING</h5>
+              <p>K1 = K2 = K3 means the EDE sequence is encrypt(K) -&gt; decrypt(K) -&gt; encrypt(K). The middle decrypt cancels the first encrypt exactly, leaving just one net encryption â€” plain single DES, with its brute-forceable 56-bit key, despite the "3DES" label implying extra strength.</p>
+              <h5>FLAG</h5>
+              <p><code>flag{plain_single_des}</code></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="lsec" id="summary" data-title="Summary">
+      <h2><span class="mk"></span>Summary</h2>
+      <ul>
+        <li>3DES runs DES three times (Encrypt-Decrypt-Encrypt) to patch its key-size problem without a new algorithm.</li>
+        <li>Effective security is ~112 bits, not 168, due to meet-in-the-middle attacks.</li>
+        <li>Its 64-bit block size is now the deprecating weakness â€” a structural issue AES's 128-bit blocks avoid.</li>
+        <li>Identical keys across all three stages silently collapse it back to insecure single DES.</li>
+      </ul>
+      <button class="btn btn-primary" id="complete-btn" onclick="markLessonComplete()">Mark lesson complete</button>
+    </section>
+
+    <div class="lesson-nav">
+      <a class="nav-link prev" id="nav-prev"><span class="lbl">â† previous</span><span class="ttl"></span></a>
+      <a class="nav-link next" id="nav-next"><span class="lbl">next â†’</span><span class="ttl"></span></a>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap"><span>å¦–æ€ª YAOGUAI â€” a beginner-to-CTF cryptography curriculum.</span></div></footer>
+
+<script>window.CRYPTO_API_BASE = window.location.origin + "/crypto";</script>
+<script src="../js/api.js"></script>
+<script src="../js/registry.js"></script>
+<script src="../js/progress.js"></script>
+<script src="../js/offline-crypto.js"></script>
+<script src="../js/interactions.js"></script>
+<script src="../js/lesson-boot.js"></script>
+<script src="../js/training-bridge.js"></script>
+</body>
+</html>

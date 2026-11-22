@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Vercel / Node
+.vercel/
+node_modules/
+
+# Environment & secrets
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.log
+*.db
+*.db-wal
+*.db-shm
+.test-runtime/
+!.env.example
+.neon
