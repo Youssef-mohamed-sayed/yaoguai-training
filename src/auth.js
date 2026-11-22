@@ -46,18 +46,19 @@ function pageFrame(kicker, title, description, content) {
 
 function renderAuthPage(mode) {
   const register = mode === 'register';
+  const adminLogin = mode === 'admin-login';
   const forgot = mode === 'forgot-password';
   const reset = mode === 'reset-password';
   const next = validNext(new URLSearchParams(location.search).get('next'));
   const token = new URLSearchParams(location.search).get('token') || '';
-  const title = register ? 'Create your account' : forgot ? 'Reset your password' : reset ? 'Choose a new password' : 'Sign in';
-  const description = register ? 'Your learning record will follow you across all four courses.' : forgot ? 'Enter the email on your account. If it can be verified, reset instructions will be sent.' : reset ? 'Choose a new password for your Yaoguai Training account.' : 'Continue your courses and keep your progress in one place.';
+  const title = adminLogin ? 'Administrator sign in' : register ? 'Create your account' : forgot ? 'Reset your password' : reset ? 'Choose a new password' : 'Sign in';
+  const description = adminLogin ? 'Sign in with an administrator account to manage learners and assignments.' : register ? 'Your learning record will follow you across all four courses.' : forgot ? 'Enter the email on your account. If it can be verified, reset instructions will be sent.' : reset ? 'Choose a new password for your Yaoguai Training account.' : 'Continue your courses and keep your progress in one place.';
   let fields = '';
   if (register) fields += '<label>Username<input name="username" autocomplete="username" minlength="3" maxlength="32" required></label><label>Email<input name="email" type="email" autocomplete="email" maxlength="254" required></label>';
   else if (!forgot && !reset) fields += '<label>Username or email<input name="username" autocomplete="username" required></label>';
   if (forgot) fields += '<label>Email<input name="email" type="email" autocomplete="email" required></label>';
   if (!forgot) fields += `<label>${reset ? 'New password' : 'Password'}<input name="password" type="password" autocomplete="${register || reset ? 'new-password' : 'current-password'}" minlength="${register || reset ? 10 : 1}" required></label>`;
-  pageFrame('Yaoguai Training', title, description, `<form class="auth-form" id="auth-form">${fields}${reset ? `<input type="hidden" name="token" value="${esc(token)}">` : ''}<p class="form-message" id="auth-message" role="status"></p><button class="button button-primary" type="submit">${register ? 'Create account' : forgot ? 'Send reset instructions' : reset ? 'Update password' : 'Sign in'}</button></form><div class="account-links">${register ? '<a href="/login">Already have an account? Sign in</a>' : forgot || reset ? '<a href="/login">Back to sign in</a>' : `<a href="/register">Create an account</a><a href="/forgot-password">Forgot password?</a>`}</div>`);
+  pageFrame(adminLogin ? 'Administration' : 'Yaoguai Training', title, description, `<form class="auth-form" id="auth-form">${fields}${reset ? `<input type="hidden" name="token" value="${esc(token)}">` : ''}<p class="form-message" id="auth-message" role="status"></p><button class="button button-primary" type="submit">${register ? 'Create account' : forgot ? 'Send reset instructions' : reset ? 'Update password' : adminLogin ? 'Sign in to administration' : 'Sign in'}</button></form><div class="account-links">${register ? '<a href="/login">Already have an account? Sign in</a>' : forgot || reset ? `<a href="${adminLogin ? '/admin/login' : '/login'}">Back to sign in</a>` : adminLogin ? '<a href="/login">Learner sign in</a><a href="/forgot-password">Forgot password?</a>' : `<a href="/register">Create an account</a><a href="/forgot-password">Forgot password?</a><a href="/admin/login">Administrator sign in</a>`}</div>`);
   const form = document.querySelector('#auth-form');
   const message = document.querySelector('#auth-message');
   form.addEventListener('submit', async event => {
@@ -66,11 +67,12 @@ function renderAuthPage(mode) {
     button.disabled = true; message.textContent = '';
     const values = Object.fromEntries(new FormData(form));
     try {
-      if (mode === 'login' || register) {
-        const result = await api(`/auth/${register ? 'register' : 'login'}`, { method: 'POST', body: JSON.stringify(values) });
+      if (mode === 'login' || adminLogin || register) {
+        const endpoint = register ? 'register' : adminLogin ? 'admin-login' : 'login';
+        const result = await api(`/auth/${endpoint}`, { method: 'POST', body: JSON.stringify(values) });
         currentUser = result.user;
         await refreshCsrf();
-        const destination = !register && currentUser.is_admin && next === '/'
+        const destination = adminLogin || (!register && currentUser.is_admin && next === '/')
           ? '/admin'
           : validNext(next);
         if (currentUser.must_change_password) {
@@ -142,7 +144,15 @@ export async function initAuth() {
   } catch { currentUser = null; }
   paintHeader();
   const route = path();
-  if (route === '/login' || route === '/register' || route === '/forgot-password' || route === '/reset-password') {
+  if (route === '/admin/login') {
+    if (currentUser?.is_admin) {
+      location.replace(currentUser.must_change_password
+        ? `/profile?required=1&next=${encodeURIComponent('/admin')}`
+        : '/admin');
+      return;
+    }
+    renderAuthPage('admin-login');
+  } else if (route === '/login' || route === '/register' || route === '/forgot-password' || route === '/reset-password') {
     if (currentUser) {
       const requested = validNext(new URLSearchParams(location.search).get('next'));
       const destination = requested === '/' && currentUser.is_admin ? '/admin' : requested;
@@ -156,9 +166,8 @@ export async function initAuth() {
     if (!currentUser) { location.replace(`/login?next=${encodeURIComponent('/profile')}`); return; }
     renderProfile();
   } else if (route === '/admin') {
-    if (!currentUser) { location.replace(`/login?next=${encodeURIComponent('/admin')}`); return; }
+    if (!currentUser || !currentUser.is_admin) { location.replace('/admin/login'); return; }
     if (currentUser.must_change_password) { location.replace(`/profile?required=1&next=${encodeURIComponent('/admin')}`); return; }
-    if (!currentUser.is_admin) { location.replace('/'); return; }
     portal().hidden = true;
     const root = document.querySelector('#admin-root'); root.hidden = false;
     const { mountAdmin } = await import('./admin.js');

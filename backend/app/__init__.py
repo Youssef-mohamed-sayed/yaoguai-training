@@ -1,8 +1,8 @@
 import os
 from datetime import timedelta
 
-from flask import Flask, jsonify, request
-from flask import send_from_directory
+from flask import Flask, jsonify, redirect, request, send_from_directory
+from flask_login import current_user
 from flask_wtf.csrf import CSRFError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -62,6 +62,16 @@ def create_app(test_config=None):
     def api_rate_limit():
         if request.path.startswith("/api/") and not allow_auth_attempt("api", 240, 60):
             return jsonify(error={"code": "rate_limited", "message": "Too many requests. Try again shortly."}), 429
+
+    @app.get("/admin")
+    def admin_portal():
+        if not current_user.is_authenticated or not current_user.is_admin or not current_user.is_active:
+            return redirect("/admin/login")
+        if current_user.must_change_password:
+            return redirect("/profile?required=1&next=%2Fadmin")
+        from pathlib import Path
+        build = Path(__file__).resolve().parents[2] / "dist"
+        return send_from_directory(build, "index.html")
 
     @app.get("/")
     @app.get("/<path:asset_path>")

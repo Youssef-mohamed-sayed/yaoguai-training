@@ -88,7 +88,7 @@ def test_bootstrap_admin_must_change_password_before_using_protected_apis(app, c
         user.must_change_password = True
         db.session.commit()
     client.post("/api/auth/logout", json={})
-    assert client.post("/api/auth/login", json={
+    assert client.post("/api/auth/admin-login", json={
         "username": "Learner", "password": "a-strong-test-password",
     }).status_code == 200
     assert client.get("/api/admin/overview").status_code == 403
@@ -177,7 +177,7 @@ def test_admin_dashboard_shows_member_progress_and_private_assigned_deadlines(ap
 
     # Task definitions and deadlines are private to the administrator.
     client.post("/api/auth/logout", json={})
-    client.post("/api/auth/login", json={"username": admin["username"], "password": "a-strong-test-password"})
+    client.post("/api/auth/admin-login", json={"username": admin["username"], "password": "a-strong-test-password"})
     assert client.get("/api/admin/members").status_code == 200
     assert all(row["id"] != admin["id"] for row in client.get("/api/admin/members").json["data"])
     group = client.post("/api/admin/groups", json={"name": "Dashboard cohort"}).json["data"]
@@ -204,7 +204,7 @@ def test_admin_dashboard_shows_member_progress_and_private_assigned_deadlines(ap
     assert client.get(f"/api/admin/members/{learner['id']}").status_code == 403
 
     client.post("/api/auth/logout", json={})
-    client.post("/api/auth/login", json={"username": admin["username"], "password": "a-strong-test-password"})
+    client.post("/api/auth/admin-login", json={"username": admin["username"], "password": "a-strong-test-password"})
     detail = client.get(f"/api/admin/members/{learner['id']}")
     assert detail.status_code == 200
     record = detail.json["data"]
@@ -216,3 +216,32 @@ def test_admin_dashboard_shows_member_progress_and_private_assigned_deadlines(ap
     assert assigned["completed_count"] == 1
     admin_tasks = client.get("/api/admin/tasks").json["data"]
     assert any(target["name"] == "Dashboard cohort" for target in next(row for row in admin_tasks if row["id"] == task["id"])["targets"])
+
+
+def test_admin_has_separate_login_and_admin_route_redirects(app, client):
+    assert client.get("/admin", follow_redirects=False).headers["Location"] == "/admin/login"
+    assert client.get("/admin/login").status_code == 200
+    admin = register(client, "separate-admin")
+    with app.app_context():
+        db.session.get(User, admin["id"]).is_admin = True
+        db.session.commit()
+    client.post("/api/auth/logout", json={})
+
+    ordinary_login = client.post("/api/auth/login", json={
+        "username": admin["username"], "password": "a-strong-test-password",
+    })
+    assert ordinary_login.status_code == 401
+    admin_login = client.post("/api/auth/admin-login", json={
+        "username": admin["username"], "password": "a-strong-test-password",
+    })
+    assert admin_login.status_code == 200
+    assert admin_login.json["data"]["user"]["is_admin"] is True
+    assert client.get("/admin", follow_redirects=False).status_code == 200
+
+    client.post("/api/auth/logout", json={})
+    learner = register(client, "separate-learner")
+    wrong_portal = client.post("/api/auth/admin-login", json={
+        "username": learner["username"], "password": "a-strong-test-password",
+    })
+    assert wrong_portal.status_code == 401
+    assert client.get("/admin", follow_redirects=False).headers["Location"] == "/admin/login"

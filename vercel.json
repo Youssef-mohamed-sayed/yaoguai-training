@@ -22,6 +22,7 @@
     { "source": "/programming/:path*", "destination": "/api?route=/programming/:path*" },
     { "source": "/crypto", "destination": "/api?route=/crypto" },
     { "source": "/crypto/:path*", "destination": "/api?route=/crypto/:path*" },
+    { "source": "/admin/login", "destination": "/api?route=/admin/login" },
     { "source": "/admin", "destination": "/api?route=/admin" },
     { "source": "/login", "destination": "/api?route=/login" },
     { "source": "/register", "destination": "/api?route=/register" },

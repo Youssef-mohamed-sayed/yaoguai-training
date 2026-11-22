@@ -76,7 +76,17 @@ def register():
 
 @auth_bp.post("/login")
 def login():
-    if not allow_auth_attempt("login", 10, 900):
+    return authenticate(admin_only=False)
+
+
+@auth_bp.post("/admin-login")
+def admin_login():
+    return authenticate(admin_only=True)
+
+
+def authenticate(admin_only):
+    bucket = "admin-login" if admin_only else "login"
+    if not allow_auth_attempt(bucket, 10, 900):
         return error("rate_limited", "Too many sign-in attempts. Try again later", 429)
     data = json_object()
     if data is None or not isinstance(data.get("username"), str) or not isinstance(data.get("password"), str):
@@ -91,7 +101,7 @@ def login():
             valid = hasher.verify(user.password_hash, data["password"])
         except (VerifyMismatchError, InvalidHashError):
             pass
-    if not valid:
+    if not valid or user.is_admin != admin_only:
         return error("invalid_credentials", "Username or password is incorrect", 401)
     if hasher.check_needs_rehash(user.password_hash):
         user.password_hash = hasher.hash(data["password"])
