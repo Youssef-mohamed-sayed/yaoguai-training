@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+/* Yaoguai shared brand layer. Loaded last by the portal and all four courses.
+   It only changes design tokens and adds a few shared pieces, so each course keeps its own layout. */
+:root{
+  --ink:#000;--ink-raise:#0b0b0b;--ink-raised:#0b0b0b;--raised:#0b0b0b;--surface:#0b0b0b;--surface-soft:#080808;--surface-raised:#141414;--ink-card:#0b0b0b;--card:#0b0b0b;
+  --line:rgba(255,255,255,.16);--line-soft:rgba(255,255,255,.09);
+  --paper:#fff;--text:#fff;--paper-dim:#cfcfcf;--dim:#cfcfcf;--muted:#a0a0a0;--paper-faint:#8a8a8a;--faint:#8a8a8a;--quiet:#8a8a8a;
+  --red:#8f0a10;--red-bright:#c01820;--red-light:#c01820;--red-deep:#5c0408;--red-soft:#3a0307;--red-wash:rgba(143,10,16,.22);
+  --serif:'Space Grotesk','Zen Kaku Gothic New',Arial,sans-serif;--mono:'JetBrains Mono','IBM Plex Mono',Consolas,monospace;
+  --radius:2px;
+}
+body{background:radial-gradient(ellipse at 80% 0,#2a0004 0,#000 55%) fixed,#000!important;color:#fff}
+h1,h2,h3,h4{font-family:var(--serif);letter-spacing:-.01em}
+/* square, hard edged look */
+button,.button,.btn,input,select,textarea,pre,code,.card,[class*="card"]{border-radius:2px!important}
+.topbar,.site-header,header.topbar{border-bottom:2px solid #8f0a10!important;background:rgba(0,0,0,.92)!important}
+.button-primary,.btn-primary,.primary,button.primary{background:linear-gradient(#a50c14,#6e0509)!important;border-color:#8f0a10!important;color:#fff!important}
+a:hover{text-decoration-color:#c01820}
+::selection{background:#8f0a10;color:#fff}
+pre,.code-block,.codeblock{border-left:4px solid #8f0a10!important}
+.brand img,.brand-mark{image-rendering:auto}
+/* scanlines */
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1000;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 4px)}
+/* shared course bar */
+.yg-bar{display:flex;align-items:center;gap:6px;height:44px;padding:0 20px;background:#000;border-bottom:1px solid rgba(255,255,255,.16);position:relative;z-index:30;font:500 12px/1 var(--mono);letter-spacing:.08em}
+.yg-bar .yg-logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font:700 14px var(--serif);letter-spacing:.16em;margin-right:14px}
+.yg-bar .yg-logo img{width:26px;height:26px;display:block}
+.yg-bar a.yg-link{color:#a0a0a0;text-decoration:none;padding:8px 12px;transition:.18s;display:flex;gap:8px;align-items:center}
+.yg-bar a.yg-link b{font:900 11px/1 'Noto Sans SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;background:#8f0a10;color:#fff;padding:3px 4px}
+.yg-bar a.yg-link:hover{color:#fff;background:rgba(143,10,16,.45)}
+.yg-bar a.yg-link.on{color:#fff;background:linear-gradient(#a50c14,#6e0509)}
+/* blood drips under the bar */
+.yg-drips{position:absolute;left:0;right:0;top:44px;height:0;z-index:31;pointer-events:none}
+.yg-drips i{position:absolute;top:0;width:7px;background:linear-gradient(#8f0a10,#5c0408);border-radius:0 0 7px 7px;transform-origin:top;animation:yg-drip 2.4s cubic-bezier(.3,.7,.3,1) both}
+.yg-drips i:after{content:"";position:absolute;bottom:-4px;left:-2px;width:11px;height:11px;border-radius:50%;background:#5c0408}
+@keyframes yg-drip{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+/* intro wipe, once per browser session */
+.yg-intro{position:fixed;inset:0;z-index:2000;background:#8f0a10;display:grid;place-items:center;transform-origin:top;animation:yg-wipe .8s cubic-bezier(.77,0,.18,1) .7s forwards}
+.yg-intro img{width:120px;animation:yg-pop .6s both}
+@keyframes yg-wipe{to{transform:scaleY(0)}}
+@keyframes yg-pop{0%{opacity:0;transform:scale(.6) rotate(-6deg)}60%{transform:scale(1.05)}100%{opacity:1;transform:none}}
+/* entrance + hover for cards and lists */
+@keyframes yg-rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+main section,main article,.platform-card,.map-row,.lesson-card,.module-card,.card{animation:yg-rise .6s both}
+.platform-card,.map-row,.lesson-card,.module-card,.card{transition:background .22s,transform .22s,border-color .22s}
+.platform-card:hover,.lesson-card:hover,.module-card:hover,.card:hover{background:linear-gradient(#a50c14,#5c0408)!important;transform:translateY(-6px);border-color:#c01820}
+.button:hover,.btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 #8f0a10}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.yg-intro{display:none}}
+@media(max-width:700px){.yg-bar{overflow-x:auto;padding:0 8px}.yg-bar .yg-logo span{display:none}}
+.hero h1 span{color:#c01820!important}.hero h1 span{text-shadow:0 0 24px rgba(160,0,10,.6)}
