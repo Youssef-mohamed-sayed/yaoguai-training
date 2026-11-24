@@ -37,7 +37,9 @@ def create_app(test_config=None):
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_pre_ping": True,
         "pool_recycle": 300,
-        **({"pool_size": 5, "max_overflow": 2} if app.config["SQLALCHEMY_DATABASE_URI"].startswith(("postgresql://", "postgresql+psycopg://")) else {}),
+        # Serverless: each instance serves one request at a time, so keep the pool small to spare Neon connections.
+        **({"pool_size": int(os.environ.get("DB_POOL_SIZE", "2")), "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", "1"))}
+           if app.config["SQLALCHEMY_DATABASE_URI"].startswith(("postgresql://", "postgresql+psycopg://")) else {}),
     }
     db.init_app(app)
     migrate.init_app(app, db, directory=os.path.join(os.path.dirname(__file__), "..", "migrations"))

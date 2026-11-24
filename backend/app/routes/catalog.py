@@ -8,14 +8,18 @@ from ..models import LearningActivity, Module, Platform
 catalog_bp = Blueprint("catalog", __name__)
 
 
-@catalog_bp.get("/platforms")
-def platforms():
+def platforms_data():
     query = (select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)
              .options(selectinload(Platform.modules).selectinload(Module.activities)))
     rows = db.session.execute(query).scalars()
-    return jsonify(data=[{"id": row.id, "name": row.name, "description": row.description,
-                          "modules_count": len(row.modules),
-                          "activities_count": sum(len(module.activities) for module in row.modules)} for row in rows])
+    return [{"id": row.id, "name": row.name, "description": row.description,
+             "modules_count": len(row.modules),
+             "activities_count": sum(len(module.activities) for module in row.modules)} for row in rows]
+
+
+@catalog_bp.get("/platforms")
+def platforms():
+    return jsonify(data=platforms_data())
 
 
 @catalog_bp.get("/platforms/<platform_id>/modules")

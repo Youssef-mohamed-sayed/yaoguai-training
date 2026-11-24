@@ -52,13 +52,15 @@
     }
     bar.appendChild(drips);
 
-    // 4. intro wipe, only the first page of a browser session
+    // 4. intro wipe with the course name, once per course per browser session
     try {
-      if (!sessionStorage.getItem('yg-intro')) {
-        sessionStorage.setItem('yg-intro', '1');
+      var course = COURSES.filter(function (c) { return c.cn && c.match.test(path); })[0] || { cn: '妖怪', label: 'TRAINING' };
+      var seen = 'yg-intro-' + course.label;
+      if (!sessionStorage.getItem(seen)) {
+        sessionStorage.setItem(seen, '1');
         var intro = document.createElement('div');
         intro.className = 'yg-intro';
-        intro.innerHTML = '<img src="/brand/logo-mask.svg" alt="">';
+        intro.innerHTML = '<img src="/brand/logo-oni.svg" alt=""><b class="k">' + course.cn + '</b><span class="t">YAOGUAI ' + course.label + '</span>';
         document.body.appendChild(intro);
         setTimeout(function () { intro.remove(); }, 1800);
       }
@@ -81,6 +83,7 @@
     }, { threshold: 0.08 });
   }
   function ticker(hero) {
+    if (document.querySelector('.ticker')) return; // the portal home already has its own ticker
     if (hero.nextElementSibling && hero.nextElementSibling.classList.contains('yg-ticker')) return;
     var one = '';
     KANJI.forEach(function (k, i) { one += '<span class="' + (i % 2 ? 'k' : '') + '">' + k + '</span>'; });

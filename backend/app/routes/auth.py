@@ -37,6 +37,13 @@ def me():
     return jsonify(data={"user": user_json(current_user._get_current_object()) if current_user.is_authenticated else None})
 
 
+@auth_bp.get("/session")
+def session_state():
+    """CSRF token and current user in one request (replaces two calls on every page load)."""
+    user = user_json(current_user._get_current_object()) if current_user.is_authenticated else None
+    return jsonify(data={"csrf_token": generate_csrf(), "user": user})
+
+
 @auth_bp.post("/register")
 def register():
     if not allow_auth_attempt("register", 5, 3600):

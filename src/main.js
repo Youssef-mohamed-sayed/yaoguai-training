@@ -13,6 +13,7 @@ async function renderCourses() {
     document.querySelector('#platform-grid').innerHTML = platforms.map(renderPlatform).join('');
   }
 }
-renderCourses();
+// The course grid exists only on the home page; skip the catalog request on account and admin pages.
+if ((location.pathname.replace(/\/$/, '') || '/') === '/') renderCourses();
 document.querySelector('.footer-index').textContent = `Yaoguai Training · ${new Date().getFullYear()}`;
-initAuth();
+initAuth().finally(() => document.querySelector('#yg-boot')?.remove());

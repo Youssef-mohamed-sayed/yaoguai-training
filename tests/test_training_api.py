@@ -305,3 +305,52 @@ def test_admin_has_separate_login_and_admin_route_redirects(app, client):
     })
     assert wrong_portal.status_code == 401
     assert client.get("/admin", follow_redirects=False).headers["Location"] == "/admin/login"
+
+
+def test_admin_dashboard_returns_every_panel_in_one_request_without_per_row_queries(app, client):
+    make_lesson(app)
+    admin = register(client, "bundle-admin")
+    with app.app_context():
+        db.session.get(User, admin["id"]).is_admin = True
+        db.session.commit()
+    client.post("/api/auth/logout", json={})
+    learners = [register(client, f"bundle-learner{i}") for i in range(3)]
+    client.post("/api/auth/logout", json={})
+    client.post("/api/auth/admin-login", json={"username": admin["username"], "password": "a-strong-test-password"})
+    for index in range(3):
+        group = client.post("/api/admin/groups", json={"name": f"Cohort {index}"}).json["data"]
+        for learner in learners:
+            client.put(f"/api/admin/groups/{group['id']}/members/{learner['id']}", json={})
+
+    statements = []
+    with app.app_context():
+        @event.listens_for(db.engine, "before_cursor_execute")
+        def count(_connection, _cursor, statement, *_args):
+            statements.append(statement)
+        response = client.get("/api/admin/dashboard")
+        event.remove(db.engine, "before_cursor_execute", count)
+    assert response.status_code == 200
+    data = response.json["data"]
+    assert set(data) == {"overview", "members", "levels", "groups", "tasks", "submissions", "platforms"}
+    assert len(data["members"]) == 3
+    assert [group["member_count"] for group in data["groups"]] == [3, 3, 3]
+    assert data["platforms"][0]["id"] == "programming"
+    # Same shape as the separate endpoints, so the admin screen can use either.
+    assert data["overview"] == client.get("/api/admin/overview").json["data"]
+    assert data["groups"] == client.get("/api/admin/groups").json["data"]
+    # Query count does not grow with the number of groups or members.
+    assert len(statements) <= 24, [s.split("FROM")[-1][:40] for s in statements]
+
+
+def test_dashboard_requires_an_administrator(app, client):
+    assert client.get("/api/admin/dashboard").status_code == 401
+    register(client, "plain-member")
+    assert client.get("/api/admin/dashboard").status_code == 403
+
+
+def test_session_endpoint_returns_csrf_token_and_user_in_one_call(app, client):
+    guest = client.get("/api/auth/session").json["data"]
+    assert guest["user"] is None and guest["csrf_token"]
+    register(client, "session-member")
+    signed_in = client.get("/api/auth/session").json["data"]
+    assert signed_in["user"]["username"] == "session-member" and signed_in["csrf_token"]

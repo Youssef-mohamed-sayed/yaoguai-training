@@ -139,8 +139,9 @@ async function refreshLearningSummary() {
 
 export async function initAuth() {
   try {
-    await refreshCsrf();
-    currentUser = (await api('/auth/me')).user || null;
+    const state = await api('/auth/session');
+    csrfToken = state.csrf_token;
+    currentUser = state.user || null;
   } catch { currentUser = null; }
   paintHeader();
   const route = path();

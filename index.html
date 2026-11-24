@@ -33,6 +33,7 @@
       </div>
     </header>
 
+    <div id="yg-boot" class="yg-load" role="status" aria-label="Loading" hidden><img src="/brand/logo-oni.svg" alt=""><b class="k">妖怪</b><span class="t">YAOGUAI TRAINING</span><i class="bar"></i></div>
     <main id="main">
       <div id="portal-content">
         <section class="account-summary" id="account-summary" hidden aria-live="polite" aria-labelledby="account-summary-title"></section>
@@ -73,6 +74,16 @@
         </section>
       </div>
       <section id="admin-root" hidden aria-live="polite"></section>
+      <script>
+        /* Account pages are drawn by JavaScript. Hide the home content at once so it never flashes before them. */
+        (function () {
+          var p = location.pathname.replace(/\/$/, '') || '/';
+          if (/^\/(admin|admin\/login|login|register|profile|forgot-password|reset-password)$/.test(p)) {
+            document.getElementById('portal-content').hidden = true;
+            document.getElementById('yg-boot').hidden = false;
+          }
+        })();
+      </script>
     </main>
 
     <footer class="site-footer">

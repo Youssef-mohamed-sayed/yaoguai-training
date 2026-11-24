@@ -29,16 +29,13 @@ function memberDetailView(detail) {
 }
 
 export async function mountAdmin(root, getUser) {
-  root.innerHTML = '<div class="admin-page"><p class="admin-empty">Loading administration data</p></div>';
   try {
-    const [summary, members, levels, groups, tasks, submissions, platforms] = await Promise.all([
-      api('/admin/overview'), api('/admin/members'), api('/admin/levels'), api('/admin/groups'),
-      api('/admin/tasks'), api('/admin/submissions'), api('/platforms'),
-    ]);
+    const data = await api('/admin/dashboard');
+    const { overview: summary, members, levels, groups, tasks, submissions, platforms } = data;
     render(summary, members, levels, groups, tasks, submissions, platforms);
   } catch (error) {
     root.innerHTML = `<div class="admin-page"><header class="admin-heading"><div><p class="section-kicker">Yaoguai Training</p><h1>Administration</h1></div><span class="muted">${esc(getUser()?.username || 'administrator')}</span></header><div class="admin-alert error" role="alert">Dashboard data could not be loaded: ${esc(error.message)}</div><button class="button" id="admin-retry">Try again</button></div>`;
-    root.querySelector('#admin-retry').addEventListener('click', () => mountAdmin(root, getUser));
+    root.querySelector('#admin-retry').addEventListener('click', () => { root.innerHTML = '<p class="admin-empty">Loading administration data</p>'; mountAdmin(root, getUser); });
   }
 
   function render(summary, members, levels, groups, tasks, submissions, platforms) {

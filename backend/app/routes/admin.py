@@ -37,9 +37,7 @@ def member_json(user):
             "groups": [{"id": group.id, "name": group.name} for group in user.groups]}
 
 
-@admin_bp.get("/overview")
-@admin_required
-def overview():
+def overview_data():
     total_members = db.session.scalar(select(func.count()).select_from(User).where(User.is_admin.is_(False))) or 0
     cutoff = now_utc().replace(hour=0, minute=0, second=0, microsecond=0)
     active = db.session.scalar(select(func.count()).select_from(User).where(
@@ -88,25 +86,33 @@ def overview():
         LearningTask.deadline_at < now_utc(),
     )) or 0
     submissions = db.session.scalar(select(func.count()).select_from(TaskSubmission).where(TaskSubmission.status == "submitted")) or 0
-    return jsonify(data={"members": total_members, "active_today": active, "groups": groups,
-                         "completed_modules": completed_modules, "outstanding_tasks": submissions,
-                         "overdue_tasks": overdue, "platforms": platform_stats})
+    return {"members": total_members, "active_today": active, "groups": groups,
+            "completed_modules": completed_modules, "outstanding_tasks": submissions,
+            "overdue_tasks": overdue, "platforms": platform_stats}
 
 
-@admin_bp.get("/members")
+@admin_bp.get("/overview")
 @admin_required
-def members():
+def overview():
+    return jsonify(data=overview_data())
+
+
+def members_data(search="", level_id=None):
     query = (select(User).where(User.is_admin.is_(False)).order_by(User.created_at.desc()).limit(200)
              .options(joinedload(User.level), selectinload(User.groups)))
-    search = (request_arg("q") or "").strip()
-    level_id = request_arg("level_id")
+    search = (search or "").strip()
     if search:
         needle = f"%{search.lower()}%"
         query = query.where((func.lower(User.username).like(needle)) | (func.lower(User.email).like(needle)))
     if level_id:
         query = query.where(User.level_id == level_id)
-    rows = db.session.execute(query).scalars()
-    return jsonify(data=[member_json(user) for user in rows])
+    return [member_json(user) for user in db.session.execute(query).scalars()]
+
+
+@admin_bp.get("/members")
+@admin_required
+def members():
+    return jsonify(data=members_data(request_arg("q"), request_arg("level_id")))
 
 
 def request_arg(name):
@@ -187,12 +193,16 @@ def update_member(user_id):
     return jsonify(data=member_json(user))
 
 
+def levels_data():
+    rows = db.session.execute(select(MemberLevel).order_by(MemberLevel.rank, MemberLevel.name)).scalars()
+    return [{"id": row.id, "name": row.name, "rank": row.rank,
+             "description": row.description, "is_active": row.is_active} for row in rows]
+
+
 @admin_bp.get("/levels")
 @admin_required
 def levels():
-    rows = db.session.execute(select(MemberLevel).order_by(MemberLevel.rank, MemberLevel.name)).scalars()
-    return jsonify(data=[{"id": row.id, "name": row.name, "rank": row.rank,
-                          "description": row.description, "is_active": row.is_active} for row in rows])
+    return jsonify(data=levels_data())
 
 
 @admin_bp.post("/levels")
@@ -207,16 +217,23 @@ def create_level():
     return jsonify(data={"id": row.id, "name": row.name, "rank": row.rank}), 201
 
 
+def groups_data():
+    # selectinload fetches every group's members in one extra query instead of one per group.
+    rows = db.session.execute(
+        select(MemberGroup).order_by(MemberGroup.created_at.desc()).options(selectinload(MemberGroup.members))
+    ).scalars()
+    return [{"id": row.id, "name": row.name, "description": row.description,
+             "platform_id": row.platform_id, "level_id": row.level_id,
+             "member_count": len(row.members), "is_active": row.is_active,
+             "members": [{"id": user.id, "username": user.username, "email": user.email}
+                         for user in row.members],
+             "created_at": row.created_at.isoformat()} for row in rows]
+
+
 @admin_bp.get("/groups")
 @admin_required
 def groups():
-    rows = db.session.execute(select(MemberGroup).order_by(MemberGroup.created_at.desc())).scalars()
-    return jsonify(data=[{"id": row.id, "name": row.name, "description": row.description,
-                          "platform_id": row.platform_id, "level_id": row.level_id,
-                          "member_count": len(row.members), "is_active": row.is_active,
-                          "members": [{"id": user.id, "username": user.username, "email": user.email}
-                                      for user in row.members],
-                          "created_at": row.created_at.isoformat()} for row in rows])
+    return jsonify(data=groups_data())
 
 
 @admin_bp.post("/groups")
@@ -322,9 +339,7 @@ def create_task():
                          "requirement_count": len(task.requirements)}), 201
 
 
-@admin_bp.get("/tasks")
-@admin_required
-def admin_tasks():
+def tasks_data():
     query = (select(LearningTask).order_by(LearningTask.created_at.desc()).limit(200)
              .options(
                  selectinload(LearningTask.assignments).selectinload(TaskAssignment.user),
@@ -332,16 +347,22 @@ def admin_tasks():
                  selectinload(LearningTask.requirements),
              ))
     rows = db.session.execute(query).scalars()
-    return jsonify(data=[{"id": task.id, "title": task.title,
-                          "deadline_at": task.deadline_at.isoformat() if task.deadline_at else None,
-                          "assignments": len(task.assignments), "requirements": len(task.requirements),
-                          "targets": [{"type": "member", "id": assignment.user.id,
-                                       "name": assignment.user.username}
-                                      if assignment.user else
-                                      {"type": "group", "id": assignment.group.id,
-                                       "name": assignment.group.name}
-                                      for assignment in task.assignments],
-                          "active": task.is_active} for task in rows])
+    return [{"id": task.id, "title": task.title,
+             "deadline_at": task.deadline_at.isoformat() if task.deadline_at else None,
+             "assignments": len(task.assignments), "requirements": len(task.requirements),
+             "targets": [{"type": "member", "id": assignment.user.id,
+                          "name": assignment.user.username}
+                         if assignment.user else
+                         {"type": "group", "id": assignment.group.id,
+                          "name": assignment.group.name}
+                         for assignment in task.assignments],
+             "active": task.is_active} for task in rows]
+
+
+@admin_bp.get("/tasks")
+@admin_required
+def admin_tasks():
+    return jsonify(data=tasks_data())
 
 
 @admin_bp.patch("/tasks/<task_id>")
@@ -358,14 +379,34 @@ def update_task(task_id):
     return jsonify(data={"id": task.id, "is_active": task.is_active})
 
 
+def submissions_data():
+    # joinedload pulls the task and the member in the same query (no query per submission row).
+    rows = db.session.execute(
+        select(TaskSubmission).order_by(TaskSubmission.submitted_at.desc()).limit(300)
+        .options(joinedload(TaskSubmission.task), joinedload(TaskSubmission.user))
+    ).scalars()
+    return [{"id": item.id, "task_id": item.task_id, "task_title": item.task.title,
+             "user_id": item.user_id, "username": item.user.username,
+             "status": item.status, "content": item.content, "feedback": item.feedback,
+             "submitted_at": item.submitted_at.isoformat()} for item in rows]
+
+
 @admin_bp.get("/submissions")
 @admin_required
 def submissions():
-    rows = db.session.execute(select(TaskSubmission).order_by(TaskSubmission.submitted_at.desc()).limit(300)).scalars()
-    return jsonify(data=[{"id": item.id, "task_id": item.task_id, "task_title": item.task.title,
-                          "user_id": item.user_id, "username": item.user.username,
-                          "status": item.status, "content": item.content, "feedback": item.feedback,
-                          "submitted_at": item.submitted_at.isoformat()} for item in rows])
+    return jsonify(data=submissions_data())
+
+
+@admin_bp.get("/dashboard")
+@admin_required
+def dashboard():
+    """Everything the administration screen needs in ONE request (one session lookup, one connection)."""
+    from .catalog import platforms_data
+    return jsonify(data={
+        "overview": overview_data(), "members": members_data(), "levels": levels_data(),
+        "groups": groups_data(), "tasks": tasks_data(), "submissions": submissions_data(),
+        "platforms": platforms_data(),
+    })
 
 
 @admin_bp.patch("/submissions/<submission_id>")
