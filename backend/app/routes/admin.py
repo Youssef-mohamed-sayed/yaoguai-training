@@ -124,7 +124,7 @@ def request_arg(name):
 @admin_required
 def member_detail(user_id):
     user = db.session.get(User, user_id)
-    if not user:
+    if not user or user.is_admin:
         return error("member_not_found", "Member not found", 404)
     progress = []
     platforms = db.session.execute(
@@ -175,7 +175,7 @@ def member_detail(user_id):
 @admin_required
 def update_member(user_id):
     user = db.session.get(User, user_id)
-    if not user:
+    if not user or user.is_admin:
         return error("member_not_found", "Member not found", 404)
     data = json_object()
     if not data:
@@ -259,6 +259,8 @@ def add_group_member(group_id, user_id):
     group, user = db.session.get(MemberGroup, group_id), db.session.get(User, user_id)
     if not group or not user:
         return error("not_found", "Group or member not found", 404)
+    if user.is_admin:
+        return error("admin_not_learner", "Administrators cannot be added to learner lists", 422)
     if user not in group.members:
         group.members.append(user)
         db.session.commit()
@@ -322,6 +324,8 @@ def create_task():
         return error("inactive_group", "Tasks cannot be assigned to inactive groups", 422)
     if any(not user.is_active for user in users_found):
         return error("inactive_member", "Tasks cannot be assigned to inactive accounts", 422)
+    if any(user.is_admin for user in users_found):
+        return error("admin_not_learner", "Tasks cannot be assigned to administrator accounts", 422)
     task = LearningTask(title=data["title"].strip(), description=str(data.get("description", "")),
                         instructions=str(data.get("instructions", "")), platform_id=data.get("platform_id"),
                         module_id=data.get("module_id"), difficulty=str(data.get("difficulty", "intermediate"))[:24],

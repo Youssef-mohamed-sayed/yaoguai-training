@@ -63,7 +63,7 @@ function getStoredUser() {
 }
 
 function setStoredUser(user) {
-  window.YaoguaiAccountUser = user || null;
+  window.YaoguaiAccountUser = user && !user.is_admin ? user : null; // administrators are not learners
 }
 
 async function fetchWithErrors(url, options) {

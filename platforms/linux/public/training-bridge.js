@@ -99,23 +99,27 @@
       const csrfResponse = await request('/auth/csrf');
       csrf = (await csrfResponse.json()).data?.csrf_token || '';
       const accountResponse = await request('/auth/me');
-      window.YaoguaiAccountUser = (await accountResponse.json()).data?.user || null;
-    } catch { window.YaoguaiAccountUser = null; }
+      const me = (await accountResponse.json()).data?.user || null;
+      // Administrators manage the platform; they are not learners, so no progress is tracked for them.
+      window.YaoguaiAdminUser = me && me.is_admin ? me : null;
+      window.YaoguaiAccountUser = me && !me.is_admin ? me : null;
+    } catch { window.YaoguaiAccountUser = null; window.YaoguaiAdminUser = null; }
 
     const nav = document.querySelector('header nav, header .topnav, header .top-links, .topnav, .topbar-tools');
     if (nav && !nav.querySelector('.training-account-link')) {
       const link = document.createElement('a');
       link.className = 'training-account-link';
       const next = encodeURIComponent(location.pathname + location.search);
-      link.href = account() ? '/profile' : `/login?next=${next}`;
-      link.textContent = account() ? `Training · ${account().username}` : 'Training account';
-      link.setAttribute('aria-label', account() ? 'Open profile settings' : 'Sign in to save learning progress');
+      const admin = window.YaoguaiAdminUser;
+      link.href = admin ? '/admin' : account() ? '/profile' : `/login?next=${next}`;
+      link.textContent = admin ? 'Administration' : account() ? `Training · ${account().username}` : 'Training account';
+      link.setAttribute('aria-label', admin ? 'Open administration' : account() ? 'Open profile settings' : 'Sign in to save learning progress');
       nav.append(link);
       const style = document.createElement('style');
       style.textContent = '.training-account-link{margin-inline-start:12px;color:inherit;font-size:.9em;text-decoration:underline;text-underline-offset:4px}.training-account-link:focus-visible{outline:2px solid #c94b55;outline-offset:3px}';
       document.head.append(style);
     }
-    if (account()?.must_change_password) { location.assign('/profile?required=1'); return; }
+    if ((account() || window.YaoguaiAdminUser)?.must_change_password) { location.assign('/profile?required=1'); return; }
     if (!account()) return;
     await refresh();
     activeId = identify();

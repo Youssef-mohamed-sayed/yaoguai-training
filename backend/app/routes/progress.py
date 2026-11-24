@@ -5,14 +5,14 @@ from sqlalchemy.orm import selectinload
 
 from ..extensions import db
 from ..models import ActivityVisit, LearningActivity, Module, Platform, UserActivityProgress, now_utc
-from ..security import authenticated_required, error, json_object
+from ..security import error, json_object, learner_required
 from ..services.progress import module_status, module_statuses, task_status
 
 progress_bp = Blueprint("progress", __name__)
 
 
 @progress_bp.post("/progress/visits")
-@authenticated_required
+@learner_required
 def record_visit():
     data = json_object()
     activity_id = data.get("activity_id") if data else None
@@ -35,7 +35,7 @@ def record_visit():
 
 
 @progress_bp.post("/progress/activities/<path:activity_id>/heartbeat")
-@authenticated_required
+@learner_required
 def activity_heartbeat(activity_id):
     activity = db.session.get(LearningActivity, activity_id)
     if not activity or not activity.is_active:
@@ -56,7 +56,7 @@ def activity_heartbeat(activity_id):
 
 
 @progress_bp.post("/progress/activities/<path:activity_id>/complete")
-@authenticated_required
+@learner_required
 def complete_activity(activity_id):
     activity = db.session.get(LearningActivity, activity_id)
     if not activity or not activity.is_active:
@@ -85,7 +85,7 @@ def complete_activity(activity_id):
 
 
 @progress_bp.post("/progress/activities/<path:activity_id>/attempts")
-@authenticated_required
+@learner_required
 def submit_attempt(activity_id):
     activity = db.session.get(LearningActivity, activity_id)
     if not activity or not activity.is_active:
@@ -126,7 +126,7 @@ def submit_attempt(activity_id):
 
 
 @progress_bp.get("/progress")
-@authenticated_required
+@learner_required
 def dashboard_progress():
     platforms = db.session.execute(
         select(Platform).where(Platform.is_active.is_(True)).order_by(Platform.sort_order)

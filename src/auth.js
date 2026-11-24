@@ -26,6 +26,7 @@ const validNext = (value) => value?.startsWith('/') && !value.startsWith('//') ?
 function paintHeader() {
   document.querySelector('[data-sign-in]').hidden = Boolean(currentUser);
   document.querySelector('[data-register]').hidden = Boolean(currentUser);
+  document.querySelector('[data-admin]').hidden = !currentUser?.is_admin;
   document.querySelector('[data-profile]').hidden = !currentUser;
   document.querySelector('[data-sign-out]').hidden = !currentUser;
   document.querySelector('[data-sign-out]').onclick = async () => {
@@ -126,6 +127,12 @@ function activityUrl(id) {
 async function refreshLearningSummary() {
   const root = document.querySelector('#account-summary');
   if (!root || path() !== '/' || !currentUser || currentUser.must_change_password) return;
+  if (currentUser.is_admin) {
+    // Administrators manage the platform. They are not learners, so no course progress is shown or tracked for them.
+    root.innerHTML = `<div class="account-summary-head"><div><p class="section-kicker">Administrator account</p><h2 id="account-summary-title">Administration</h2><p>Course progress is tracked for learners only. You can still read every course.</p></div></div><div class="summary-footer"><a class="button button-primary" href="/admin">Open administration &rarr;</a></div>`;
+    root.hidden = false;
+    return;
+  }
   try {
     const progress = await api('/progress');
     const { overall, platforms, last_activity: last } = progress;

@@ -18,6 +18,18 @@ def authenticated_required(view):
     return wrapped
 
 
+def learner_required(view):
+    """Signed-in learners only. Administrators manage the platform and have no learner progress."""
+    @wraps(view)
+    @authenticated_required
+    def wrapped(*args, **kwargs):
+        if current_user.is_admin:
+            return jsonify(error={"code": "admin_not_learner",
+                                  "message": "Administrator accounts do not have learner progress"}), 403
+        return view(*args, **kwargs)
+    return wrapped
+
+
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
