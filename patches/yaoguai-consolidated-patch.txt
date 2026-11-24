@@ -1,0 +1,153 @@
+diff --git a/public/brand/yaoguai-brand.css b/public/brand/yaoguai-brand.css
+index 8402749..ce486b4 100644
+--- a/public/brand/yaoguai-brand.css
++++ b/public/brand/yaoguai-brand.css
+@@ -53,3 +53,45 @@ main section,main article,.platform-card,.map-row,.lesson-card,.module-card,.car
+ img[src*="logo-emblem"]{content:url(/brand/logo-mask.svg);image-rendering:auto;object-fit:contain}
+ .brand-mark,.loader-mark{font-size:0!important;color:transparent!important;background:url(/brand/logo-mask.svg) center/cover no-repeat!important;border:1px solid #c01820!important}
+ .hero-sigil{font-size:0!important;color:transparent!important;background:url(/brand/logo-mask.svg) center/contain no-repeat!important;opacity:.14!important;border-radius:0!important;border:0!important;aspect-ratio:952/968}
++
++/* v4: Crypto hero/footer logo (crisp vector instead of 206px JPG), Network double-navbar gap */
++img.hero-art{content:url(/brand/logo-mask.svg);object-fit:contain!important;padding:34px;box-sizing:border-box;background:#050202;border:1px solid #5c0408;box-shadow:0 0 60px rgba(143,10,16,.35);animation:yg-float2 5s ease-in-out infinite}
++img.footer-logo,img.brand-mark[src*="logo-emblem"]{content:url(/brand/logo-mask.svg);object-fit:contain}
++body:has(header.topbar) .yg-bar{position:sticky;top:0;z-index:60}
++body:has(header.topbar) header.topbar{top:44px}
++
++/* v5: shared motion layer for all courses (ticker, scroll reveal, glitch accent, hero scan) */
++@keyframes yg-float2{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 10px))}}
++@keyframes yg-marq2{to{transform:translateX(-50%)}}
++@keyframes yg-glitch2{0%,92%,100%{transform:none}93%{transform:translateX(-4px);text-shadow:4px 0 #fff,-4px 0 #5c0408}95%{transform:translateX(4px);text-shadow:-4px 0 #fff,4px 0 #5c0408}97%{transform:translateX(-2px)}}
++@keyframes yg-scan{from{transform:translateY(-100%)}to{transform:translateY(100vh)}}
++.yg-ticker{overflow:hidden;white-space:nowrap;border-top:2px solid #fff;border-bottom:2px solid #fff;background:linear-gradient(#8f0a10,#5c0408);position:relative;z-index:3}
++.yg-ticker div{display:inline-block;font:900 20px 'Noto Sans SC','Noto Sans CJK SC','Microsoft YaHei',serif;padding:8px 0;color:#fff;animation:yg-marq2 16s linear infinite}
++.yg-ticker span{margin:0 22px}
++.yg-ticker span.k{opacity:.55}
++.yg-accent{display:inline-block;color:#c01820;text-shadow:0 0 26px rgba(160,0,10,.65);animation:yg-glitch2 5s steps(1) infinite}
++.yg-rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
++.yg-rv.in{opacity:1;transform:none}
++.hero,.dashboard-hero{position:relative;overflow:hidden}
++.hero:before,.dashboard-hero:before{content:"";position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(transparent,rgba(143,10,16,.16),transparent);pointer-events:none;z-index:1;animation:yg-scan 7s linear infinite}
++.hero .btn,.hero .button,.dashboard-hero .btn,.dashboard-hero .button{transition:transform .18s,box-shadow .18s}
++a.module-card,a.card,.lesson-card,.module-card,.card{transition:transform .22s,border-color .22s,background .22s}
++@media (prefers-reduced-motion:reduce){.yg-rv{opacity:1;transform:none;transition:none}.yg-ticker div,.yg-accent,.hero:before,.dashboard-hero:before{animation:none}}
++
++.yg-drips{transition:opacity .25s}
++
++/* v6: oni masks replace the blood drips */
++.yg-drips{height:0}
++.yg-drips i{display:none}
++.yg-oni{position:absolute;top:-13px;width:24px;height:24px;margin-left:-12px;display:block;pointer-events:none;
++  transform-origin:50% 0;animation:yg-oni 2.6s cubic-bezier(.25,.8,.3,1) both,yg-oni-sway 5s ease-in-out 3.4s infinite;
++  filter:drop-shadow(0 4px 8px rgba(0,0,0,.7)) drop-shadow(0 0 8px rgba(143,10,16,.5))}
++.yg-oni:before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:6px;background:#8f0a10}
++.yg-oni img{width:24px;height:24px;display:block;border:1px solid #c01820;background:#8f0a10}
++@keyframes yg-oni{
++ 0%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.3)}
++ 35%{opacity:1;transform:translate(calc(var(--dx)*.45),22px) rotate(calc(var(--rot)*-.7)) scale(1.25)}
++ 65%{transform:translate(calc(var(--dx)*-.15),10px) rotate(calc(var(--rot)*.25)) scale(1.05)}
++ 100%{opacity:1;transform:translate(0,0) rotate(0) scale(1)}}
++@keyframes yg-oni-sway{0%,100%{transform:rotate(0)}50%{transform:rotate(2.5deg)}}
++@media (prefers-reduced-motion:reduce){.yg-oni{animation:none}}
+diff --git a/public/brand/yaoguai-brand.js b/public/brand/yaoguai-brand.js
+index 8879be0..a248bbe 100644
+--- a/public/brand/yaoguai-brand.js
++++ b/public/brand/yaoguai-brand.js
+@@ -26,18 +26,25 @@
+     bar.innerHTML = html;
+     document.body.insertBefore(bar, document.body.firstChild);
+ 
+-    // 3. blood drips under the bar
++    // 3. oni masks: they drop in, wander, then settle in an even row under the bar
+     var drips = document.createElement('div');
+     drips.className = 'yg-drips';
+-    var positions = [4, 11, 19, 27, 36, 44, 53, 61, 70, 78, 87, 95];
+-    var heights = [18, 30, 38, 24, 34, 20, 40, 26, 36, 18, 32, 24];
+-    positions.forEach(function (p, n) {
+-      var d = document.createElement('i');
+-      d.style.left = p + '%';
+-      d.style.height = heights[n] + 'px';
+-      d.style.animationDelay = (0.9 + n * 0.22) + 's';
+-      drips.appendChild(d);
+-    });
++    var count = Math.max(6, Math.min(16, Math.round(window.innerWidth / 96)));
++    for (var n = 0; n < count; n++) {
++      var m = document.createElement('b');
++      m.className = 'yg-oni';
++      var slot = (n + 0.5) / count;
++      m.style.left = (slot * 100) + '%';
++      // random start offset (px), spin (deg); fixed per mask so the motion looks scattered
++      var seed = Math.sin(n * 12.9898) * 43758.5453;
++      var r = seed - Math.floor(seed);
++      m.style.setProperty('--dx', Math.round((r - 0.5) * 360) + 'px');
++      m.style.setProperty('--dy', Math.round(-60 - r * 90) + 'px');
++      m.style.setProperty('--rot', Math.round((r - 0.5) * 220) + 'deg');
++      m.style.animationDelay = (0.5 + n * 0.12) + 's';
++      m.innerHTML = '<img src="/brand/logo-mask.svg" alt="">';
++      drips.appendChild(m);
++    }
+     bar.appendChild(drips);
+ 
+     // 4. intro wipe, only the first page of a browser session
+@@ -57,6 +64,62 @@
+   else start();
+ })();
+ 
++
++// v5: motion layer shared by every course page (also runs on pages that render client-side)
++(function () {
++  var KANJI = ['妖怪', '网络', '系统', '代码', '密码', 'YAOGUAI'];
++  var CARDS = '.module-card,.lesson-card,.card,.platform-card,.pathway-card,.stat-card,.progress-card';
++  var io = null;
++  if ('IntersectionObserver' in window) {
++    io = new IntersectionObserver(function (es) {
++      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
++    }, { threshold: 0.08 });
++  }
++  function ticker(hero) {
++    if (hero.nextElementSibling && hero.nextElementSibling.classList.contains('yg-ticker')) return;
++    var one = '';
++    KANJI.forEach(function (k, i) { one += '<span class="' + (i % 2 ? 'k' : '') + '">' + k + '</span>'; });
++    var t = document.createElement('div');
++    t.className = 'yg-ticker';
++    t.setAttribute('aria-hidden', 'true');
++    t.innerHTML = '<div>' + one + one + one + one + '</div>';
++    hero.parentNode.insertBefore(t, hero.nextSibling);
++  }
++  function accent(hero) {
++    if (hero.querySelector('.yg-accent')) return;
++    var h = hero.querySelector('h1');
++    if (!h) return;
++    var em = h.querySelector('span,em');
++    if (em) em.classList.add('yg-accent');
++  }
++  function scan() {
++    var heroes = document.querySelectorAll('.hero,.dashboard-hero');
++    for (var i = 0; i < heroes.length; i++) { ticker(heroes[i]); accent(heroes[i]); }
++    var cs = document.querySelectorAll(CARDS);
++    for (var j = 0; j < cs.length; j++) {
++      var c = cs[j];
++      if (c.dataset.ygRv || c.closest('#platforms')) continue;
++      c.dataset.ygRv = '1';
++      if (!io) continue;
++      c.classList.add('yg-rv');
++      c.style.transitionDelay = Math.min(j % 6, 5) * 70 + 'ms';
++      io.observe(c);
++    }
++  }
++  function dripFade() {
++    var d = document.querySelector('.yg-drips');
++    if (d) d.style.opacity = window.scrollY > 24 ? '0' : '1';
++  }
++  window.addEventListener('scroll', dripFade, { passive: true });
++  var pending = false;
++  function later() { if (pending) return; pending = true; setTimeout(function () { pending = false; scan(); }, 120); }
++  function boot() {
++    scan();
++    new MutationObserver(later).observe(document.body, { childList: true, subtree: true });
++  }
++  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
++})();
++
+ // Keep the brand stylesheet last in <head> so it wins over styles that scripts add later.
+ window.addEventListener('load', function () {
+   var link = document.querySelector('link[href="/brand/yaoguai-brand.css"]');

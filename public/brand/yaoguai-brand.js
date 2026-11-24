@@ -26,18 +26,25 @@
     bar.innerHTML = html;
     document.body.insertBefore(bar, document.body.firstChild);
 
-    // 3. blood drips under the bar
+    // 3. oni masks: they drop in, wander, then settle in an even row under the bar
     var drips = document.createElement('div');
     drips.className = 'yg-drips';
-    var positions = [4, 11, 19, 27, 36, 44, 53, 61, 70, 78, 87, 95];
-    var heights = [18, 30, 38, 24, 34, 20, 40, 26, 36, 18, 32, 24];
-    positions.forEach(function (p, n) {
-      var d = document.createElement('i');
-      d.style.left = p + '%';
-      d.style.height = heights[n] + 'px';
-      d.style.animationDelay = (0.9 + n * 0.22) + 's';
-      drips.appendChild(d);
-    });
+    var count = Math.max(6, Math.min(16, Math.round(window.innerWidth / 96)));
+    for (var n = 0; n < count; n++) {
+      var m = document.createElement('b');
+      m.className = 'yg-oni';
+      var slot = (n + 0.5) / count;
+      m.style.left = (slot * 100) + '%';
+      // random start offset (px), spin (deg); fixed per mask so the motion looks scattered
+      var seed = Math.sin(n * 12.9898) * 43758.5453;
+      var r = seed - Math.floor(seed);
+      m.style.setProperty('--dx', Math.round((r - 0.5) * 360) + 'px');
+      m.style.setProperty('--dy', Math.round(-60 - r * 90) + 'px');
+      m.style.setProperty('--rot', Math.round((r - 0.5) * 220) + 'deg');
+      m.style.animationDelay = (0.5 + n * 0.12) + 's';
+      m.innerHTML = '<img src="/brand/logo-mask.svg" alt="">';
+      drips.appendChild(m);
+    }
     bar.appendChild(drips);
 
     // 4. intro wipe, only the first page of a browser session
@@ -55,6 +62,62 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
+})();
+
+
+// v5: motion layer shared by every course page (also runs on pages that render client-side)
+(function () {
+  var KANJI = ['妖怪', '网络', '系统', '代码', '密码', 'YAOGUAI'];
+  var CARDS = '.module-card,.lesson-card,.card,.platform-card,.pathway-card,.stat-card,.progress-card';
+  var io = null;
+  if ('IntersectionObserver' in window) {
+    io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+  }
+  function ticker(hero) {
+    if (hero.nextElementSibling && hero.nextElementSibling.classList.contains('yg-ticker')) return;
+    var one = '';
+    KANJI.forEach(function (k, i) { one += '<span class="' + (i % 2 ? 'k' : '') + '">' + k + '</span>'; });
+    var t = document.createElement('div');
+    t.className = 'yg-ticker';
+    t.setAttribute('aria-hidden', 'true');
+    t.innerHTML = '<div>' + one + one + one + one + '</div>';
+    hero.parentNode.insertBefore(t, hero.nextSibling);
+  }
+  function accent(hero) {
+    if (hero.querySelector('.yg-accent')) return;
+    var h = hero.querySelector('h1');
+    if (!h) return;
+    var em = h.querySelector('span,em');
+    if (em) em.classList.add('yg-accent');
+  }
+  function scan() {
+    var heroes = document.querySelectorAll('.hero,.dashboard-hero');
+    for (var i = 0; i < heroes.length; i++) { ticker(heroes[i]); accent(heroes[i]); }
+    var cs = document.querySelectorAll(CARDS);
+    for (var j = 0; j < cs.length; j++) {
+      var c = cs[j];
+      if (c.dataset.ygRv || c.closest('#platforms')) continue;
+      c.dataset.ygRv = '1';
+      if (!io) continue;
+      c.classList.add('yg-rv');
+      c.style.transitionDelay = Math.min(j % 6, 5) * 70 + 'ms';
+      io.observe(c);
+    }
+  }
+  function dripFade() {
+    var d = document.querySelector('.yg-drips');
+    if (d) d.style.opacity = window.scrollY > 24 ? '0' : '1';
+  }
+  window.addEventListener('scroll', dripFade, { passive: true });
+  var pending = false;
+  function later() { if (pending) return; pending = true; setTimeout(function () { pending = false; scan(); }, 120); }
+  function boot() {
+    scan();
+    new MutationObserver(later).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 
 // Keep the brand stylesheet last in <head> so it wins over styles that scripts add later.
