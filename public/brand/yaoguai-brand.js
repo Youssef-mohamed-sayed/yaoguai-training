@@ -29,20 +29,25 @@
     // 3. oni masks: they drop in, wander, then settle in an even row under the bar
     var drips = document.createElement('div');
     drips.className = 'yg-drips';
-    var count = Math.max(6, Math.min(16, Math.round(window.innerWidth / 96)));
+    // masks sit inside the bar, in the free space to the right of the course links
+    var last = bar.querySelector('.yg-link:last-of-type');
+    var from = last ? last.getBoundingClientRect().right + 30 : 600;
+    var room = window.innerWidth - from - 24;
+    var count = Math.max(0, Math.min(14, Math.floor(room / 44)));
+    drips.style.left = from + 'px';
+    drips.style.right = '24px';
     for (var n = 0; n < count; n++) {
       var m = document.createElement('b');
       m.className = 'yg-oni';
       var slot = (n + 0.5) / count;
       m.style.left = (slot * 100) + '%';
-      // random start offset (px), spin (deg); fixed per mask so the motion looks scattered
       var seed = Math.sin(n * 12.9898) * 43758.5453;
       var r = seed - Math.floor(seed);
-      m.style.setProperty('--dx', Math.round((r - 0.5) * 360) + 'px');
-      m.style.setProperty('--dy', Math.round(-60 - r * 90) + 'px');
+      m.style.setProperty('--dx', Math.round((r - 0.5) * 240) + 'px');
+      m.style.setProperty('--dy', Math.round(-30 - r * 40) + 'px');
       m.style.setProperty('--rot', Math.round((r - 0.5) * 220) + 'deg');
       m.style.animationDelay = (0.5 + n * 0.12) + 's';
-      m.innerHTML = '<img src="/brand/logo-mask.svg" alt="">';
+      m.innerHTML = '<img src="/brand/logo-oni.svg" alt="">';
       drips.appendChild(m);
     }
     bar.appendChild(drips);

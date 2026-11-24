@@ -81,13 +81,12 @@ a.module-card,a.card,.lesson-card,.module-card,.card{transition:transform .22s,b
 .yg-drips{transition:opacity .25s}
 
 /* v6: oni masks replace the blood drips */
-.yg-drips{height:0}
+.yg-drips{top:0;height:44px}
 .yg-drips i{display:none}
-.yg-oni{position:absolute;top:-13px;width:24px;height:24px;margin-left:-12px;display:block;pointer-events:none;
+.yg-oni{position:absolute;top:9px;width:26px;height:26px;margin-left:-13px;display:block;pointer-events:none;
   transform-origin:50% 0;animation:yg-oni 2.6s cubic-bezier(.25,.8,.3,1) both,yg-oni-sway 5s ease-in-out 3.4s infinite;
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.7)) drop-shadow(0 0 8px rgba(143,10,16,.5))}
-.yg-oni:before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:6px;background:#8f0a10}
-.yg-oni img{width:24px;height:24px;display:block;border:1px solid #c01820;background:#8f0a10}
+  filter:drop-shadow(0 0 3px rgba(143,10,16,.95)) drop-shadow(0 0 9px rgba(143,10,16,.55))}
+.yg-oni img{width:26px;height:26px;display:block}
 @keyframes yg-oni{
  0%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.3)}
  35%{opacity:1;transform:translate(calc(var(--dx)*.45),22px) rotate(calc(var(--rot)*-.7)) scale(1.25)}
@@ -95,3 +94,4 @@ a.module-card,a.card,.lesson-card,.module-card,.card{transition:transform .22s,b
  100%{opacity:1;transform:translate(0,0) rotate(0) scale(1)}}
 @keyframes yg-oni-sway{0%,100%{transform:rotate(0)}50%{transform:rotate(2.5deg)}}
 @media (prefers-reduced-motion:reduce){.yg-oni{animation:none}}
+@media(max-width:900px){.yg-drips{display:none}}
