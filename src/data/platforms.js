@@ -13,6 +13,7 @@ export const platforms = [
     url: '/network',
     icon: 'network',
     tone: 'network',
+    kanji: '网络',
   },
   {
     name: 'Yaoguai Linux',
@@ -21,6 +22,7 @@ export const platforms = [
     url: '/linux',
     icon: 'linux',
     tone: 'linux',
+    kanji: '系统',
   },
   {
     name: 'Yaoguai Programming',
@@ -29,6 +31,7 @@ export const platforms = [
     url: '/programming',
     icon: 'python',
     tone: 'python',
+    kanji: '代码',
   },
   {
     name: 'Yaoguai Crypto',
@@ -37,18 +40,20 @@ export const platforms = [
     url: '/crypto',
     icon: 'crypto',
     tone: 'crypto',
+    kanji: '密码',
   },
 ];
 
 export function renderPlatform(platform, index, stats = null) {
   return `
     <a class="platform-card ${platform.tone}" href="${platform.url}" aria-label="Open ${platform.name}">
-      <div class="card-topline"><span class="card-number">0${index + 1}</span><span class="card-topic">${platform.topic}</span></div>
-      <div class="card-icon">${icons[platform.icon]}</div>
+      <span class="card-kanji" aria-hidden="true">${platform.kanji}</span>
+      <div class="card-topline"><span class="card-number">0${index + 1} / ${platform.topic.toUpperCase()}</span></div>
       <div class="card-copy">
         <h3>${platform.name}</h3>
         <p>${platform.description}</p>
       </div>
-      <div class="card-action"><span>${stats ? stats.modules_count + ' modules · ' + stats.activities_count + ' activities' : 'Open course'}</span><span class="action-arrow" aria-hidden="true">→</span></div>
+      <div class="card-bar"><i></i></div>
+      <div class="card-action"><span>${stats ? stats.modules_count + ' modules · ' + stats.activities_count + ' activities' : 'Open course'}</span><span class="action-arrow" aria-hidden="true">OPEN →</span></div>
     </a>`;
 }

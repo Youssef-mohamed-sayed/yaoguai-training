@@ -1,0 +1,37 @@
+/* Portal home page (index.html) only: hero, ticker and course cards in the Yaoguai style. */
+.site-header .brand,.site-header .site-nav a[href="/#platforms"]{display:none}
+.site-header{height:56px}.site-header .header-inner{justify-content:flex-end!important}
+.hero-yg{border-bottom:0;position:relative;overflow:hidden}
+.hero-yg .hero-inner{min-height:560px;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px}
+.hero-yg h1{font:700 clamp(46px,6.4vw,92px)/.98 var(--serif);letter-spacing:-.025em;margin:20px 0 24px;animation:yg-rise .8s .4s both}
+.hero-yg h1 span{display:inline-block;color:#c01820;text-shadow:0 0 28px rgba(160,0,10,.7);animation:yg-glitch 3.4s 2s infinite}
+.hero-yg .eyebrow-index{color:#a0a0a0;letter-spacing:.14em}
+.hero-yg .hero-description{color:#d0d0d0;font-size:18px}
+.hero-art{position:relative;display:flex;gap:16px;align-items:flex-start;justify-content:flex-end}
+.hero-art .hero-mask{width:min(300px,52%);aspect-ratio:1;animation:yg-pop .9s .5s both,yg-float 4s 1.6s ease-in-out infinite,yg-glow 3s 1.6s infinite}
+.hero-art .hero-word{height:min(300px,52vw);width:auto;animation:yg-bars 1.2s .9s both cubic-bezier(.7,0,.2,1)}
+.hero-kanji{position:absolute;right:-20px;top:-50px;font:900 min(340px,30vw)/1 'Noto Sans SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;color:rgba(255,255,255,.04);z-index:-1;animation:yg-drift 9s ease-in-out infinite;pointer-events:none}
+@keyframes yg-glitch{0%,92%,100%{transform:none}93%{transform:translateX(-4px);text-shadow:4px 0 #fff,-4px 0 #8f0a10}95%{transform:translateX(5px);text-shadow:-4px 0 #fff,4px 0 #8f0a10}97%{transform:translateX(-2px)}}
+@keyframes yg-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes yg-glow{0%,100%{box-shadow:0 0 40px 4px rgba(120,0,6,.55)}50%{box-shadow:0 0 80px 14px rgba(160,0,10,.75)}}
+@keyframes yg-bars{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes yg-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,20px)}}
+.ticker{overflow:hidden;white-space:nowrap;border-top:2px solid #fff;border-bottom:2px solid #fff;background:linear-gradient(#8f0a10,#5c0408);position:relative;z-index:3}
+.ticker div{display:inline-block;font:900 26px 'Noto Sans SC','Noto Sans CJK SC','Microsoft YaHei',var(--serif);padding:10px 0;animation:yg-marq 14s linear infinite}
+.ticker span{margin:0 26px}
+@keyframes yg-marq{to{transform:translateX(-50%)}}
+/* course cards */
+#platforms .platform-grid{grid-template-columns:repeat(4,minmax(0,1fr));border:2px solid #fff;gap:0}
+#platforms .platform-grid .platform-card{display:flex;flex-direction:column;gap:14px;min-height:320px;padding:26px;border:0;border-right:1px solid rgba(255,255,255,.16);background:#0b0b0b;position:relative;overflow:hidden}
+#platforms .platform-card:last-child{border-right:0}
+.card-kanji{display:grid;place-items:center;width:64px;height:64px;background:linear-gradient(#a50c14,#6e0509);color:#fff;font:900 28px 'Noto Sans SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;transition:.25s}
+#platforms .platform-card .card-copy{flex:1}.platform-card h3{font:700 26px var(--serif)}
+.card-bar{height:4px;background:rgba(255,255,255,.16)}.card-bar i{display:block;height:100%;width:0;background:#8f0a10}
+.platform-card:hover .card-kanji{background:#fff;color:#8f0a10;transform:rotate(-6deg) scale(1.1)}
+.platform-card:hover .card-bar i{background:#fff}.platform-card:hover p,.platform-card:hover .card-topline{color:#fff}
+#platforms .platform-card .card-action{grid-column:auto;display:flex;justify-content:space-between;width:100%;margin:0;font:700 12px var(--mono);letter-spacing:.08em}.platform-card:hover .action-arrow{letter-spacing:.3em}
+.platform-card .card-icon{display:none}
+@media(max-width:1000px){#platforms .platform-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero-yg .hero-inner{grid-template-columns:1fr}.hero-art{justify-content:flex-start}}
+@media(max-width:560px){#platforms .platform-grid{grid-template-columns:1fr}#platforms .platform-grid .platform-card{min-height:240px}}
+#platforms .platform-grid .platform-card .card-topline{grid-column:auto}
+#platforms .action-arrow{white-space:nowrap;flex:none}#platforms .card-action{gap:10px}
