@@ -1,0 +1,90 @@
+/* Crypto tools page: extra motion and polish. Loaded after styles.css, so it only adds. */
+:root{ --yg-red:#8f0a10; --yg-red2:#5c0408; --ease:cubic-bezier(.2,.7,.2,1); }
+
+/* moving red haze behind the page */
+body{ position:relative; }
+body::before{ content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(60vmax 40vmax at 85% -10%, rgba(143,10,16,.28), transparent 60%),
+             radial-gradient(50vmax 40vmax at -10% 110%, rgba(92,4,8,.30), transparent 60%);
+  animation:fx-haze 14s ease-in-out infinite alternate; }
+@keyframes fx-haze{ from{ transform:translate3d(0,0,0) scale(1); opacity:.8 } to{ transform:translate3d(-2%,2%,0) scale(1.08); opacity:1 } }
+.topbar,.tools-shell{ position:relative; z-index:1; }
+
+/* top bar */
+.brand-mark{ transition:transform .4s var(--ease), box-shadow .4s; }
+.brand:hover .brand-mark{ transform:rotate(-6deg) scale(1.08); box-shadow:0 0 18px rgba(143,10,16,.8); }
+.topnav a{ position:relative; border-bottom:0!important; }
+.topnav a::after{ content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:var(--yg-red);
+  transform:scaleX(0); transform-origin:left; transition:transform .35s var(--ease); }
+.topnav a:hover::after,.topnav a.active::after{ transform:scaleX(1); }
+
+/* API status chip with a live dot */
+.progress-chip#api-status{ display:inline-flex; align-items:center; gap:8px; }
+.progress-chip#api-status::before{ content:""; width:8px; height:8px; border-radius:50%; background:#777; }
+.progress-chip#api-status[data-state=ok]::before{ background:#fff; box-shadow:0 0 0 0 rgba(255,255,255,.7); animation:fx-ping 2s infinite; }
+.progress-chip#api-status[data-state=bad]::before{ background:var(--yg-red); box-shadow:0 0 8px var(--yg-red); }
+.progress-chip#api-status[data-state=wait]::before{ background:#bbb; animation:fx-blink 1s steps(2) infinite; }
+@keyframes fx-ping{ 70%{ box-shadow:0 0 0 8px rgba(255,255,255,0) } 100%{ box-shadow:0 0 0 0 rgba(255,255,255,0) } }
+@keyframes fx-blink{ 50%{ opacity:.25 } }
+
+/* page entrance: sidebar items cascade in */
+.tools-list a{ opacity:0; transform:translateX(-14px); animation:fx-in .5s var(--ease) forwards; position:relative;
+  transition:color .2s, background .25s, padding-left .25s var(--ease); }
+.tools-list a:hover{ padding-left:16px; background:rgba(143,10,16,.14); }
+.tools-list a.current{ background:linear-gradient(90deg,rgba(143,10,16,.45),rgba(143,10,16,.05)); border-left-color:var(--yg-red); box-shadow:inset 3px 0 0 var(--yg-red); }
+.tools-group{ opacity:0; animation:fx-in .5s var(--ease) forwards; }
+@keyframes fx-in{ to{ opacity:1; transform:none } }
+
+/* switching tool: header and panels slide in again */
+.tools-main.fx-swap .tools-head,.tools-main.fx-swap .mode-switch,.tools-main.fx-swap .params{ animation:fx-swap .45s var(--ease) both; }
+.tools-main.fx-swap .tools-head h1{ animation:fx-glitch .5s steps(6) both; }
+@keyframes fx-swap{ from{ opacity:0; transform:translateY(12px) } to{ opacity:1; transform:none } }
+@keyframes fx-glitch{ 0%{ text-shadow:3px 0 #8f0a10,-3px 0 #fff; transform:translateX(-3px) }
+  40%{ text-shadow:-2px 0 #8f0a10,2px 0 #fff; transform:translateX(3px) } 100%{ text-shadow:none; transform:none } }
+.tools-head h1{ position:relative; display:inline-block; }
+.tools-head h1::after{ content:""; display:block; height:3px; width:56px; margin-top:8px; background:var(--yg-red); transition:width .5s var(--ease); }
+.tools-main:hover .tools-head h1::after{ width:120px; }
+
+/* mode switch */
+.mode-switch button{ transition:background .3s var(--ease), color .2s; }
+.mode-switch button:not(.on):hover{ background:rgba(143,10,16,.18); color:#fff; }
+.mode-switch button.on{ background:linear-gradient(#a50c14,#6e0509); box-shadow:inset 0 -2px 0 rgba(255,255,255,.35); }
+
+/* inputs */
+.tools-main textarea,.tools-main input,.tools-main select{ transition:border-color .25s, box-shadow .3s, background .3s; }
+.tools-main textarea:focus,.tools-main input:focus,.tools-main select:focus{
+  border-color:var(--yg-red); box-shadow:0 0 0 1px var(--yg-red), 0 0 24px rgba(143,10,16,.35); background:rgba(143,10,16,.04); }
+
+/* buttons: red sweep + press */
+.tools-main .btn{ position:relative; overflow:hidden; transition:transform .15s, box-shadow .3s, background .25s, color .25s, border-color .25s; }
+.tools-main .btn::after{ content:""; position:absolute; top:0; bottom:0; width:40%; left:-60%; transform:skewX(-20deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent); }
+.tools-main .btn:hover::after{ left:130%; transition:left .6s var(--ease); }
+.tools-main .btn:hover{ transform:translateY(-2px); box-shadow:0 8px 22px rgba(143,10,16,.45); }
+.tools-main .btn:active{ transform:translateY(0) scale(.97); box-shadow:none; }
+.tools-main .btn-primary{ background:linear-gradient(#a50c14,#6e0509); border-color:#c01820; color:#fff; }
+.tools-main .btn-primary:hover{ background:linear-gradient(#bd0f18,#7e0609); color:#fff; }
+.tools-main .btn.fx-busy{ pointer-events:none; }
+.tools-main .btn.fx-busy::before{ content:""; position:absolute; left:0; bottom:0; height:3px; width:100%; background:#fff;
+  transform-origin:left; animation:fx-load 1s linear infinite; }
+@keyframes fx-load{ from{ transform:scaleX(0) } to{ transform:scaleX(1) } }
+
+/* output: scan sweep when a result arrives */
+#output{ transition:border-color .3s, box-shadow .6s; }
+#output.fx-result{ animation:fx-result 1s var(--ease); }
+@keyframes fx-result{ 0%{ box-shadow:inset 0 0 0 0 rgba(143,10,16,0); border-color:#fff; background-image:linear-gradient(180deg,transparent 0,rgba(143,10,16,.55) 50%,transparent 100%); background-size:100% 40px; background-repeat:no-repeat; background-position:0 -40px; }
+  100%{ box-shadow:inset 0 0 30px rgba(143,10,16,.0); background-position:0 140%; } }
+.out-wrap-fx{ position:relative; }
+.tool-msg{ transition:color .3s; }
+.tool-msg.ok,.tool-msg.bad{ animation:fx-pop .4s var(--ease); }
+.tool-msg.bad{ color:#ff8c92; }
+@keyframes fx-pop{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:none } }
+
+/* links to other tools */
+.continue-link{ transition:transform .25s var(--ease), border-color .25s, background .25s, box-shadow .3s; }
+.continue-link:hover{ transform:translateY(-3px); border-color:var(--yg-red); background:rgba(143,10,16,.12); box-shadow:0 10px 24px rgba(143,10,16,.25); }
+
+@media (prefers-reduced-motion:reduce){
+  body::before,.tools-list a,.tools-group,.tools-main *{ animation:none!important; transition:none!important; }
+  .tools-list a,.tools-group{ opacity:1; transform:none; }
+}
