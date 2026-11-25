@@ -51,7 +51,7 @@
       if (document.visibilityState === 'visible') request(`/progress/activities/${safePath}/heartbeat`, 'POST', {});
     };
     if (window.__yaoguaiHeartbeat) clearInterval(window.__yaoguaiHeartbeat);
-    window.__yaoguaiHeartbeat = setInterval(heartbeat, 20000);
+    window.__yaoguaiHeartbeat = setInterval(heartbeat, 60000);
     window.addEventListener('pagehide', heartbeat, { once: true });
   }
 

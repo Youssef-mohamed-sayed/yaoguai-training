@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import threading
 from pathlib import Path
 from typing import Callable
 
@@ -73,6 +74,26 @@ def network_application(central_app):
     return PrefixedApplication(app, "/network", preserve_path=True)
 
 
+class LazyApplication:
+    """Build a mounted app on its first request instead of at startup.
+
+    A cold serverless instance used to import every platform (bs4, Pygments,
+    nh3, bcrypt, requests and the crypto cores) before it could answer any
+    request. Now the central app and API start alone; each course app pays
+    its own import cost the first time someone actually opens it.
+    """
+    def __init__(self, factory: Callable):
+        self.factory, self._application = factory, None
+        self._lock = threading.Lock()
+
+    def __call__(self, environ, start_response):
+        if self._application is None:
+            with self._lock:
+                if self._application is None:
+                    self._application = self.factory()
+        return self._application(environ, start_response)
+
+
 def crypto_application():
     scripts = PLATFORMS / "crypto" / "scripts"
     sys.path.insert(0, str(scripts))
@@ -92,8 +113,8 @@ def crypto_application():
 
 
 central = create_app()
-network = network_application(central)
-crypto = crypto_application()
+network = LazyApplication(lambda: network_application(central))
+crypto = LazyApplication(crypto_application)
 linux = StaticCourse(PLATFORMS / "linux" / "dist", "/linux")
 programming = StaticCourse(PLATFORMS / "programming" / "public", "/programming")
 
