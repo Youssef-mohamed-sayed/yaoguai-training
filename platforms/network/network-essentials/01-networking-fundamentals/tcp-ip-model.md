@@ -13,7 +13,9 @@ Wireshark's packet details pane is organised by these layers. Knowing them tells
 
 ## 1. Introduction
 
-TCP/IP is the **practical** model behind the Internet. It has 4 layers (some books use 5 by splitting the bottom one).
+TCP/IP is the **practical** model behind the Internet - the one your packets actually follow. It has 4 layers (some books use 5 by splitting the bottom one into Physical and Data Link).
+
+A model is just a way of dividing labor. Each layer solves one problem and trusts the layer below to do its job: the application writes HTTP without caring about IP; IP routes without caring about cables; Ethernet delivers frames without caring what they contain. This separation is why a web page can cross fiber, Wi-Fi, and a satellite hop without the web server knowing the difference.
 
 ## 2. Core Concept
 
@@ -30,6 +32,8 @@ Transport      ← ports (TCP 443)
 Internet       ← IP addresses
 Network Access ← MAC addresses, cables, Wi-Fi
 ```
+
+One addressing fact ties the bottom three layers together: a packet is guided by **three different addresses at three different layers** - the port says which program, the IP says which host, the MAC says which NIC on the current local hop. When you read a capture top-to-bottom you are reading all three at once, which is why the layers stop being abstract the first time you open Wireshark.
 
 ### Mini Task 1
 
@@ -61,9 +65,18 @@ Network Access, Internet, Transport, Application.
 
 Run `curl -I http://example.com` (a site you may legitimately request). Identify: the application protocol (HTTP), the transport protocol (TCP), and the likely port (80).
 
+Then, for the same request, answer at each layer: which address identifies the web *program* on the server, which identifies the *machine*, and which would change if the packet crossed to a different router hop?
+
+<details>
+<summary>Check Your Answer</summary>
+
+The destination port (80) identifies the program - Transport layer. The destination IP identifies the machine - Internet layer, and it stays constant end to end. The destination MAC identifies the next hop's NIC - Network Access layer, and it changes at every router along the path.
+
+</details>
+
 ## 5. Cybersecurity Perspective
 
-Firewalls, IDS and scanners are described by layer: "port scan" = Transport, "DNS tunnelling" = Application.
+Firewalls, IDS and scanners are described by layer: "port scan" = Transport, "DNS tunnelling" = Application, "ARP spoofing" = Network Access, "IP spoofing" = Internet. The layer vocabulary tells you the blast radius and the right countermeasure before you know any other detail - an L2 attack needs switch-level defenses (DAI, port security), an L7 attack needs application-level ones (WAF, rate limits).
 
 ## 6. Common Mistakes
 

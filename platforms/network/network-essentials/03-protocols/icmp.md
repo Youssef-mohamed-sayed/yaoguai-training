@@ -14,7 +14,9 @@ Ping is often the first reachability test. ICMP also leaks network information a
 
 ## 1. Introduction
 
-**ICMP** carries error and diagnostic messages for IP. It is **not** a transport like TCP/UDP: no ports.
+**ICMP** carries error and diagnostic messages for IP itself. When a router cannot deliver your packet, or a destination port is closed, or you just want to know "is that host alive?", ICMP is the messenger. It is **not** a transport like TCP/UDP: it carries no user data and has no ports - it sits directly inside IP packets.
+
+This position in the stack confuses people, so be precise: ICMP does not run *on top of* TCP or UDP; it is a separate protocol identified by the IP header's protocol field.
 
 | Property | Value |
 |----------|-------|
@@ -24,14 +26,19 @@ Ping is often the first reachability test. ICMP also leaks network information a
 
 ## 2. Core Concept
 
+Every ICMP message has a **type** and a **code**. The types you will actually read:
+
 | Type | Meaning |
 |------|---------|
 | 8 | Echo Request (ping) |
 | 0 | Echo Reply |
-| 3 | Destination Unreachable |
+| 3 | Destination Unreachable (code tells why: 3 = port unreachable) |
 | 11 | Time Exceeded (TTL hit 0; used by traceroute) |
+| 5 | Redirect ("send that via a better gateway") |
 
-**TTL** (Time To Live) decreases by 1 at every router; at 0 the packet is dropped and a Type 11 is returned.
+**TTL** (Time To Live) decreases by 1 at every router; at 0 the packet is dropped and a Type 11 is returned to the sender. This prevents packets from looping the Internet forever - and traceroute weaponizes it: it sends probes with TTL 1, 2, 3... so each router along the path reveals itself by returning Time Exceeded. That is the whole trick.
+
+"Port unreachable" (Type 3, Code 3) deserves a special note: it is how UDP-based tools learn a port is closed. Nmap's UDP scan interprets it exactly this way - an answer at all means *something* is there.
 
 ### Mini Task 1
 
@@ -41,6 +48,17 @@ Type for ping request? Does ICMP use ports?
 <summary>Check Your Answer</summary>
 
 8; no.
+
+</details>
+
+### Mini Task 2
+
+Traceroute shows 9 lines of output. What did it send, and what did it receive, to produce them?
+
+<details>
+<summary>Check Your Answer</summary>
+
+It sent probes with increasing TTLs (1, 2, 3, ...) and received ICMP Time Exceeded (Type 11) messages - one from each of the 9 routers where the TTL expired. The last line is usually the destination itself replying.
 
 </details>
 
@@ -61,6 +79,15 @@ Read: `ttl` (remaining hops), `time` (round trip), packet loss.
 ### Exercise
 
 Run `ping` while capturing with filter `icmp`. Find an Echo request and its reply; note the sequence number and TTL.
+
+Then predict: if you ping a host on your own LAN and the same host across the Internet, which reply should show the lower TTL - and why?
+
+<details>
+<summary>Check Your Answer</summary>
+
+The Internet host: its reply crossed more routers, so more was subtracted from its initial TTL. A LAN host one hop away returns nearly its full initial TTL (e.g. 64 → 64 directly connected). Comparing TTLs is a rough distance meter.
+
+</details>
 
 **Nmap:** `nmap -sn` uses ICMP echo (plus other probes); `nmap -Pn` skips host discovery.
 
@@ -100,7 +127,7 @@ Treating a non-responsive ping as a dead host.
 
 ## Summary
 
-ICMP = IP's diagnostic messenger; ping, traceroute, errors; no ports.
+ICMP = IP's diagnostic messenger: echo (ping), errors (unreachable), and Time Exceeded (traceroute's engine). No ports, no transport-layer session, and "no reply" never proves "host down".
 
 ## What To Learn Next
 

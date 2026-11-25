@@ -4,17 +4,18 @@
 
 ## What You Will Learn
 
-- What SSH is and why it replaced Telnet
-- What is visible (and not) in a capture
-- Banners and Nmap results
+- What SSH provides: encryption, integrity, authentication
+- How a session is established at a high level
+- Host keys, known_hosts, and key-based login
+- Using SSH safely for remote administration
 
 ## Why This Matters in Cybersecurity
 
-SSH is the main remote-admin protocol on servers. Exposed SSH is a prime target for password guessing; it's a common finding in recon.
+SSH is how nearly every Linux server is administered - which makes it both the tool defenders rely on and a prime target for brute-force attacks and key theft. Analysts see SSH in logs daily; understanding it is non-negotiable.
 
 ## 1. Introduction
 
-**SSH** gives encrypted remote command-line access (and file transfer via SFTP/SCP).
+**SSH** (Secure Shell) gives encrypted remote login and command execution. It replaced Telnet, which sent everything - passwords included - in cleartext. SSH also carries file transfer (SFTP, `scp`) and tunneling (port forwarding).
 
 | Property | Value |
 |----------|-------|
@@ -22,73 +23,108 @@ SSH is the main remote-admin protocol on servers. Exposed SSH is a prime target 
 | Port | 22 |
 | Transport | TCP |
 
-## 2. How It Works
+## 2. How a Session Starts
+
+At a high level, three things happen when you run `ssh user@server`:
+
+1. **Key exchange** (Diffie-Hellman family): client and server agree on a shared session key over the open network, without ever sending it. All later traffic is encrypted with that key.
+2. **Server authentication:** the server proves its identity with its **host key**. Your client checks it against `~/.ssh/known_hosts`. A changed host key triggers the loud "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED" - treat it as a possible man-in-the-middle until verified.
+3. **User authentication:** password, or better, a **key pair**: the private key stays on your machine, the public key sits in the server's `~/.ssh/authorized_keys`, and the server challenges you to prove you hold the private half.
 
 ```text
-1. TCP handshake to port 22
-2. Banners exchanged: SSH-2.0-OpenSSH_9.2p1 ...
-3. Key exchange → encrypted channel
-4. Server host key verified by client (first-use "fingerprint")
-5. User authentication (password / public key)
-6. Encrypted shell session
+$ ssh admin@192.168.56.20
+The authenticity of host '192.168.56.20' can't be established.
+ED25519 key fingerprint is SHA256:7kQf...
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 ```
+
 ### Mini Task 1
 
-What is the default SSH port? Is the session content readable in Wireshark?
+What two things does SSH authenticate before a session is usable?
 
 <details>
 <summary>Check Your Answer</summary>
 
-22; no, only the banner and handshake metadata are visible.
+The server to the client (host key), and the user to the server (password or key pair).
+
+</details>
+
+### Mini Task 2
+
+Why is a changed host key warning worth investigating instead of clicking through?
+
+<details>
+<summary>Check Your Answer</summary>
+
+Because it means the server no longer proves the identity your client recorded - either the server was rebuilt/rekeyed (benign) or someone is intercepting the connection (attack). Verify the new fingerprint out-of-band before accepting.
 
 </details>
 
 ## 3. Practical Example / Exercise
 
-```bash
-ssh student@192.168.56.20
-```
-`ssh` = client; `student` = account; `@192.168.56.20` = target host. Use only on lab machines. Verify the host key fingerprint prompt.
+In an authorised lab:
 
-**Nmap:** `22/tcp open ssh OpenSSH 9.2p1 Debian`. **Wireshark:** filter `ssh` or `tcp.port == 22`.
+```bash
+ssh-keygen -t ed25519 -C "lab key"     # generate a key pair
+ssh-copy-id user@192.168.56.20         # install your public key
+ssh user@192.168.56.20                 # passwordless login
+```
+
+**Exercise.** After setting up key login, run `ssh -v user@host` and find the lines where the client offers the public key and the server accepts it. Which authentication method does the verbose log name?
+
+<details>
+<summary>Check Your Answer</summary>
+
+Look for `debug1: Offering public key` and `debug1: Authentication succeeded (publickey)`. The method is `publickey` - password authentication is skipped entirely once the key works.
+
+</details>
+
+**Nmap:** `22/tcp open ssh OpenSSH 9.2p1` - the version banner matters for vulnerability lookup. In Wireshark, SSH after the banner is encrypted: you can see *that* a session exists, not what it says.
 
 ## 4. Cybersecurity Perspective
 
-- Brute-force/password-spray attempts against SSH are very common: use keys, disable root login, rate-limit.
-- Old versions/protocols have had real vulnerabilities, but seeing a banner does **not** prove a vulnerability.
-- SSH tunnelling can hide traffic; detect via unusual long-lived sessions.
+- **Brute force:** internet-facing port 22 gets hammered constantly. Defenses: key-only login (`PasswordAuthentication no`), rate limiting (fail2ban), non-default users with sudo, and ` PermitRootLogin no`.
+- **Key hygiene:** private keys are as sensitive as passwords; they belong encrypted with a passphrase and never in git or chat.
+- **Tunneling cuts both ways:** `ssh -L/-R/-D` forwards ports - legitimately for admin access, and abused by attackers to pivot through a compromised host.
+- In captures, SSH banners (`SSH-2.0-OpenSSH_9.2`) are visible; everything after the key exchange is ciphertext.
 
 ## 5. Common Mistakes
 
-Ignoring the host-key warning ("WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED"). It can indicate interception.
+Reusing one key pair everywhere (one theft unlocks everything), ignoring host-key warnings, and leaving password login enabled on internet-facing servers.
 
 ## 6. CTF Challenge
 
-**Title:** Banner Grab
+**Title:** The Wrong Door
 **Difficulty:** Easy
-**Scenario:** A lab Nmap scan shows `22/tcp open ssh` and a banner `SSH-2.0-OpenSSH_9.2p1 Debian-2+deb12u3`.
-**Objective:** Identify the software and version.
-**Task:** Flag = software and version token from the banner.
-**Flag format:** `FLAG{OpenSSH_x.yp1}`
+**Scenario:** An authorised lab auth log shows:
+```text
+Oct 10 03:14:15 srv sshd[812]: Failed password for root from 203.0.113.7 port 51122 ssh2
+Oct 10 03:14:18 srv sshd[812]: Failed password for root from 203.0.113.7 port 51124 ssh2
+Oct 10 03:14:21 srv sshd[812]: Failed password for root from 203.0.113.7 port 51126 ssh2
+```
+**Objective:** Identify the attack pattern.
+**Task:** Flag = the two-word name of this attack, lowercase with a dash.
+**Flag format:** `FLAG{attack-name}`
 
 <details>
 <summary>Show Hints</summary>
 
-- Hint 1: After `SSH-2.0-` comes the software identification.
+- Hint 1: Same account, same source, many rapid failures.
+- Hint 2: The defense section above names it.
 
 </details>
 
 <details>
 <summary>Show Solution</summary>
 
-Flag: `FLAG{OpenSSH_9.2p1}`. (Knowing the version is discovery; checking it against vulnerability data is a separate step.)
+Flag: `FLAG{brute-force}`. Repeated password attempts against one account from one IP is the brute-force signature; key-only login and fail2ban are the standard counters.
 
 </details>
 
 ## Summary
 
-SSH = encrypted remote access on TCP 22.
+SSH: TCP 22, encrypted remote access. Key exchange builds the session key, host keys authenticate the server, key pairs (better than passwords) authenticate the user. Watch for brute force; disable password login where possible.
 
 ## What To Learn Next
 
-[ARP (protocol analysis)](arp.md)
+[ICMP](icmp.md)

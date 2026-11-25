@@ -16,9 +16,11 @@ ARP has no authentication. Understanding it explains local-network attacks and h
 
 ## 1. Introduction
 
-You know the destination **IP** but Ethernet needs a destination **MAC**. **ARP** (Address Resolution Protocol) asks the local network: "Who has this IP?"
+Two addressing systems operate at once on your LAN: **IP addresses** route packets across networks, but the final delivery on the local segment happens inside **Ethernet frames**, which are addressed by **MAC addresses**. Your PC knows the destination IP (from DNS or config) but cannot transmit until it knows which network card to address. **ARP** (Address Resolution Protocol) bridges that gap by asking the local network: "Who has this IP?"
 
 > Analogy: Shouting in a room, "Who is Alice?" and Alice replying "I am, here is my desk."
+
+Every IP packet your PC sends on the LAN - to a local host or to the gateway for forwarding - goes through this resolution first. Without ARP, IP and Ethernet could not cooperate.
 
 ## 2. Core Concept
 
@@ -32,7 +34,18 @@ PC A (192.168.1.50)                       All hosts on LAN
    │ ◄───────────────────────────────────────────
 ```
 
-Results are stored in the **ARP cache** for a short time.
+Results are stored in the **ARP cache** for a short time (typically 1-20 minutes). The cache is the reason your PC does not broadcast for every single packet - and the attack surface, because entries are accepted without any authentication. A forged reply that arrives last simply overwrites the truth.
+
+### Mini Task 2
+
+Why does a host ARP again for an address it resolved an hour ago?
+
+<details>
+<summary>Check Your Answer</summary>
+
+The cache entry expired. ARP entries are deliberately short-lived so that changed hardware or readdressed hosts are picked up automatically - the cost is periodic re-broadcasting.
+
+</details>
 
 ### Mini Task 1
 
@@ -56,6 +69,15 @@ Sample:
 ? (192.168.1.1) at aa:bb:cc:dd:ee:01 on eth0
 ```
 Now `ping 192.168.1.1` (your own gateway) then run it again and observe entries.
+
+**Exercise 2.** Flush the cache (`sudo ip neigh flush all` on Linux), ping your gateway once, and check the table immediately. How many ARP exchanges did one ping need?
+
+<details>
+<summary>Check Your Answer</summary>
+
+One: the first ping packet triggers a single request/reply pair for the gateway, and every packet after it uses the cached entry. Subsequent pings need no ARP at all until the entry expires.
+
+</details>
 
 ### Exercise
 
