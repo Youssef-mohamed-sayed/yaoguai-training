@@ -1,0 +1,145 @@
+diff --git a/public/brand/yaoguai-brand.js b/public/brand/yaoguai-brand.js
+index f3e00f0..d04a486 100644
+--- a/public/brand/yaoguai-brand.js
++++ b/public/brand/yaoguai-brand.js
+@@ -152,3 +152,11 @@ window.addEventListener('load', function () {
+   if (link) document.head.appendChild(link);
+ });
+ 
++
++// Custom cursor (black pixel arrow, white outline). Mouse and trackpad only.
++(function () {
++  var s = document.createElement('script');
++  s.src = '/brand/yaoguai-cursor.js';
++  s.defer = true;
++  document.head.appendChild(s);
++})();
+diff --git a/public/brand/yaoguai-cursor.js b/public/brand/yaoguai-cursor.js
+new file mode 100644
+index 0000000..6cacb17
+--- /dev/null
++++ b/public/brand/yaoguai-cursor.js
+@@ -0,0 +1,123 @@
++/* Yaoguai cursor: black pixel arrow with a white outline and a rare, short glitch.
++   Plain JavaScript. No per-frame work: images are built once, and the page only
++   reacts when the pointer enters a different element. Mouse and trackpad only. */
++(function () {
++  if (window.__yaoguaiCursor) return;
++  window.__yaoguaiCursor = true;
++  if (!window.matchMedia || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
++
++  var ARROW = [
++    'X', 'XX', 'XXX', 'XXXX', 'XXXXX', 'XXXXXX', 'XXXXXXX', 'XXXXXXXX', 'XXXXXXXXX',
++    'XXXXXXXXXX', 'XXXXXXXXXXX', 'XXXXXXXXXXXX', 'XXXXXXX', 'XXX XXXX', 'XX  XXXX',
++    'X    XXXX', '     XXXX', '      XXXX', '      XX'
++  ];
++  var HAND = [
++    '   XX       ', '  XXXX      ', '  XXXX      ', '  XXXX      ', '  XXXX XX XX ',
++    '  XXXXXXXXXXX', 'XXXXXXXXXXXXX', 'XXXXXXXXXXXXX', ' XXXXXXXXXXXX', ' XXXXXXXXXXX ',
++    '  XXXXXXXXXX ', '  XXXXXXXXX  ', '   XXXXXXX   '
++  ];
++  var IBEAM = [
++    'XXX XXX', 'XXXXXXX', '  XXX  ', '  XXX  ', '  XXX  ', '  XXX  ', '  XXX  ', '  XXX  ',
++    '  XXX  ', '  XXX  ', '  XXX  ', '  XXX  ', '  XXX  ', 'XXXXXXX', 'XXX XXX'
++  ];
++  var SCALE = 2;
++
++  function cells(rows) {
++    var set = {};
++    rows.forEach(function (r, y) {
++      for (var x = 0; x < r.length; x++) if (r[x] === 'X') set[(x + 1) + ',' + (y + 1)] = 1;
++    });
++    return set;
++  }
++
++  // Draw one sprite as an SVG data URI. shift = [dx, dy] slides a few rows sideways for the glitch.
++  function build(rows, hotX, hotY, glitch) {
++    var fill = cells(rows), edge = {}, k, p, x, y, dx, dy;
++    for (k in fill) {
++      p = k.split(',');
++      for (dx = -1; dx <= 1; dx++) for (dy = -1; dy <= 1; dy++) {
++        var key = (+p[0] + dx) + ',' + (+p[1] + dy);
++        if (!fill[key]) edge[key] = 1;
++      }
++    }
++    var w = rows.reduce(function (m, r) { return Math.max(m, r.length); }, 0) + 2 + (glitch ? 2 : 0);
++    var h = rows.length + 2;
++    var out = '';
++    function rects(set, color, offsetFn) {
++      for (var yy = 0; yy < h; yy++) {
++        var run = -1;
++        for (var xx = 0; xx <= w; xx++) {
++          var on = xx < w && set[xx + ',' + yy];
++          if (on && run < 0) run = xx;
++          if (!on && run >= 0) {
++            var o = offsetFn ? offsetFn(yy) : 0;
++            out += '<rect x="' + (run + o) + '" y="' + yy + '" width="' + (xx - run) + '" height="1" fill="' + color + '"/>';
++            run = -1;
++          }
++        }
++      }
++    }
++    var shiftRow = glitch ? function (yy) { return (yy % 6 === 2 || yy % 6 === 3) ? 2 : 0; } : null;
++    rects(edge, '#fff', shiftRow);
++    if (glitch) rects(fill, '#c01820', function () { return 1; });
++    rects(fill, '#000', shiftRow);
++    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w * SCALE + '" height="' + h * SCALE +
++      '" viewBox="0 0 ' + w + ' ' + h + '" shape-rendering="crispEdges">' + out + '</svg>';
++    return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '") ' + (hotX + 1) * SCALE + ' ' + (hotY + 1) * SCALE;
++  }
++
++  var sprites = {
++    arrow: [ARROW, 0, 0],
++    hand: [HAND, 4, 0],
++    text: [IBEAM, 3, 7]
++  };
++  var style = document.createElement('style');
++  var css = '';
++  Object.keys(sprites).forEach(function (name) {
++    var s = sprites[name];
++    var fallback = name === 'arrow' ? 'default' : name === 'hand' ? 'pointer' : 'text';
++    css += 'html[data-yg-cursor="' + name + '"],html[data-yg-cursor="' + name + '"] *{cursor:' +
++      build(s[0], s[1], s[2], false) + ',' + fallback + ' !important}';
++    css += 'html[data-yg-cursor="' + name + '"][data-yg-glitch],html[data-yg-cursor="' + name + '"][data-yg-glitch] *{cursor:' +
++      build(s[0], s[1], s[2], true) + ',' + fallback + ' !important}';
++  });
++  style.textContent = css;
++  document.head.appendChild(style);
++
++  var root = document.documentElement;
++  var last = null;
++
++  function resolve(el) {
++    // Read the page's own cursor choice with our override switched off, then switch it back on.
++    root.removeAttribute('data-yg-cursor');
++    var c = el && el.nodeType === 1 ? getComputedStyle(el).cursor : 'auto';
++    var name = null;
++    if (c === 'auto' || c === 'default') name = 'arrow';
++    else if (c === 'pointer') name = 'hand';
++    else if (c === 'text') name = 'text';
++    if (name === 'arrow' && el && el.closest && el.closest('input:not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),textarea,[contenteditable=""],[contenteditable="true"]')) name = 'text';
++    if (name) root.setAttribute('data-yg-cursor', name);
++  }
++
++  document.addEventListener('mouseover', function (e) {
++    if (e.target === last) return;
++    last = e.target;
++    resolve(last);
++  }, { passive: true, capture: true });
++
++  document.addEventListener('mouseleave', function () { last = null; root.removeAttribute('data-yg-cursor'); });
++
++  // Rare glitch: roughly every 4 to 9 seconds the cursor jitters for about 120ms.
++  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
++  if (!reduce) {
++    (function schedule() {
++      setTimeout(function () {
++        if (!document.hidden && root.hasAttribute('data-yg-cursor')) {
++          root.setAttribute('data-yg-glitch', '');
++          setTimeout(function () { root.removeAttribute('data-yg-glitch'); }, 120);
++        }
++        schedule();
++      }, 4000 + Math.random() * 5000);
++    })();
++  }
++})();

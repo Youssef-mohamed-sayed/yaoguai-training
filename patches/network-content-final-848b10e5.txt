@@ -1,0 +1,764 @@
+diff --git a/platforms/network/network-essentials/01-networking-fundamentals/osi-vs-tcpip.md b/platforms/network/network-essentials/01-networking-fundamentals/osi-vs-tcpip.md
+index 84ea087..c73f85c 100644
+--- a/platforms/network/network-essentials/01-networking-fundamentals/osi-vs-tcpip.md
++++ b/platforms/network/network-essentials/01-networking-fundamentals/osi-vs-tcpip.md
+@@ -4,11 +4,13 @@
+ 
+ ## What You Will Learn
+ 
+-How the two models line up and why both are used.
++- Why two layering models exist and how they line up
++- Translating fluently between OSI numbers and TCP/IP names
++- Which model actually runs your network (and which one people talk in)
+ 
+ ## Why This Matters in Cybersecurity
+ 
+-Reports use OSI numbers ("Layer 7 attack"); tools use TCP/IP structure. You must translate between them.
++Reports use OSI numbers ("Layer 7 attack", "L3/L4 filtering"); tools and documentation use TCP/IP structure. Misreading the layer means misreading the finding: a "Layer 4" issue is about ports and connections, a "Layer 7" issue is about application content like HTTP. You must translate between the two without thinking.
+ 
+ ## 1. Core Concept
+ 
+@@ -28,6 +30,11 @@ OSI                         TCP/IP
+ | Layers | 7 | 4 |
+ | Nature | Reference/teaching model | Real protocol suite |
+ | Application stuff | Split in 3 layers | One layer |
++| Origin | ISO standard (1984) | Grew with the actual Internet |
++
++**Why keep both?** History. TCP/IP won the implementation war - nothing on the wire "is OSI". But OSI's finer split turned out to be a better *vocabulary*, so the industry kept OSI's numbering for conversation and TCP/IP's structure for engineering. When someone says "Layer 2 switch" or "Layer 7 WAF" they are speaking OSI about TCP/IP networks.
++
++A rough phrase for each layer, bottom to top: wires and signals (L1), local delivery with MAC addresses (L2), routing between networks with IPs (L3), end-to-end connections with ports (L4), then everything applications say to each other (L5-7, folded into TCP/IP "Application").
+ 
+ ### Mini Task 1
+ 
+@@ -40,6 +47,17 @@ Internet; Application.
+ 
+ </details>
+ 
++### Mini Task 2
++
++A colleague says "the firewall is Layer 3 only". What can it filter on, and what can it not see?
++
++<details>
++<summary>Check Your Answer</summary>
++
++It can filter on IP addresses (and generally Layer 4 ports), but it cannot understand application content - it cannot block a specific URL, username, or command inside the traffic, because those live at Layer 7.
++
++</details>
++
+ ## 2. Practical Example
+ 
+ "The firewall inspects Layer 7" means it understands application content (e.g. HTTP URLs), not just IPs and ports.
+@@ -57,7 +75,7 @@ Classify as OSI layer number and TCP/IP layer: (a) MAC address, (b) TCP port, (c
+ 
+ ## 3. Cybersecurity Perspective
+ 
+-When an alert says "L3/L4 filtering", expect IP/port rules. "L7" implies deep inspection (WAF, proxy).
++When an alert says "L3/L4 filtering", expect IP/port rules. "L7" implies deep inspection (WAF, proxy). Attack classification follows the same vocabulary: a SYN flood is a Layer 4 attack (connection state exhaustion), an HTTP flood or SQL injection is Layer 7 (valid-looking application requests), and ARP spoofing is Layer 2 (local network only). Knowing the layer tells you the blast radius and the right defense.
+ 
+ ## 4. Common Mistakes
+ 
+@@ -88,7 +106,7 @@ OSI L4 = Transport. Flag: `FLAG{transport}`
+ 
+ ## Summary
+ 
+-OSI teaches; TCP/IP runs. Know both.
++OSI teaches; TCP/IP runs. OSI's 7 numbers are the industry's shared vocabulary ("Layer 7 attack", "Layer 2 switch") even though real networks follow TCP/IP's 4-layer structure. Map L1-2 to Network Access, L3 to Internet, L4 to Transport, L5-7 to Application.
+ 
+ ## What To Learn Next
+ 
+diff --git a/platforms/network/network-essentials/01-networking-fundamentals/tcp-ip-model.md b/platforms/network/network-essentials/01-networking-fundamentals/tcp-ip-model.md
+index 2bf482e..de2560a 100644
+--- a/platforms/network/network-essentials/01-networking-fundamentals/tcp-ip-model.md
++++ b/platforms/network/network-essentials/01-networking-fundamentals/tcp-ip-model.md
+@@ -13,7 +13,9 @@ Wireshark's packet details pane is organised by these layers. Knowing them tells
+ 
+ ## 1. Introduction
+ 
+-TCP/IP is the **practical** model behind the Internet. It has 4 layers (some books use 5 by splitting the bottom one).
++TCP/IP is the **practical** model behind the Internet - the one your packets actually follow. It has 4 layers (some books use 5 by splitting the bottom one into Physical and Data Link).
++
++A model is just a way of dividing labor. Each layer solves one problem and trusts the layer below to do its job: the application writes HTTP without caring about IP; IP routes without caring about cables; Ethernet delivers frames without caring what they contain. This separation is why a web page can cross fiber, Wi-Fi, and a satellite hop without the web server knowing the difference.
+ 
+ ## 2. Core Concept
+ 
+@@ -31,6 +33,8 @@ Internet       ← IP addresses
+ Network Access ← MAC addresses, cables, Wi-Fi
+ ```
+ 
++One addressing fact ties the bottom three layers together: a packet is guided by **three different addresses at three different layers** - the port says which program, the IP says which host, the MAC says which NIC on the current local hop. When you read a capture top-to-bottom you are reading all three at once, which is why the layers stop being abstract the first time you open Wireshark.
++
+ ### Mini Task 1
+ 
+ Which TCP/IP layer is each protocol in? `UDP`, `IPv4`, `DNS`, `Ethernet`
+@@ -61,9 +65,18 @@ Network Access, Internet, Transport, Application.
+ 
+ Run `curl -I http://example.com` (a site you may legitimately request). Identify: the application protocol (HTTP), the transport protocol (TCP), and the likely port (80).
+ 
++Then, for the same request, answer at each layer: which address identifies the web *program* on the server, which identifies the *machine*, and which would change if the packet crossed to a different router hop?
++
++<details>
++<summary>Check Your Answer</summary>
++
++The destination port (80) identifies the program - Transport layer. The destination IP identifies the machine - Internet layer, and it stays constant end to end. The destination MAC identifies the next hop's NIC - Network Access layer, and it changes at every router along the path.
++
++</details>
++
+ ## 5. Cybersecurity Perspective
+ 
+-Firewalls, IDS and scanners are described by layer: "port scan" = Transport, "DNS tunnelling" = Application.
++Firewalls, IDS and scanners are described by layer: "port scan" = Transport, "DNS tunnelling" = Application, "ARP spoofing" = Network Access, "IP spoofing" = Internet. The layer vocabulary tells you the blast radius and the right countermeasure before you know any other detail - an L2 attack needs switch-level defenses (DAI, port security), an L7 attack needs application-level ones (WAF, rate limits).
+ 
+ ## 6. Common Mistakes
+ 
+diff --git a/platforms/network/network-essentials/02-addressing/arp.md b/platforms/network/network-essentials/02-addressing/arp.md
+index 486ea18..2fb8927 100644
+--- a/platforms/network/network-essentials/02-addressing/arp.md
++++ b/platforms/network/network-essentials/02-addressing/arp.md
+@@ -16,10 +16,12 @@ ARP has no authentication. Understanding it explains local-network attacks and h
+ 
+ ## 1. Introduction
+ 
+-You know the destination **IP** but Ethernet needs a destination **MAC**. **ARP** (Address Resolution Protocol) asks the local network: "Who has this IP?"
++Two addressing systems operate at once on your LAN: **IP addresses** route packets across networks, but the final delivery on the local segment happens inside **Ethernet frames**, which are addressed by **MAC addresses**. Your PC knows the destination IP (from DNS or config) but cannot transmit until it knows which network card to address. **ARP** (Address Resolution Protocol) bridges that gap by asking the local network: "Who has this IP?"
+ 
+ > Analogy: Shouting in a room, "Who is Alice?" and Alice replying "I am, here is my desk."
+ 
++Every IP packet your PC sends on the LAN - to a local host or to the gateway for forwarding - goes through this resolution first. Without ARP, IP and Ethernet could not cooperate.
++
+ ## 2. Core Concept
+ 
+ ```text
+@@ -32,7 +34,18 @@ PC A (192.168.1.50)                       All hosts on LAN
+    │ ◄───────────────────────────────────────────
+ ```
+ 
+-Results are stored in the **ARP cache** for a short time.
++Results are stored in the **ARP cache** for a short time (typically 1-20 minutes). The cache is the reason your PC does not broadcast for every single packet - and the attack surface, because entries are accepted without any authentication. A forged reply that arrives last simply overwrites the truth.
++
++### Mini Task 2
++
++Why does a host ARP again for an address it resolved an hour ago?
++
++<details>
++<summary>Check Your Answer</summary>
++
++The cache entry expired. ARP entries are deliberately short-lived so that changed hardware or readdressed hosts are picked up automatically - the cost is periodic re-broadcasting.
++
++</details>
+ 
+ ### Mini Task 1
+ 
+@@ -57,6 +70,15 @@ Sample:
+ ```
+ Now `ping 192.168.1.1` (your own gateway) then run it again and observe entries.
+ 
++**Exercise 2.** Flush the cache (`sudo ip neigh flush all` on Linux), ping your gateway once, and check the table immediately. How many ARP exchanges did one ping need?
++
++<details>
++<summary>Check Your Answer</summary>
++
++One: the first ping packet triggers a single request/reply pair for the gateway, and every packet after it uses the cached entry. Subsequent pings need no ARP at all until the entry expires.
++
++</details>
++
+ ### Exercise
+ 
+ For a destination **outside** your subnet, whose MAC does your PC ARP for?
+diff --git a/platforms/network/network-essentials/03-protocols/arp.md b/platforms/network/network-essentials/03-protocols/arp.md
+index a6d08db..0cb0643 100644
+--- a/platforms/network/network-essentials/03-protocols/arp.md
++++ b/platforms/network/network-essentials/03-protocols/arp.md
+@@ -21,8 +21,12 @@ ARP spoofing is a classic LAN man-in-the-middle technique; detecting it is a SOC
+ | Layer | 2/3 boundary |
+ | Port / transport | None; carried directly in Ethernet (EtherType `0x0806`) |
+ 
++ARP has one job: translate an IP address into a MAC address on the local network. IP gets a packet to the right network; the final hop on the LAN is delivered by Ethernet, which understands only MAC addresses. When a host knows *what* to send but not *where the NIC is*, it ARPs.
++
+ Fields: operation (request=1, reply=2), sender MAC, sender IP, target MAC, target IP.
+ 
++Results are cached in the **ARP table** (`arp -a`, or `ip neigh` on Linux) for a few minutes, so repeat traffic to the same host skips the broadcast. Nothing in a reply is authenticated: any host may answer any query, and the *last* reply wins. That single design fact is why ARP spoofing exists.
++
+ ```text
+ Request:  Who has 192.168.1.1? Tell 192.168.1.20
+           sender: 52:54:00:12:34:20 / 192.168.1.20
+@@ -41,6 +45,17 @@ In a request, what is the target MAC, and why?
+ 
+ </details>
+ 
++### Mini Task 2
++
++Why does ARP only work on the local network, and what happens when the destination IP is remote?
++
++<details>
++<summary>Check Your Answer</summary>
++
++ARP requests are Ethernet broadcasts, which routers do not forward. For a remote destination the host ARPs for its *default gateway's* MAC instead and sends the frame there; each router along the path repeats the process on its own local segments.
++
++</details>
++
+ ## 2. Wireshark / Nmap
+ 
+ Filters: `arp`, `arp.opcode == 1` (requests), `arp.opcode == 2` (replies), `arp.duplicate-address-detected`. Nmap `-sn` on the local LAN uses ARP requests, which are more reliable than ping for host discovery.
+@@ -49,11 +64,20 @@ Filters: `arp`, `arp.opcode == 1` (requests), `arp.opcode == 2` (replies), `arp.
+ 
+ Capture: `ping` a LAN host after clearing the cache (`sudo ip neigh flush all`). Find one request and one reply and fill in: sender IP, sender MAC, target IP, target MAC.
+ 
++Then run `ip neigh` (or `arp -a`) twice, a few minutes apart, and explain any difference.
++
++<details>
++<summary>Check Your Answer</summary>
++
++The request is broadcast to `ff:ff:ff:ff:ff:ff` with target MAC zeroed; the reply is unicast from the owner of the queried IP, carrying its MAC. The ARP cache ages out entries (typically 1-20 minutes depending on OS), so idle entries disappear or show as STALE between the two runs - the next packet to that host triggers a fresh ARP exchange.
++
++</details>
++
+ ## 4. Cybersecurity Perspective
+ 
+-- Unsolicited replies ("gratuitous ARP") can poison caches.
+-- Signs: IP seen with 2 MACs; gateway MAC changes; many ARP replies without requests.
+-- Defences: DAI, port security, static entries, monitoring tools.
++- **ARP spoofing/poisoning:** an attacker answers "who has the gateway?" with their own MAC, and separately tells the gateway *they* are the victim. Traffic now flows through the attacker - a man-in-the-middle on the LAN, enabling sniffing and tampering. Unsolicited replies ("gratuitous ARP") make this cheap: no waiting for a question.
++- Signs: one IP claimed by 2 MACs; the gateway's MAC suddenly changing; bursts of replies without matching requests.
++- Defences: Dynamic ARP Inspection (DAI) on managed switches, port security, static ARP entries for critical hosts, and monitoring (arpwatch).
+ 
+ ## 5. Common Mistakes
+ 
+diff --git a/platforms/network/network-essentials/03-protocols/dhcp.md b/platforms/network/network-essentials/03-protocols/dhcp.md
+index a71cdea..baa86b9 100644
+--- a/platforms/network/network-essentials/03-protocols/dhcp.md
++++ b/platforms/network/network-essentials/03-protocols/dhcp.md
+@@ -10,11 +10,13 @@
+ 
+ ## Why This Matters in Cybersecurity
+ 
+-DHCP logs map IPs to devices at a time. Rogue DHCP servers can redirect all of a victim's traffic.
++DHCP logs map IPs to devices at a time - the first place investigators look when an alert names only an IP. Rogue DHCP servers can redirect all of a victim's traffic without touching any other part of the network.
+ 
+ ## 1. Introduction
+ 
+-When you join a network you need an IP, mask, gateway and DNS server. **DHCP** hands these out automatically.
++When you join a network you need four things before anything works: an **IP address**, a **subnet mask**, a **default gateway**, and a **DNS server**. Configuring them by hand on every laptop and phone does not scale, so **DHCP** hands them out automatically the moment a device connects.
++
++A DHCP assignment is a **lease**, not a gift: it expires (commonly 24 hours on home networks, shorter on busy ones). Halfway through the lease the client tries to renew with the same server; if the server is gone, the client keeps the address until expiry and then starts over with Discover. This is why "my IP changed overnight" is normal behavior, not a fault.
+ 
+ | Property | Value |
+ |----------|-------|
+@@ -31,7 +33,20 @@ Client                              Server
+   Request  ───────────►                "I'll take 192.168.1.134"
+            ◄─────────── Acknowledge    "Confirmed, lease 24h"
+ ```
+-The client starts with source `0.0.0.0` and destination `255.255.255.255` (it has no IP yet).
++The client starts with source `0.0.0.0` and destination `255.255.255.255` (it has no IP yet). Discover and Offer are broadcasts, which is why DHCP cannot cross routers without a **DHCP relay** (the `ip helper-address` feature on enterprise gear).
++
++Why UDP and not TCP? TCP needs addresses on both ends before the handshake - impossible when the client has no address. Broadcast UDP works with zero configuration, which is exactly the situation DHCP exists for.
++
++### Mini Task 1.5
++
++A capture shows a Discover from source 0.0.0.0 port 68 to 255.255.255.255 port 67. Why can the client send this before it owns an address?
++
++<details>
++<summary>Check Your Answer</summary>
++
++0.0.0.0 means "this host, no address yet" and 255.255.255.255 is the local broadcast address - every host on the segment receives it, so the client can be found and answered without knowing anything.
++
++</details>
+ 
+ ### Mini Task 1
+ 
+@@ -60,12 +75,21 @@ DHCP Offer
+ - Windows: `ipconfig /renew`. Linux: `sudo dhclient -v` (on your lab machine).
+ - Wireshark filter: `bootp` (older name) or `dhcp`. Capture while renewing; find the four DORA messages.
+ 
++**Exercise.** While capturing, run a renewal and then look at your own lease: `ipconfig /all` (Windows) or `cat /var/lib/dhcp/dhclient.leases` / NetworkManager's `nmcli` on Linux. Write down your lease's expiry time and the server that issued it.
++
++<details>
++<summary>Check Your Answer</summary>
++
++The lease file (or `ipconfig /all` under "Lease Obtained / Lease Expires") shows both timestamps - commonly 24 hours apart on home networks. The issuing server is usually your router (e.g. 192.168.1.1). If the expiry is missing or the server is unexpected, that is worth investigating.
++
++</details>
++
+ **Nmap:** `67/udp open|filtered dhcps`.
+ 
+ ## 5. Cybersecurity Perspective
+ 
+-- **Rogue DHCP server** gives victims a malicious gateway/DNS.
+-- **DHCP starvation**: exhausting the pool.
++- **Rogue DHCP server**: DHCP has no authentication - the *first* Offer a client receives usually wins. An attacker's server answers faster than the real one and hands the victim a malicious gateway/DNS, turning the attacker into a man-in-the-middle for everything the victim does.
++- **DHCP starvation**: requesting thousands of leases with spoofed MAC addresses until the pool is empty, so legitimate clients get nothing (and a rogue server can then serve them).
+ - Mitigation: DHCP snooping on switches.
+ - Forensics: lease logs map IP → MAC → time.
+ 
+@@ -101,7 +125,7 @@ Flag: `FLAG{2-4-1-3}`
+ 
+ ## Summary
+ 
+-DHCP automates addressing via DORA on UDP 67/68.
++DHCP automates addressing via DORA (Discover, Offer, Request, ACK) on UDP 67/68. Leases expire and renew; broadcast-based, unauthenticated, and therefore both essential and spoofable - DHCP snooping is the standard defense.
+ 
+ ## What To Learn Next
+ 
+diff --git a/platforms/network/network-essentials/03-protocols/ftp.md b/platforms/network/network-essentials/03-protocols/ftp.md
+index ceaefe6..46e5435 100644
+--- a/platforms/network/network-essentials/03-protocols/ftp.md
++++ b/platforms/network/network-essentials/03-protocols/ftp.md
+@@ -4,17 +4,18 @@
+ 
+ ## What You Will Learn
+ 
+-- How FTP transfers files
+-- Why it is insecure
++- How FTP transfers files over two separate connections
++- Active vs passive mode and why firewalls care
++- Why FTP is insecure and what replaced it
+ - Seeing credentials in a capture
+ 
+ ## Why This Matters in Cybersecurity
+ 
+-FTP is a classic example of cleartext protocols exposing credentials, and a frequent finding in scans and CTFs.
++FTP is a classic example of cleartext protocols exposing credentials, and a frequent finding in scans and CTFs. Misconfigured anonymous FTP still leaks files on real assessments, and the two-channel design is the standard interview question about why protocols and firewalls clash.
+ 
+ ## 1. Introduction
+ 
+-**FTP** moves files between client and server.
++**FTP** moves files between client and server. It is one of the oldest application protocols still found on networks (1971 origins), which explains both its quirks and why it appears so often in legacy systems.
+ 
+ | Property | Value |
+ |----------|-------|
+@@ -24,7 +25,7 @@ FTP is a classic example of cleartext protocols exposing credentials, and a freq
+ 
+ ## 2. How It Works
+ 
+-Two connections: a **control** channel (commands) and a **data** channel (file/listing).
++FTP uses **two TCP connections**: a control channel (port 21, stays open for the session, carries commands and replies) and a data channel (opened per transfer, carries files and listings).
+ 
+ ```text
+ S: 220 Welcome to FTP
+@@ -32,10 +33,21 @@ C: USER admin
+ S: 331 Password required
+ C: PASS Summer2024!
+ S: 230 Login successful
++C: PASV
++S: 227 Entering Passive Mode (192,168,56,20,195,80)
+ C: LIST
+ S: 150 Here comes the directory listing
++S: 226 Directory send OK
+ ```
+-Reply codes: 2xx success, 3xx need more info, 4xx temporary failure, 5xx error.
++
++The `227` reply encodes the IP and port for the data connection: the last two numbers are port-high and port-low bytes, so 195×256 + 80 = port 50000.
++
++**Active vs passive mode:**
++
++- **Active:** the client says `PORT` and the *server* connects back to the client from port 20. Client-side NAT and firewalls usually break this.
++- **Passive:** the client asks `PASV`, the server opens a high port, and the *client* makes both connections. This is the default today because outbound connections pass NAT easily.
++
++Reply codes: 2xx success, 3xx need more info, 4xx temporary failure, 5xx error. The first digit is enough for most reading.
+ 
+ ### Mini Task 1
+ 
+@@ -48,22 +60,43 @@ Login successful; the username.
+ 
+ </details>
+ 
++### Mini Task 2
++
++A server replies `227 Entering Passive Mode (10,0,0,5,19,136)`. Which IP and port should the client connect to for the data channel?
++
++<details>
++<summary>Check Your Answer</summary>
++
++IP 10.0.0.5, port 19×256 + 136 = 5000.
++
++</details>
++
+ ## 3. Practical Example / Exercise
+ 
+ In an authorised lab with an FTP server: `ftp 192.168.56.20`. Capture with Wireshark (`tcp.port == 21`) and right-click → Follow TCP Stream to see the commands.
+ 
++**Exercise.** Predict what you will see in the capture before you run it: which packets contain the password, and will `LIST` output travel over port 21?
++
++<details>
++<summary>Check Your Answer</summary>
++
++The password appears in the `PASS` command on the control channel (port 21), readable as plain text. The `LIST` output travels over the separate data channel - in passive mode, a high port chosen by the server - so filtering only port 21 shows the commands but not the file data.
++
++</details>
++
+ **Nmap:** `21/tcp open ftp vsftpd 3.0.5`. Check Nmap script `ftp-anon` (anonymous login) only on authorised targets.
+ 
+ ## 4. Cybersecurity Perspective
+ 
+-- Credentials and data are **cleartext**.
+-- Anonymous FTP may expose sensitive files.
+-- Alternatives: SFTP (over SSH, port 22), FTPS (FTP over TLS).
+-- Passive-mode data ports complicate firewalls.
++- Credentials and data are **cleartext** - anyone on the path can read them, as the CTF below shows.
++- Anonymous FTP (`USER anonymous`) may expose sensitive files; check for it in assessments.
++- The historic **FTP bounce** attack abused the `PORT` command to make a server connect to third parties - a reason modern servers restrict it.
++- Alternatives: SFTP (over SSH, port 22), FTPS (FTP over TLS). Both encrypt; only SFTP is a single-connection protocol.
++- Passive-mode data ports complicate firewall rules: the server must open a fixed high-port range and the firewall must allow it.
+ 
+ ## 5. Common Mistakes
+ 
+-Confusing SFTP with FTPS; they are different protocols.
++Confusing SFTP with FTPS; they are different protocols. SFTP is a subsystem of SSH with one encrypted channel; FTPS is classic FTP wrapped in TLS and still uses two channels. Also common: assuming port 21 carries files, when it only carries commands.
+ 
+ ## 6. CTF Challenge
+ 
+@@ -96,7 +129,7 @@ Flag: `FLAG{backup_Winter#42}`. Lesson: FTP exposes credentials in plain text; u
+ 
+ ## Summary
+ 
+-FTP: TCP 21, two channels, cleartext.
++FTP: TCP 21 control + separate data channel, active (server calls back) vs passive (client connects twice), cleartext credentials, replaced by SFTP/FTPS.
+ 
+ ## What To Learn Next
+ 
+diff --git a/platforms/network/network-essentials/03-protocols/icmp.md b/platforms/network/network-essentials/03-protocols/icmp.md
+index a12f307..e603356 100644
+--- a/platforms/network/network-essentials/03-protocols/icmp.md
++++ b/platforms/network/network-essentials/03-protocols/icmp.md
+@@ -14,7 +14,9 @@ Ping is often the first reachability test. ICMP also leaks network information a
+ 
+ ## 1. Introduction
+ 
+-**ICMP** carries error and diagnostic messages for IP. It is **not** a transport like TCP/UDP: no ports.
++**ICMP** carries error and diagnostic messages for IP itself. When a router cannot deliver your packet, or a destination port is closed, or you just want to know "is that host alive?", ICMP is the messenger. It is **not** a transport like TCP/UDP: it carries no user data and has no ports - it sits directly inside IP packets.
++
++This position in the stack confuses people, so be precise: ICMP does not run *on top of* TCP or UDP; it is a separate protocol identified by the IP header's protocol field.
+ 
+ | Property | Value |
+ |----------|-------|
+@@ -24,14 +26,19 @@ Ping is often the first reachability test. ICMP also leaks network information a
+ 
+ ## 2. Core Concept
+ 
++Every ICMP message has a **type** and a **code**. The types you will actually read:
++
+ | Type | Meaning |
+ |------|---------|
+ | 8 | Echo Request (ping) |
+ | 0 | Echo Reply |
+-| 3 | Destination Unreachable |
++| 3 | Destination Unreachable (code tells why: 3 = port unreachable) |
+ | 11 | Time Exceeded (TTL hit 0; used by traceroute) |
++| 5 | Redirect ("send that via a better gateway") |
++
++**TTL** (Time To Live) decreases by 1 at every router; at 0 the packet is dropped and a Type 11 is returned to the sender. This prevents packets from looping the Internet forever - and traceroute weaponizes it: it sends probes with TTL 1, 2, 3... so each router along the path reveals itself by returning Time Exceeded. That is the whole trick.
+ 
+-**TTL** (Time To Live) decreases by 1 at every router; at 0 the packet is dropped and a Type 11 is returned.
++"Port unreachable" (Type 3, Code 3) deserves a special note: it is how UDP-based tools learn a port is closed. Nmap's UDP scan interprets it exactly this way - an answer at all means *something* is there.
+ 
+ ### Mini Task 1
+ 
+@@ -44,6 +51,17 @@ Type for ping request? Does ICMP use ports?
+ 
+ </details>
+ 
++### Mini Task 2
++
++Traceroute shows 9 lines of output. What did it send, and what did it receive, to produce them?
++
++<details>
++<summary>Check Your Answer</summary>
++
++It sent probes with increasing TTLs (1, 2, 3, ...) and received ICMP Time Exceeded (Type 11) messages - one from each of the 9 routers where the TTL expired. The last line is usually the destination itself replying.
++
++</details>
++
+ ## 3. Practical Example — Lab 2: Test Connectivity
+ 
+ ```bash
+@@ -62,6 +80,15 @@ Read: `ttl` (remaining hops), `time` (round trip), packet loss.
+ 
+ Run `ping` while capturing with filter `icmp`. Find an Echo request and its reply; note the sequence number and TTL.
+ 
++Then predict: if you ping a host on your own LAN and the same host across the Internet, which reply should show the lower TTL - and why?
++
++<details>
++<summary>Check Your Answer</summary>
++
++The Internet host: its reply crossed more routers, so more was subtracted from its initial TTL. A LAN host one hop away returns nearly its full initial TTL (e.g. 64 → 64 directly connected). Comparing TTLs is a rough distance meter.
++
++</details>
++
+ **Nmap:** `nmap -sn` uses ICMP echo (plus other probes); `nmap -Pn` skips host discovery.
+ 
+ ## 4. Cybersecurity Perspective
+@@ -100,7 +127,7 @@ Treating a non-responsive ping as a dead host.
+ 
+ ## Summary
+ 
+-ICMP = IP's diagnostic messenger; ping, traceroute, errors; no ports.
++ICMP = IP's diagnostic messenger: echo (ping), errors (unreachable), and Time Exceeded (traceroute's engine). No ports, no transport-layer session, and "no reply" never proves "host down".
+ 
+ ## What To Learn Next
+ 
+diff --git a/platforms/network/network-essentials/03-protocols/ssh.md b/platforms/network/network-essentials/03-protocols/ssh.md
+index 6d3c488..bdc5c75 100644
+--- a/platforms/network/network-essentials/03-protocols/ssh.md
++++ b/platforms/network/network-essentials/03-protocols/ssh.md
+@@ -4,17 +4,18 @@
+ 
+ ## What You Will Learn
+ 
+-- What SSH is and why it replaced Telnet
+-- What is visible (and not) in a capture
+-- Banners and Nmap results
++- What SSH provides: encryption, integrity, authentication
++- How a session is established at a high level
++- Host keys, known_hosts, and key-based login
++- Using SSH safely for remote administration
+ 
+ ## Why This Matters in Cybersecurity
+ 
+-SSH is the main remote-admin protocol on servers. Exposed SSH is a prime target for password guessing; it's a common finding in recon.
++SSH is how nearly every Linux server is administered - which makes it both the tool defenders rely on and a prime target for brute-force attacks and key theft. Analysts see SSH in logs daily; understanding it is non-negotiable.
+ 
+ ## 1. Introduction
+ 
+-**SSH** gives encrypted remote command-line access (and file transfer via SFTP/SCP).
++**SSH** (Secure Shell) gives encrypted remote login and command execution. It replaced Telnet, which sent everything - passwords included - in cleartext. SSH also carries file transfer (SFTP, `scp`) and tunneling (port forwarding).
+ 
+ | Property | Value |
+ |----------|-------|
+@@ -22,73 +23,108 @@ SSH is the main remote-admin protocol on servers. Exposed SSH is a prime target
+ | Port | 22 |
+ | Transport | TCP |
+ 
+-## 2. How It Works
++## 2. How a Session Starts
++
++At a high level, three things happen when you run `ssh user@server`:
++
++1. **Key exchange** (Diffie-Hellman family): client and server agree on a shared session key over the open network, without ever sending it. All later traffic is encrypted with that key.
++2. **Server authentication:** the server proves its identity with its **host key**. Your client checks it against `~/.ssh/known_hosts`. A changed host key triggers the loud "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED" - treat it as a possible man-in-the-middle until verified.
++3. **User authentication:** password, or better, a **key pair**: the private key stays on your machine, the public key sits in the server's `~/.ssh/authorized_keys`, and the server challenges you to prove you hold the private half.
+ 
+ ```text
+-1. TCP handshake to port 22
+-2. Banners exchanged: SSH-2.0-OpenSSH_9.2p1 ...
+-3. Key exchange → encrypted channel
+-4. Server host key verified by client (first-use "fingerprint")
+-5. User authentication (password / public key)
+-6. Encrypted shell session
++$ ssh admin@192.168.56.20
++The authenticity of host '192.168.56.20' can't be established.
++ED25519 key fingerprint is SHA256:7kQf...
++Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+ ```
++
+ ### Mini Task 1
+ 
+-What is the default SSH port? Is the session content readable in Wireshark?
++What two things does SSH authenticate before a session is usable?
++
++<details>
++<summary>Check Your Answer</summary>
++
++The server to the client (host key), and the user to the server (password or key pair).
++
++</details>
++
++### Mini Task 2
++
++Why is a changed host key warning worth investigating instead of clicking through?
+ 
+ <details>
+ <summary>Check Your Answer</summary>
+ 
+-22; no, only the banner and handshake metadata are visible.
++Because it means the server no longer proves the identity your client recorded - either the server was rebuilt/rekeyed (benign) or someone is intercepting the connection (attack). Verify the new fingerprint out-of-band before accepting.
+ 
+ </details>
+ 
+ ## 3. Practical Example / Exercise
+ 
++In an authorised lab:
++
+ ```bash
+-ssh student@192.168.56.20
++ssh-keygen -t ed25519 -C "lab key"     # generate a key pair
++ssh-copy-id user@192.168.56.20         # install your public key
++ssh user@192.168.56.20                 # passwordless login
+ ```
+-`ssh` = client; `student` = account; `@192.168.56.20` = target host. Use only on lab machines. Verify the host key fingerprint prompt.
+ 
+-**Nmap:** `22/tcp open ssh OpenSSH 9.2p1 Debian`. **Wireshark:** filter `ssh` or `tcp.port == 22`.
++**Exercise.** After setting up key login, run `ssh -v user@host` and find the lines where the client offers the public key and the server accepts it. Which authentication method does the verbose log name?
++
++<details>
++<summary>Check Your Answer</summary>
++
++Look for `debug1: Offering public key` and `debug1: Authentication succeeded (publickey)`. The method is `publickey` - password authentication is skipped entirely once the key works.
++
++</details>
++
++**Nmap:** `22/tcp open ssh OpenSSH 9.2p1` - the version banner matters for vulnerability lookup. In Wireshark, SSH after the banner is encrypted: you can see *that* a session exists, not what it says.
+ 
+ ## 4. Cybersecurity Perspective
+ 
+-- Brute-force/password-spray attempts against SSH are very common: use keys, disable root login, rate-limit.
+-- Old versions/protocols have had real vulnerabilities, but seeing a banner does **not** prove a vulnerability.
+-- SSH tunnelling can hide traffic; detect via unusual long-lived sessions.
++- **Brute force:** internet-facing port 22 gets hammered constantly. Defenses: key-only login (`PasswordAuthentication no`), rate limiting (fail2ban), non-default users with sudo, and ` PermitRootLogin no`.
++- **Key hygiene:** private keys are as sensitive as passwords; they belong encrypted with a passphrase and never in git or chat.
++- **Tunneling cuts both ways:** `ssh -L/-R/-D` forwards ports - legitimately for admin access, and abused by attackers to pivot through a compromised host.
++- In captures, SSH banners (`SSH-2.0-OpenSSH_9.2`) are visible; everything after the key exchange is ciphertext.
+ 
+ ## 5. Common Mistakes
+ 
+-Ignoring the host-key warning ("WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED"). It can indicate interception.
++Reusing one key pair everywhere (one theft unlocks everything), ignoring host-key warnings, and leaving password login enabled on internet-facing servers.
+ 
+ ## 6. CTF Challenge
+ 
+-**Title:** Banner Grab
++**Title:** The Wrong Door
+ **Difficulty:** Easy
+-**Scenario:** A lab Nmap scan shows `22/tcp open ssh` and a banner `SSH-2.0-OpenSSH_9.2p1 Debian-2+deb12u3`.
+-**Objective:** Identify the software and version.
+-**Task:** Flag = software and version token from the banner.
+-**Flag format:** `FLAG{OpenSSH_x.yp1}`
++**Scenario:** An authorised lab auth log shows:
++```text
++Oct 10 03:14:15 srv sshd[812]: Failed password for root from 203.0.113.7 port 51122 ssh2
++Oct 10 03:14:18 srv sshd[812]: Failed password for root from 203.0.113.7 port 51124 ssh2
++Oct 10 03:14:21 srv sshd[812]: Failed password for root from 203.0.113.7 port 51126 ssh2
++```
++**Objective:** Identify the attack pattern.
++**Task:** Flag = the two-word name of this attack, lowercase with a dash.
++**Flag format:** `FLAG{attack-name}`
+ 
+ <details>
+ <summary>Show Hints</summary>
+ 
+-- Hint 1: After `SSH-2.0-` comes the software identification.
++- Hint 1: Same account, same source, many rapid failures.
++- Hint 2: The defense section above names it.
+ 
+ </details>
+ 
+ <details>
+ <summary>Show Solution</summary>
+ 
+-Flag: `FLAG{OpenSSH_9.2p1}`. (Knowing the version is discovery; checking it against vulnerability data is a separate step.)
++Flag: `FLAG{brute-force}`. Repeated password attempts against one account from one IP is the brute-force signature; key-only login and fail2ban are the standard counters.
+ 
+ </details>
+ 
+ ## Summary
+ 
+-SSH = encrypted remote access on TCP 22.
++SSH: TCP 22, encrypted remote access. Key exchange builds the session key, host keys authenticate the server, key pairs (better than passwords) authenticate the user. Watch for brute force; disable password login where possible.
+ 
+ ## What To Learn Next
+ 
+-[ARP (protocol analysis)](arp.md)
++[ICMP](icmp.md)
+diff --git a/platforms/network/network-essentials/04-ports-and-tcp/tcp-vs-udp.md b/platforms/network/network-essentials/04-ports-and-tcp/tcp-vs-udp.md
+index 5d7e608..d85ff30 100644
+--- a/platforms/network/network-essentials/04-ports-and-tcp/tcp-vs-udp.md
++++ b/platforms/network/network-essentials/04-ports-and-tcp/tcp-vs-udp.md
+@@ -16,6 +16,10 @@ TCP scans are fast and reliable; UDP scans are slow and ambiguous. Knowing why a
+ 
+ > Analogy: TCP is a phone call (connect, confirm, hang up). UDP is posting a postcard (send and hope).
+ 
++Both live at Layer 4 and use **ports** to hand data to the right application - that part is identical. Everything else is a trade-off. TCP spends extra packets and time buying guarantees: a connection (the three-way handshake), acknowledgment of every segment, retransmission of losses, and in-order delivery. UDP spends nothing and guarantees nothing: each datagram is independent, may be lost, duplicated, or arrive out of order, and nobody will tell you.
++
++The practical reading: TCP moves data that must be complete and correct (web pages, files, logins). UDP moves data that must be *fast* or *simple* (a DNS lookup is one packet each way; a lost video frame is not worth a retransmit that arrives too late to show).
++
+ | Feature | TCP | UDP |
+ |---------|-----|-----|
+ | Connection | Yes (handshake) | No |
+@@ -44,15 +48,37 @@ UDP header (8 bytes):  src port | dst port | length | checksum
+ TCP header (20+ bytes): src port | dst port | seq | ack | flags | window | checksum ...
+ ```
+ 
++The header sizes tell the design story. UDP's 8 bytes are just enough to deliver a datagram. TCP's 20+ bytes carry the machinery of reliability: sequence numbers (so bytes can be reordered and gaps detected), acknowledgment numbers (so the sender learns what arrived), flags (SYN/ACK/FIN/RST drive the connection lifecycle), and a window field for flow control.
++
++### Mini Task 2
++
++Why does a "reliable" protocol need sequence numbers at all?
++
++<details>
++<summary>Check Your Answer</summary>
++
++IP can deliver packets out of order or lose them. Sequence numbers let the receiver reassemble bytes in order and notice a gap; the missing range is then re-requested via the ACK numbers.
++
++</details>
++
+ ## 3. Practical Example / Exercise
+ 
+ Wireshark filters: `tcp`, `udp`. Run `nslookup example.com` and capture it. Which transport does the query use and what is the destination port?
+ 
++Then load any HTTPS page while capturing `tcp`. Before looking, predict the first three packets between your host and the server.
++
++<details>
++<summary>Check Your Answer</summary>
++
++The DNS query uses UDP to destination port 53 (one request packet, one response packet). The HTTPS capture starts with SYN, SYN-ACK, ACK - the three-way handshake every TCP connection opens with, covered in the next lesson.
++
++</details>
++
+ ## 4. Cybersecurity Perspective
+ 
+-- TCP scan result is decided by handshake responses.
+-- UDP closed ports return ICMP "port unreachable"; silence = `open|filtered`.
+-- UDP-based amplification (DNS, NTP) is used in DDoS.
++- TCP scan result is decided by handshake responses: SYN-ACK = open, RST = closed, silence = filtered.
++- UDP scans are slow and ambiguous: closed ports usually return ICMP "port unreachable", but silence means `open|filtered` - the scanner cannot tell a listening service from a dropped packet, so Nmap retransmits and waits, which is why `-sU` crawls.
++- UDP-based amplification (DNS, NTP) is used in DDoS: a small spoofed query yields a large answer aimed at the victim, and UDP's connectionlessness makes source spoofing trivial.
+ 
+ ## 5. Common Mistakes
+ 
+@@ -86,7 +112,7 @@ Flag: `FLAG{udp_dns}`
+ 
+ ## Summary
+ 
+-TCP = reliable, connection-based. UDP = fast, connectionless.
++TCP = reliable, ordered, connection-based (20+ byte header, handshake, ACKs, retransmit). UDP = fast, connectionless (8-byte header, no guarantees). Choose TCP when correctness matters, UDP when latency or simplicity does - and expect UDP scan results to be inherently ambiguous.
+ 
+ ## What To Learn Next
+ 
+diff --git a/platforms/network/tests/content-sha256.json b/platforms/network/tests/content-sha256.json
+index 7aa94a1..cc4f7ef 100644
+--- a/platforms/network/tests/content-sha256.json
++++ b/platforms/network/tests/content-sha256.json
+@@ -1,26 +1,26 @@
+ {
+   "network-essentials/01-networking-fundamentals/encapsulation.md": "4132865a7e92b804d30fbcf3a08eeaf4d94b69551aedb00a1dc859d40cb3dc7f",
+   "network-essentials/01-networking-fundamentals/osi-model.md": "e403db3fb024d40fd7cd254144ce15142ee20922ae6dc5dc79f2b66f8f598ca3",
+-  "network-essentials/01-networking-fundamentals/osi-vs-tcpip.md": "55a741ce66befdefb8813a6509a8fb7d902b8cfddcecc3d8e0cc3ca129397726",
++  "network-essentials/01-networking-fundamentals/osi-vs-tcpip.md": "b2c61d90346692299094188fc145b097f63a3094aaedcb9ebb04d89623fdf84c",
+   "network-essentials/01-networking-fundamentals/README.md": "7665b3cf1c00f7418de5041922ac7328ce8b7b409120074acc767d29214d9fa5",
+-  "network-essentials/01-networking-fundamentals/tcp-ip-model.md": "dcd2f9fc5c719b78a0aa78fec25577ab37ae90ad27a48e10458ecab39754bfd1",
+-  "network-essentials/02-addressing/arp.md": "fc290852eec75689c2a9508b81944b57c8e632d4b3b369870ab9c601e9eb1d1c",
++  "network-essentials/01-networking-fundamentals/tcp-ip-model.md": "2c15b6880bae85895b00d16e8e718e04b4c510b3f9dcd06d16f264709fcf84d1",
++  "network-essentials/02-addressing/arp.md": "b621e679a9217cf263fd3d6f7c3f5bbfa843e2859a794bd78464f2976cf3755a",
+   "network-essentials/02-addressing/ipv4.md": "6e97099e0b8ed719e4dd69420c55489f6bda9842753f61631253084885fc24c0",
+   "network-essentials/02-addressing/mac-addresses.md": "13fb4f15aa281073e75d93c3d83d75531086042dc701e539e3c37e8d3f2e9614",
+   "network-essentials/02-addressing/README.md": "d0e16de80c848b9f0f4e0c7fa520ffd9a9f280e8db3d8a6f5660e82dfa135586",
+   "network-essentials/02-addressing/subnetting.md": "49721e87883486783cbb7279293778f4031c0ee74b2f442b7a99be1fa3ffec3e",
+-  "network-essentials/03-protocols/arp.md": "534bb5bb1bff32da4b3aec0bc16502a4a2930b158b41c9515df03742ba290e95",
+-  "network-essentials/03-protocols/dhcp.md": "f41656a20ecd44b441f9a961b79025dd37d706822640320757a14373e10989cb",
++  "network-essentials/03-protocols/arp.md": "045503bdcca52bc410dc0c7084d1246dadd7cfd0899f4c97dc29488de2bbe198",
++  "network-essentials/03-protocols/dhcp.md": "d22d659772074be7415180539a15fa384756b9434dc920878f1c71a6d5e5d6b0",
+   "network-essentials/03-protocols/dns.md": "5d3a48e3784a4f6f5db8e35fc5858751d114e59476e878fee3beffa0e0c39571",
+-  "network-essentials/03-protocols/ftp.md": "6df2cb03af1f1cf552957c9b7cfe4f5d0c1a857cf945f48c6d60a7a66ba9b6b6",
++  "network-essentials/03-protocols/ftp.md": "54efd677d878e4c2c83f45ab0ac46528cb2e007d15afe68efee546b933d19739",
+   "network-essentials/03-protocols/http-https.md": "b83854e7f1c2c7ae352e2288bf7933cbf444bd93cb1a373fe6ed58e672fb125a",
+-  "network-essentials/03-protocols/icmp.md": "3d9f144aedecddeb2c98bfe00b0578b32dd58758a4751e799249ecdd371ba202",
++  "network-essentials/03-protocols/icmp.md": "d551c8010d9edb247d8881ef42ce311e1b35a229be17c12b42d8877780ea88bf",
+   "network-essentials/03-protocols/README.md": "0396b86de374866b96383144a9f34ebe2473a0fef80aa9a73c3f40b292189f0a",
+-  "network-essentials/03-protocols/ssh.md": "b3790d91a6c9f32b2d9ce8ee988a32159887d8065c933d1e10da026aa01dc59a",
++  "network-essentials/03-protocols/ssh.md": "3feb5120ed6c8f10303ed23966df4fa18881cf72bae5bed89ec6033f3b560d9a",
+   "network-essentials/04-ports-and-tcp/ports-and-services.md": "c9b51dc29dc6d442155bc28227cc3c7aa19e5efe50c2826288d461644519a5de",
+   "network-essentials/04-ports-and-tcp/README.md": "623e5900ebe8890d33cecec317999cbca8d49ed549292a59ce3c277f7dc23c42",
+   "network-essentials/04-ports-and-tcp/tcp-handshake.md": "618051cab7752089d1b13077e2ae2cbbcd80df3db027983c1ba68a437ded1ae5",
+-  "network-essentials/04-ports-and-tcp/tcp-vs-udp.md": "6d9fe8d918f21cec90562cdc5f970717ce0bdd622bf195bc77caa78abdcad1f5",
++  "network-essentials/04-ports-and-tcp/tcp-vs-udp.md": "164d28889705290823eb40ea84da1c01d21d1d1fc7e09a3b3d2aeb4ae4767764",
+   "network-essentials/05-network-devices/network-topologies.md": "824469cef8b96f7d882699718dcd2d6a15211b00a896c4ae6386bf33cceaa5f6",
+   "network-essentials/05-network-devices/README.md": "687ad9610e7c59265c47600242dce5fc5ab9eb1c2722f6977609b20783b4005d",
+   "network-essentials/06-nmap/host-discovery.md": "836b0b358f854b97a0a209cffe07d0cc0d5c0e476c2ca8e1b398067c919b2b46",

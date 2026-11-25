@@ -1,6 +1,8 @@
 """Decryption functions for each supported algorithm. Ciphertext inputs are
-base64 strings (matching what encryption.py produces)."""
+auto-detected: base64 (what encryption.py produces), hex, decimal byte lists,
+or raw strings."""
 import base64
+import re
 
 from stream_core import xor_crypt_bytes, rc4_crypt_bytes
 from des_core import des_decrypt_bytes
@@ -10,7 +12,34 @@ from encryption import _normalize_key
 
 
 def _unb64(data: str) -> bytes:
-    return base64.b64decode(data)
+    """Smart ciphertext decoder (the name is historical - not only base64).
+
+    Accepts the ciphertext in any of these representations and returns the
+    raw bytes:
+
+    1. decimal - byte values separated by spaces/commas ("221 184 52 ...")
+    2. hex     - hex digits, optional spaces and 0x prefixes ("DDB83487...")
+    3. base64  - the format encryption.py produces ("3bg0h019...")
+    4. string  - anything else is taken as raw UTF-8 text
+
+    Detection runs in that order, so an input matching more than one form is
+    read as the earliest match: a pure-digit string of even length is hex,
+    and any text that is valid base64 is base64 (never a plain string).
+    """
+    text = data.strip()
+
+    parts = re.split(r"[\s,;]+", text)
+    if len(parts) > 1 and all(p.isdigit() and int(p) <= 255 for p in parts):
+        return bytes(int(p) for p in parts)
+
+    squashed = re.sub(r"0[xX]", "", re.sub(r"\s+", "", text))
+    if len(squashed) >= 4 and len(squashed) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", squashed):
+        return bytes.fromhex(squashed)
+
+    try:
+        return base64.b64decode(re.sub(r"\s+", "", text), validate=True)
+    except ValueError:
+        return data.encode("utf-8")
 
 
 def xor_decrypt(data_b64: str, key: str) -> str:

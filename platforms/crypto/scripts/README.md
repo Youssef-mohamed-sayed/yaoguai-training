@@ -132,8 +132,11 @@ with an appropriate HTTP status code (usually 400).
 
 ### Encryption / Decryption
 
-All ciphertext is base64-encoded in the JSON response/request (except RSA,
+Encryption returns base64 ciphertext in the JSON response (except RSA,
 which uses a decimal integer string, matching the slides' `c = m^e mod n`).
+Decryption auto-detects the input format: base64, hex, decimal byte lists
+("221 184 52 ..."), or plain UTF-8 text are all accepted and converted
+internally to the bytes each algorithm needs.
 
 | Method | Endpoint | Body |
 |---|---|---|

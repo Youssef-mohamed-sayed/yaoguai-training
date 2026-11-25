@@ -28,15 +28,15 @@ const TOOLS = [
       { name: "Decode", endpoint: "/api/encoding/url/decode", run: (i) => T.encoding.urlDecode(i) } ] },
 
   { group: "Encryption" },
-  { id: "xor", name: "XOR", desc: "Repeating-key XOR. Ciphertext is Base64.", params: [KEY],
+  { id: "xor", name: "XOR", desc: "Repeating-key XOR. Ciphertext: Base64, hex, decimal, or plain text (auto-detected).", params: [KEY],
     modes: [
       { name: "Encrypt", endpoint: "/api/encryption/xor", run: (i, p) => T.encryption.xor(i, p.key) },
       { name: "Decrypt", endpoint: "/api/decryption/xor", run: (i, p) => T.decryption.xor(i.trim(), p.key) } ] },
-  { id: "rc4", name: "RC4", desc: "Stream cipher. Ciphertext is Base64.", params: [KEY],
+  { id: "rc4", name: "RC4", desc: "Stream cipher. Ciphertext: Base64, hex, decimal, or plain text (auto-detected).", params: [KEY],
     modes: [
       { name: "Encrypt", endpoint: "/api/encryption/rc4", run: (i, p) => T.encryption.rc4(i, p.key) },
       { name: "Decrypt", endpoint: "/api/decryption/rc4", run: (i, p) => T.decryption.rc4(i.trim(), p.key) } ] },
-  { id: "des", name: "DES", desc: "56-bit block cipher. The key is padded or cut to 8 bytes. Ciphertext is Base64.", params: [KEY],
+  { id: "des", name: "DES", desc: "56-bit block cipher. The key is padded or cut to 8 bytes. Ciphertext: Base64, hex, decimal, or plain text (auto-detected).", params: [KEY],
     modes: [
       { name: "Encrypt", endpoint: "/api/encryption/des", run: (i, p) => T.encryption.des(i, p.key) },
       { name: "Decrypt", endpoint: "/api/decryption/des", run: (i, p) => T.decryption.des(i.trim(), p.key) } ] },
@@ -45,7 +45,7 @@ const TOOLS = [
     modes: [
       { name: "Encrypt", endpoint: "/api/encryption/3des", run: (i, p) => T.encryption.des3(i, p.key1, p.key2, p.key3 || undefined) },
       { name: "Decrypt", endpoint: "/api/decryption/3des", run: (i, p) => T.decryption.des3(i.trim(), p.key1, p.key2, p.key3 || undefined) } ] },
-  { id: "aes", name: "AES-128", desc: "Modern block cipher. The key is padded or cut to 16 bytes. Ciphertext is Base64.", params: [KEY],
+  { id: "aes", name: "AES-128", desc: "Modern block cipher. The key is padded or cut to 16 bytes. Ciphertext: Base64, hex, decimal, or plain text (auto-detected).", params: [KEY],
     modes: [
       { name: "Encrypt", endpoint: "/api/encryption/aes", run: (i, p) => T.encryption.aes(i, p.key) },
       { name: "Decrypt", endpoint: "/api/decryption/aes", run: (i, p) => T.decryption.aes(i.trim(), p.key) } ] },
