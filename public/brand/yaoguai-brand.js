@@ -151,3 +151,5 @@ window.addEventListener('load', function () {
   var link = document.querySelector('link[href="/brand/yaoguai-brand.css"]');
   if (link) document.head.appendChild(link);
 });
+
+;(function(){var s=document.createElement('script');s.src='/brand/yaoguai-cursor.js';document.head.appendChild(s)})();
