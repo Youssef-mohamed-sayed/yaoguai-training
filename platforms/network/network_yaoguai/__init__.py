@@ -42,8 +42,8 @@ def create_app(config=None):
     @app.after_request
     def security_headers(response):
         response.headers["Content-Security-Policy"] = (
-            "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https:; "
-            "font-src 'self'; connect-src 'self'; form-action 'self'; "
+            "default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' https:; "
+            "font-src 'self' https://fonts.gstatic.com; connect-src 'self'; form-action 'self'; "
             "frame-ancestors 'none'; base-uri 'none'"
         )
         response.headers["X-Content-Type-Options"] = "nosniff"
