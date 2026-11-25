@@ -108,6 +108,10 @@ a.module-card,a.card,.lesson-card,.module-card,.card{transition:transform .22s,b
 @keyframes yg-oni-sway{0%,100%{transform:rotate(0)}50%{transform:rotate(2.5deg)}}
 @media (prefers-reduced-motion:reduce){.yg-oni{animation:none}}
 @media(max-width:900px){.yg-drips{display:none}}
+/* smooth-scroll and lag fix: no CSS smooth scrolling on wheel, no blur behind the sticky bar, masks play their drop-in once and stop */
+html{scroll-behavior:auto!important}
+.topbar{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.yg-oni{animation:yg-oni 2.6s cubic-bezier(.25,.8,.3,1) both!important;filter:drop-shadow(0 0 4px rgba(143,10,16,.85))!important}
 
 /* loading screen: used by the portal account pages and by Linux and Programming while they start */
 .yg-load{min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;color:#fff;background:radial-gradient(ellipse at 50% 45%,rgba(143,10,16,.28),transparent 62%)}
