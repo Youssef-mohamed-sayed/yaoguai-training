@@ -5,7 +5,7 @@
   --ink:#000;--ink-raise:#0b0b0b;--ink-raised:#0b0b0b;--raised:#0b0b0b;--surface:#0b0b0b;--surface-soft:#080808;--surface-raised:#141414;--ink-card:#0b0b0b;--card:#0b0b0b;
   --line:rgba(255,255,255,.16);--line-soft:rgba(255,255,255,.09);
   --paper:#fff;--text:#fff;--paper-dim:#cfcfcf;--dim:#cfcfcf;--muted:#a0a0a0;--paper-faint:#8a8a8a;--faint:#8a8a8a;--quiet:#8a8a8a;
-  --red:#8f0a10;--red-bright:#c01820;--red-light:#c01820;--red-deep:#5c0408;--red-soft:#3a0307;--red-wash:rgba(143,10,16,.22);
+  --red:#8f0a10;--red-bright:#d10028;--red-light:#d10028;--red-deep:#5c0408;--red-soft:#3a0307;--red-wash:rgba(143,10,16,.22);
   --serif:'Space Grotesk','Zen Kaku Gothic New',Arial,sans-serif;--mono:'JetBrains Mono','IBM Plex Mono',Consolas,monospace;
   --radius:2px;
   --yg-logo:url(/brand/logo-oni-face.svg);
@@ -16,8 +16,8 @@ h1,h2,h3,h4{font-family:var(--serif);letter-spacing:-.01em}
 /* square, hard edged look */
 button,.button,.btn,input,select,textarea,pre,code,.card,[class*="card"]{border-radius:2px!important}
 .topbar,.site-header,header.topbar{border-bottom:2px solid #8f0a10!important;background:rgba(0,0,0,.92)!important}
-.button-primary,.btn-primary,.primary,button.primary{background:linear-gradient(#a50c14,#6e0509)!important;border-color:#8f0a10!important;color:#fff!important}
-a:hover{text-decoration-color:#c01820}
+.button-primary,.btn-primary,.primary,button.primary{background:linear-gradient(#d10028,#a3001f)!important;border-color:#d10028!important;color:#fff!important}
+a:hover{text-decoration-color:#d10028}
 ::selection{background:#8f0a10;color:#fff}
 pre,.code-block,.codeblock{border-left:4px solid #8f0a10!important}
 .brand img,.brand-mark{image-rendering:auto}
@@ -29,8 +29,8 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1000;ba
 .yg-bar .yg-logo img{width:38px;height:32px;display:block;object-fit:contain;overflow:visible}
 .yg-bar a.yg-link{color:#a0a0a0;text-decoration:none;padding:8px 12px;transition:.18s;display:flex;gap:8px;align-items:center}
 .yg-bar a.yg-link b{font:900 11px/1 'Noto Sans SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;background:#8f0a10;color:#fff;padding:3px 4px}
-.yg-bar a.yg-link:hover{color:#fff;background:rgba(143,10,16,.45)}
-.yg-bar a.yg-link.on{color:#fff;background:linear-gradient(#a50c14,#6e0509)}
+.yg-bar a.yg-link:hover{color:#fff;background:rgba(209,0,40,.45)}
+.yg-bar a.yg-link.on{color:#fff;background:linear-gradient(#d10028,#a3001f)}
 /* blood drips under the bar */
 .yg-drips{position:absolute;left:0;right:0;top:44px;height:0;z-index:31;pointer-events:none}
 .yg-drips i{position:absolute;top:0;width:7px;background:linear-gradient(#8f0a10,#5c0408);border-radius:0 0 7px 7px;transform-origin:top;animation:yg-drip 2.4s cubic-bezier(.3,.7,.3,1) both}
@@ -56,11 +56,11 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1000;ba
 @keyframes yg-rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 main section,main article,.platform-card,.map-row,.lesson-card,.module-card,.card{animation:yg-rise .6s both}
 .platform-card,.map-row,.lesson-card,.module-card,.card{transition:background .22s,transform .22s,border-color .22s}
-.platform-card:hover,.lesson-card:hover,.module-card:hover,.card:hover{background:linear-gradient(#a50c14,#5c0408)!important;transform:translateY(-6px);border-color:#c01820}
-.button:hover,.btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 #8f0a10}
+.platform-card:hover,.lesson-card:hover,.module-card:hover,.card:hover{background:linear-gradient(#d10028,#8f0a10)!important;transform:translateY(-6px);border-color:#d10028}
+.button:hover,.btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 #d10028}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.yg-intro{display:none}}
 @media(max-width:700px){.yg-bar{overflow-x:auto;padding:0 8px}.yg-bar .yg-logo span{display:none}}
-.hero h1 span{color:#c01820!important}.hero h1 span{text-shadow:0 0 24px rgba(160,0,10,.6)}
+.hero h1 span{color:#d10028!important}.hero h1 span{text-shadow:0 0 24px rgba(209,0,40,.6)}
 
 /* v3: unify logo usage in Linux / Programming (crisp vector mask instead of upscaled PNG or 妖 glyph) */
 img[src*="logo-emblem"]{content:var(--yg-logo);image-rendering:auto;object-fit:contain}
