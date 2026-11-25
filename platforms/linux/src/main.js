@@ -409,7 +409,7 @@ async function init() {
     initShortcuts();
   } catch (error) {
     console.error(error);
-    app.innerHTML = `<main class="load-error"><img src="/linux/assets/images/logo-emblem.png" alt="" width="48"><span class="eyebrow">COURSE CONTENT UNAVAILABLE</span><h1>We couldn't load the learning path.</h1><p>${esc(error.message)}. Rebuild the course index and refresh this page.</p></main>`;
+    app.innerHTML = `<main class="load-error"><img src="/brand/logo-oni-face.svg" alt="" width="84"><span class="eyebrow">COURSE CONTENT UNAVAILABLE</span><h1>We couldn't load the learning path.</h1><p>${esc(error.message)}. Rebuild the course index and refresh this page.</p></main>`;
   }
 }
 

@@ -59,10 +59,13 @@
       if (!sessionStorage.getItem(seen)) {
         sessionStorage.setItem(seen, '1');
         var intro = document.createElement('div');
-        intro.className = 'yg-intro';
-        intro.innerHTML = '<img src="/brand/logo-oni.svg" alt=""><b class="k">' + course.cn + '</b><span class="t">YAOGUAI ' + course.label + '</span>';
+        var isCourse = !!course.href;
+        intro.className = 'yg-intro' + (isCourse ? ' face' : '');
+        intro.innerHTML = isCourse
+          ? '<img src="/brand/logo-oni-face.svg" alt=""><b class="k">' + course.cn + '</b><span class="t">YAOGUAI ' + course.label + '</span><i class="bar"></i>'
+          : '<img src="/brand/logo-oni.svg" alt=""><b class="k">' + course.cn + '</b><span class="t">YAOGUAI ' + course.label + '</span>';
         document.body.appendChild(intro);
-        setTimeout(function () { intro.remove(); }, 1800);
+        setTimeout(function () { intro.remove(); }, isCourse ? 2200 : 1800);
       }
     } catch (e) { /* storage blocked: skip the intro */ }
   }

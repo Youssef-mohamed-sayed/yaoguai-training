@@ -35,7 +35,7 @@ export async function mountAdmin(root, getUser) {
     render(summary, members, levels, groups, tasks, submissions, platforms);
   } catch (error) {
     root.innerHTML = `<div class="admin-page"><header class="admin-heading"><div><p class="section-kicker">Yaoguai Training</p><h1>Administration</h1></div><span class="muted">${esc(getUser()?.username || 'administrator')}</span></header><div class="admin-alert error" role="alert">Dashboard data could not be loaded: ${esc(error.message)}</div><button class="button" id="admin-retry">Try again</button></div>`;
-    root.querySelector('#admin-retry').addEventListener('click', () => { root.innerHTML = '<p class="admin-empty">Loading administration data</p>'; mountAdmin(root, getUser); });
+    root.querySelector('#admin-retry').addEventListener('click', () => { root.innerHTML = '<p class="admin-empty yg-inline" role="status"><img src="/brand/logo-oni-face.svg" alt="">Loading administration data</p>'; mountAdmin(root, getUser); });
   }
 
   function render(summary, members, levels, groups, tasks, submissions, platforms) {
@@ -61,7 +61,7 @@ export async function mountAdmin(root, getUser) {
 
     const showMember = async id => {
       const panel = root.querySelector('#member-detail');
-      panel.innerHTML = '<p class="admin-empty">Loading member progress</p>';
+      panel.innerHTML = '<p class="admin-empty yg-inline" role="status"><img src="/brand/logo-oni-face.svg" alt="">Loading member progress</p>';
       try { panel.innerHTML = memberDetailView(await api(`/admin/members/${encodeURIComponent(id)}`)); }
       catch (error) { panel.innerHTML = `<p class="admin-alert error">${esc(error.message)}</p>`; }
     };

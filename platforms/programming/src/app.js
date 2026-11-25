@@ -374,5 +374,5 @@ try {
   course = await response.json();
   renderRoute();
 } catch (error) {
-  app.innerHTML = `<main class="wrap page-wrap load-error"><div class="section-kicker">COURSE CONTENT UNAVAILABLE</div><h1>We could not load the course.</h1><p>${escapeHtml(error.message)}</p><p>Build the course index, then refresh this page.</p></main>`;
+  app.innerHTML = `<main class="wrap page-wrap load-error"><img src="/brand/logo-oni-face.svg" alt="" width="84"><div class="section-kicker">COURSE CONTENT UNAVAILABLE</div><h1>We could not load the course.</h1><p>${escapeHtml(error.message)}</p><p>Build the course index, then refresh this page.</p></main>`;
 }
