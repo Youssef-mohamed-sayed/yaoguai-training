@@ -13,9 +13,9 @@ This module develops practical skills in **bash scripting**. Work through the le
 - [Safe Scripting Debugging And Error Handling](03-safe-scripting-debugging-and-error-handling.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Scripts, Variables, Arguments, and Input](01-script-structure-variables-and-input.md).
-- Complete the hands-on practice in [Conditionals, Loops, Functions, and Arrays](02-conditionals-loops-functions-and-arrays.md).
-- Complete the hands-on practice in [Safe Scripting, Debugging, and Error Handling](03-safe-scripting-debugging-and-error-handling.md).
+- Complete the practice exercises and self-checks in [Scripts, Variables, Arguments, and Input](01-script-structure-variables-and-input.md).
+- Complete the practice exercises and self-checks in [Conditionals, Loops, Functions, and Arrays](02-conditionals-loops-functions-and-arrays.md).
+- Complete the practice exercises and self-checks in [Safe Scripting, Debugging, and Error Handling](03-safe-scripting-debugging-and-error-handling.md).
 
 ## Prerequisites
 - Modules 04–08 and Bash.

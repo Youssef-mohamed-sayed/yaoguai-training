@@ -2,10 +2,18 @@
 
 
 ## Level objective
-Use the official level instructions to read a file whose name is a single dash character.
+Read the file in the home directory whose name is a single dash: `-`. Confirm the exact goal on the official level page.
 
 ## Concepts practiced
-Option parsing, relative paths, `--`, and explicit pathnames.
+Option parsing, relative paths, the `--` end-of-options marker, and explicit pathnames.
+
+## Background
+Try the obvious first and watch it fail: `cat -` does not read a file named `-`. Nearly every Unix command-line program treats an argument starting with `-` as an **option**, and a bare `-` by convention often means standard input. So `cat -` waits for you to type, which looks exactly like the command "hanging". (If that happens to you, `Ctrl-C` out.)
+
+Two standard escapes exist, and both are worth knowing because this exact problem recurs with files like `-rf`, `--help`, and worse:
+
+- **Make it a path.** A name containing `/` is never parsed as an option: `./-` is unambiguously the file `-` in the current directory.
+- **End the options.** GNU utilities accept `--` to mean "everything after this is an operand, not an option": `cat -- -`.
 
 ## Relevant commands
 ```bash
@@ -15,18 +23,32 @@ cat -- -
 ```
 
 ## Hints (in increasing order)
-1. A filename beginning with `-` can be mistaken for a command option.
+1. The filename is being mistaken for a command option.
 2. Prefix the name with a path component.
-3. Many GNU utilities accept `--` to mark the end of options.
+3. Many GNU utilities accept `--` to end option processing.
 
 ## Solution explanation
-Use `cat ./-` to make the argument an explicit relative path. On implementations that support it, `cat -- -` also tells the program that subsequent arguments are operands rather than options.
+`ls -la` shows the file `-` in the home directory. `cat ./-` reads it as an explicit relative path and prints the next password. On GNU systems, `cat -- -` works too. Use the credential only to log in to the next level.
 
 ## Why it works
-Option parsers commonly interpret a leading dash as an option. A pathname containing `/` is not interpreted as an option, and `--` conventionally ends option processing.
+Option parsers split arguments into options and operands before the program sees them. Both fixes work at that parsing layer: a path with a slash cannot look like an option, and `--` tells the parser to stop looking. Neither changes the file or the command; both change how your argument is *interpreted*.
 
-## Lessons learned
-Unusual filenames are valid. Quote and delimit arguments deliberately.
+## Check yourself
+**Q1.** A file is named `-rf`. Why is `rm -rf` a terrifying typo, and how do you delete that file safely?
+
+<details>
+<summary>Show answer</summary>
+
+Unqualified, the name parses as the recursive-force options. Delete it with an explicit path: `rm -- -rf` or `rm ./-rf` (and read it twice first, as always with `rm`).
+</details>
+
+**Q2.** Are `./-` and `--` interchangeable everywhere?
+
+<details>
+<summary>Show answer</summary>
+
+Nearly, but not universally: `--` is a GNU convention that some minimal or non-GNU tools do not honor, while the `./name` path form works with anything that accepts a path. When in doubt, use the path form.
+</details>
 
 ## Official verification
 [Bandit Level 1 → Level 2](https://overthewire.org/wargames/bandit/bandit2.html)

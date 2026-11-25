@@ -12,8 +12,8 @@ This module develops practical skills in **searching and security inspection**. 
 - [Defensive Filesystem Audit](02-defensive-filesystem-audit.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Find, locate, whereis, and which](01-find-locate-and-whereis.md).
-- Complete the hands-on practice in [Defensive Filesystem and Permission Auditing](02-defensive-filesystem-audit.md).
+- Complete the practice exercises and self-checks in [Find, locate, whereis, and which](01-find-locate-and-whereis.md).
+- Complete the practice exercises and self-checks in [Defensive Filesystem and Permission Auditing](02-defensive-filesystem-audit.md).
 
 ## Prerequisites
 - Modules 03–08.

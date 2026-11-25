@@ -12,8 +12,8 @@ This module develops practical skills in **filesystem hierarchy**. Work through 
 - [Paths Hidden Files Types And Links](02-paths-hidden-files-types-and-links.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [The Filesystem Tree and Important Directories](01-filesystem-tree-and-directories.md).
-- Complete the hands-on practice in [Paths, Hidden Files, File Types, and Links](02-paths-hidden-files-types-and-links.md).
+- Complete the practice exercises and self-checks in [The Filesystem Tree and Important Directories](01-filesystem-tree-and-directories.md).
+- Complete the practice exercises and self-checks in [Paths, Hidden Files, File Types, and Links](02-paths-hidden-files-types-and-links.md).
 
 ## Prerequisites
 - Modules 01–02.

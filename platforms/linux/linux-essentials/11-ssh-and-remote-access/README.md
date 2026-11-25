@@ -12,8 +12,8 @@ This module develops practical skills in **ssh and remote access**. Work through
 - [Ssh Keys Agent And File Transfer](02-ssh-keys-agent-and-file-transfer.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [SSH Connections and Host-Key Verification](01-ssh-client-and-host-verification.md).
-- Complete the hands-on practice in [SSH Keys, ssh-agent, SCP, and SFTP](02-ssh-keys-agent-and-file-transfer.md).
+- Complete the practice exercises and self-checks in [SSH Connections and Host-Key Verification](01-ssh-client-and-host-verification.md).
+- Complete the practice exercises and self-checks in [SSH Keys, ssh-agent, SCP, and SFTP](02-ssh-keys-agent-and-file-transfer.md).
 
 ## Prerequisites
 - Modules 04–06 and network connectivity.

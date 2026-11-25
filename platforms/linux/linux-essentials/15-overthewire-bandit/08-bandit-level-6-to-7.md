@@ -1,31 +1,51 @@
-# Bandit Level 6 to Level 7: Search by Ownership and Size
+# Bandit Level 6 to Level 7: Owned by Someone, Somewhere
 
 
 ## Level objective
-Locate a file using the owner, group, and size conditions stated by the official game.
+Somewhere on the whole system is a file owned by user `bandit7`, group `bandit6`, exactly 33 bytes. Find it and read the password. Confirm the exact goal on the official level page.
 
 ## Concepts practiced
-UID/GID ownership, `find -user`, `find -group`, and `find -size`.
+System-wide `find` with ownership predicates, and disciplined error suppression.
+
+## Background
+Now the search space is the entire filesystem, which raises two practical problems you will meet on real servers too.
+
+First, the search must start at `/`: `find /`. Second, most of the tree is unreadable to you, so the output drowns in "Permission denied" lines. The standard move is `2>/dev/null`, which discards stderr while leaving real results on stdout. Use it knowingly: you are searching *everything you may read*, not literally everything, and in this game that is enough.
+
+The predicates translate directly: owner → `-user bandit7`, group → `-group bandit6`, size → `-size 33c`.
 
 ## Relevant commands
 ```bash
 find / -type f -user bandit7 -group bandit6 -size 33c 2>/dev/null
-stat /path/to/candidate
 ```
 
 ## Hints (in increasing order)
-1. The target may not be under the current home directory.
-2. Combine owner, group, and size tests in one search.
-3. Permission-denied messages are expected when searching system-wide as an unprivileged user; suppress them only if you understand the limitation.
+1. Start the search at `/`.
+2. `-user` and `-group` filter by ownership.
+3. Send the permission errors to `/dev/null`.
 
 ## Solution explanation
-Search the filesystem for a regular file satisfying all official ownership and size conditions. Verify the candidate's metadata with `stat`, then read it if permitted.
+The command prints exactly one path. Read it with `cat` for the next password. If you see many permission errors, confirm the `2>/dev/null` is redirecting descriptor 2, not being passed to `find`.
 
 ## Why it works
-`find` can filter on ownership and size without requiring you to know the file's path in advance.
+Ownership and size are inode metadata, so `find` answers from directory records and inodes without opening files. The `2>/dev/null` redirection works because errors are emitted on stderr (descriptor 2), a separate stream from the results, the exact split from module 08 lesson 1.
 
-## Lessons learned
-File ownership is metadata, not a filename property. A search with suppressed errors may be incomplete.
+## Check yourself
+**Q1.** What do you silently give up when you add `2>/dev/null` to a system-wide search?
+
+<details>
+<summary>Show answer</summary>
+
+Knowledge of what was skipped. Directories you cannot enter never report their contents, so the honest summary is "nothing found *that I can read*". On audits, that caveat belongs in the report.
+</details>
+
+**Q2.** Why is this search fast even though it starts at `/`?
+
+<details>
+<summary>Show answer</summary>
+
+It tests metadata (owner, group, size) rather than reading file contents, so the cost is directory traversal, not data transfer.
+</details>
 
 ## Official verification
 [Bandit Level 6 → Level 7](https://overthewire.org/wargames/bandit/bandit7.html)

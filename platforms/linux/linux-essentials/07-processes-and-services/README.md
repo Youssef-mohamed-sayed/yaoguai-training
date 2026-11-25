@@ -12,8 +12,8 @@ This module develops practical skills in **processes and services**. Work throug
 - [Services Systemd And Logs](02-services-systemd-and-logs.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Processes, Signals, and Monitoring](01-processes-signals-and-monitoring.md).
-- Complete the hands-on practice in [Services, systemd, and Logs](02-services-systemd-and-logs.md).
+- Complete the practice exercises and self-checks in [Processes, Signals, and Monitoring](01-processes-signals-and-monitoring.md).
+- Complete the practice exercises and self-checks in [Services, systemd, and Logs](02-services-systemd-and-logs.md).
 
 ## Prerequisites
 - Modules 01–05; systemd commands require a system using systemd.

@@ -13,9 +13,9 @@ This module develops practical skills in **users and permissions**. Work through
 - [Special Permissions And Least Privilege](03-special-permissions-and-least-privilege.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Users, Groups, and Account Databases](01-users-groups-and-account-files.md).
-- Complete the hands-on practice in [Permissions, chmod, chown, and sudo](02-permissions-chmod-chown-and-sudo.md).
-- Complete the hands-on practice in [SUID, SGID, Sticky Bit, and Least Privilege](03-special-permissions-and-least-privilege.md).
+- Complete the practice exercises and self-checks in [Users, Groups, and Account Databases](01-users-groups-and-account-files.md).
+- Complete the practice exercises and self-checks in [Permissions, chmod, chown, and sudo](02-permissions-chmod-chown-and-sudo.md).
+- Complete the practice exercises and self-checks in [SUID, SGID, Sticky Bit, and Least Privilege](03-special-permissions-and-least-privilege.md).
 
 ## Prerequisites
 - Modules 01–05; administrator access in a disposable VM for account-management tasks.

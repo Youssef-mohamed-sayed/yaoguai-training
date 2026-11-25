@@ -12,8 +12,8 @@ This module develops practical skills in **introduction to linux**. Work through
 - [Linux Architecture And Open Source](02-linux-architecture-and-open-source.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [What Is Linux?](01-what-is-linux.md).
-- Complete the hands-on practice in [Linux Architecture and Open Source](02-linux-architecture-and-open-source.md).
+- Complete the practice exercises and self-checks in [What Is Linux?](01-what-is-linux.md).
+- Complete the practice exercises and self-checks in [Linux Architecture and Open Source](02-linux-architecture-and-open-source.md).
 
 ## Prerequisites
 - Basic computer literacy.

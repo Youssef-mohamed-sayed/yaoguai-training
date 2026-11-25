@@ -12,8 +12,8 @@ This module develops practical skills in **package management**. Work through th
 - [Dnf Rpm And Pacman](02-dnf-rpm-and-pacman.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Debian and Ubuntu: apt and dpkg](01-apt-and-dpkg.md).
-- Complete the hands-on practice in [Fedora/RHEL: dnf and rpm; Arch: pacman](02-dnf-rpm-and-pacman.md).
+- Complete the practice exercises and self-checks in [Debian and Ubuntu: apt and dpkg](01-apt-and-dpkg.md).
+- Complete the practice exercises and self-checks in [Fedora/RHEL: dnf and rpm; Arch: pacman](02-dnf-rpm-and-pacman.md).
 
 ## Prerequisites
 - A Linux system; use only the package manager for its distribution.

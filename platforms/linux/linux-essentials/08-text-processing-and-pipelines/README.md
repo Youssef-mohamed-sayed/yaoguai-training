@@ -12,8 +12,8 @@ This module develops practical skills in **text processing and pipelines**. Work
 - [Grep Sed Awk And Log Analysis](02-grep-sed-awk-and-log-analysis.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Standard Streams, Redirection, and Pipes](01-streams-redirection-and-pipes.md).
-- Complete the hands-on practice in [grep, sed, awk, and Practical Log Analysis](02-grep-sed-awk-and-log-analysis.md).
+- Complete the practice exercises and self-checks in [Standard Streams, Redirection, and Pipes](01-streams-redirection-and-pipes.md).
+- Complete the practice exercises and self-checks in [grep, sed, awk, and Practical Log Analysis](02-grep-sed-awk-and-log-analysis.md).
 
 ## Prerequisites
 - Modules 01–05.

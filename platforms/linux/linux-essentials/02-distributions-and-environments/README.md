@@ -12,8 +12,8 @@ This module develops practical skills in **distributions and environments**. Wor
 - [Desktops Shells Vms And Wsl](02-desktops-shells-vms-and-wsl.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Linux Distributions](01-linux-distributions.md).
-- Complete the hands-on practice in [Desktop Environments, Shells, VMs, and WSL](02-desktops-shells-vms-and-wsl.md).
+- Complete the practice exercises and self-checks in [Linux Distributions](01-linux-distributions.md).
+- Complete the practice exercises and self-checks in [Desktop Environments, Shells, VMs, and WSL](02-desktops-shells-vms-and-wsl.md).
 
 ## Prerequisites
 - Module 01.

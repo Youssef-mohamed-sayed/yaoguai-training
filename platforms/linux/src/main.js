@@ -176,7 +176,7 @@ function renderLesson(lesson) {
   const next = lessonIndex[index + 1];
   const complete = progress.completed.includes(lesson.slug);
   const { html, toc } = markdownHtml(lesson);
-  return `<div class="lesson-layout"><article class="lesson-article"><div class="breadcrumb"><a href="/" data-link>Home</a>${icon('chevron', 13)}<a href="${modulePath(module)}" data-link>${esc(module.title)}</a>${icon('chevron', 13)}<span>Lesson ${String(index + 1).padStart(2, '0')}</span></div><header class="lesson-heading"><span class="eyebrow">${esc(module.title)} <span class="eyebrow-sep">/</span> LESSON ${String(module.lessons.indexOf(lesson) + 1).padStart(2, '0')}</span><h1>${esc(lesson.title)}</h1><div class="lesson-meta"><span>${lesson.markdown.trim().split(/\s+/).length} words</span><span class="meta-dot"></span><span>${Math.max(1, Math.round(lesson.markdown.trim().split(/\s+/).length / 220))} min read</span><span class="meta-dot"></span><span class="lesson-state ${complete ? 'done' : ''}">${complete ? icon('check', 12) : ''}</span><span>${complete ? 'Completed' : 'In progress'}</span></div></header><div class="reading-progress"><i></i></div><div class="markdown-body lesson-content">${html}</div><nav class="lesson-pager">${previous ? `<a href="${lessonPath(previous)}" data-link><small>← PREVIOUS LESSON</small><span>${esc(previous.title)}</span></a>` : `<a href="${modulePath(module)}" data-link><small>← BACK TO MODULE</small><span>${esc(module.title)}</span></a>`}${next ? `<a class="next" href="${lessonPath(next)}" data-link><small>NEXT LESSON →</small><span>${esc(next.title)}</span></a>` : `<a class="next" href="${modulePath(module)}" data-link><small>MODULE COMPLETE →</small><span>Review ${esc(module.title)}</span></a>`}</nav></article><aside class="lesson-rail"><div class="rail-sticky"><div class="toc-title"><span class="eyebrow">IN THIS LESSON</span><button class="icon-button toc-toggle" aria-label="Toggle table of contents">${icon('menu', 16)}</button></div><nav class="toc-list" aria-label="Table of contents">${toc.map((heading) => `<a href="#${esc(heading.id)}" class="toc-link level-${heading.depth}">${esc(heading.text)}</a>`).join('')}</nav><a class="rail-module" href="${modulePath(module)}" data-link><span class="eyebrow">CURRENT MODULE</span><b>${esc(module.title)}</b><span>${completeCount(module)} / ${module.lessons.length} lessons complete</span><div class="progress-track"><i style="width:${progressSummary(module).pct}%"></i></div></a><span class="rail-index">${String(index + 1).padStart(2, '0')} <i>/</i> ${String(lessonIndex.length).padStart(2, '0')}</span></div></aside></div>`;
+  return `<div class="lesson-layout"><article class="lesson-article"><div class="breadcrumb"><a href="/" data-link>Home</a>${icon('chevron', 13)}<a href="${modulePath(module)}" data-link>${esc(module.title)}</a>${icon('chevron', 13)}<span>Lesson ${String(index + 1).padStart(2, '0')}</span></div><header class="lesson-heading"><span class="eyebrow">${esc(module.title)} <span class="eyebrow-sep">/</span> LESSON ${String(module.lessons.indexOf(lesson) + 1).padStart(2, '0')}</span><h1>${esc(lesson.title)}</h1><div class="lesson-meta"><span>${lesson.markdown.trim().split(/\s+/).length} words</span><span class="meta-dot"></span><span>${Math.max(1, Math.round(lesson.markdown.trim().split(/\s+/).length / 220))} min read</span><span class="meta-dot"></span><span class="lesson-state ${complete ? 'done' : ''}">${complete ? icon('check', 12) : ''}</span><span>${complete ? 'Completed' : 'In progress'}</span></div></header><div class="reading-progress"><i></i></div><div class="markdown-body lesson-content">${html}</div><div class="lesson-complete-box ${complete ? 'is-complete' : ''}"><span class="complete-icon">${icon('check', 16)}</span><div><b>${complete ? 'Lesson completed' : 'Finished reading?'}</b><p>${complete ? 'This lesson is marked complete in your learning path.' : 'Mark this lesson complete to track it in your course progress.'}</p></div><button class="button ${complete ? 'quiet' : 'primary'}" type="button" data-complete-lesson ${complete ? 'disabled' : ''}>${complete ? 'Completed' : 'Mark complete'}</button></div><nav class="lesson-pager">${previous ? `<a href="${lessonPath(previous)}" data-link><small>← PREVIOUS LESSON</small><span>${esc(previous.title)}</span></a>` : `<a href="${modulePath(module)}" data-link><small>← BACK TO MODULE</small><span>${esc(module.title)}</span></a>`}${next ? `<a class="next" href="${lessonPath(next)}" data-link><small>NEXT LESSON →</small><span>${esc(next.title)}</span></a>` : `<a class="next" href="${modulePath(module)}" data-link><small>MODULE COMPLETE →</small><span>Review ${esc(module.title)}</span></a>`}</nav></article><aside class="lesson-rail"><div class="rail-sticky"><div class="toc-title"><span class="eyebrow">IN THIS LESSON</span><button class="icon-button toc-toggle" aria-label="Toggle table of contents">${icon('menu', 16)}</button></div><nav class="toc-list" aria-label="Table of contents">${toc.map((heading) => `<a href="#${esc(heading.id)}" class="toc-link level-${heading.depth}">${esc(heading.text)}</a>`).join('')}</nav><a class="rail-module" href="${modulePath(module)}" data-link><span class="eyebrow">CURRENT MODULE</span><b>${esc(module.title)}</b><span>${completeCount(module)} / ${module.lessons.length} lessons complete</span><div class="progress-track"><i style="width:${progressSummary(module).pct}%"></i></div></a><span class="rail-index">${String(index + 1).padStart(2, '0')} <i>/</i> ${String(lessonIndex.length).padStart(2, '0')}</span></div></aside></div>`;
 }
 
 function renderNotFound() {
@@ -290,6 +290,25 @@ function showSearch(value) {
 }
 
 function setupLessonInteractions(lesson) {
+  const completeButton = app.querySelector('[data-complete-lesson]');
+  if (completeButton && !progress.completed.includes(lesson.slug)) {
+    completeButton.addEventListener('click', async () => {
+      completeButton.disabled = true;
+      completeButton.textContent = 'Saving…';
+      let saved = true;
+      if (window.YaoguaiAccountUser && window.YaoguaiTraining) {
+        saved = await window.YaoguaiTraining.complete(`linux/${lesson.slug}`).catch(() => false);
+      }
+      if (saved) {
+        if (!progress.completed.includes(lesson.slug)) progress.completed.push(lesson.slug);
+        saveProgress();
+        render();
+      } else {
+        completeButton.disabled = false;
+        completeButton.textContent = 'Mark complete';
+      }
+    });
+  }
   const content = app.querySelector('.lesson-content');
   const tocLinks = [...app.querySelectorAll('.toc-link')];
   content.querySelectorAll('a').forEach((anchor) => resolveLessonLink(anchor, lesson));

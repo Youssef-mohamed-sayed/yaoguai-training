@@ -12,8 +12,8 @@ This module develops practical skills in **command-line fundamentals**. Work thr
 - [Navigation And Shell Efficiency](02-navigation-and-shell-efficiency.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Terminal, Shell, and Command Syntax](01-terminal-shell-and-command-syntax.md).
-- Complete the hands-on practice in [Navigation and Shell Efficiency](02-navigation-and-shell-efficiency.md).
+- Complete the practice exercises and self-checks in [Terminal, Shell, and Command Syntax](01-terminal-shell-and-command-syntax.md).
+- Complete the practice exercises and self-checks in [Navigation and Shell Efficiency](02-navigation-and-shell-efficiency.md).
 
 ## Prerequisites
 - Modules 01–03.

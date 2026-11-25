@@ -11,7 +11,7 @@ This module develops practical skills in **linux security and privilege basics**
 - [Least Privilege And Defensive Administration](01-least-privilege-and-defensive-administration.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Least Privilege and Defensive Linux Administration](01-least-privilege-and-defensive-administration.md).
+- Complete the practice exercises and self-checks in [Least Privilege and Defensive Linux Administration](01-least-privilege-and-defensive-administration.md).
 
 ## Prerequisites
 - Modules 06–12.

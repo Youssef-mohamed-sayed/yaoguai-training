@@ -12,8 +12,8 @@ This module develops practical skills in **files and directories**. Work through
 - [Reading And Inspecting Files](02-reading-and-inspecting-files.md)
 
 ## Practical exercises
-- Complete the hands-on practice in [Create, Copy, Move, and Remove Files](01-create-copy-move-and-remove.md).
-- Complete the hands-on practice in [Reading and Inspecting Files](02-reading-and-inspecting-files.md).
+- Complete the practice exercises and self-checks in [Create, Copy, Move, and Remove Files](01-create-copy-move-and-remove.md).
+- Complete the practice exercises and self-checks in [Reading and Inspecting Files](02-reading-and-inspecting-files.md).
 
 ## Prerequisites
 - Modules 01–04.
