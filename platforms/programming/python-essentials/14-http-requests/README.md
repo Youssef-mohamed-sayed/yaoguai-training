@@ -6,7 +6,7 @@ This module develops practical skills in http requests with requests as part of 
 
 - Understand the concepts introduced in this module.
 - Run and adapt every example.
-- Complete the practical exercises.
+- Complete the practice exercises and self-checks in each lesson.
 - Explain common errors and safe usage.
 
 ## Lessons
@@ -18,5 +18,5 @@ This module develops practical skills in http requests with requests as part of 
 
 - [ ] Read lessons in order.
 - [ ] Run and modify every example.
-- [ ] Complete the exercises independently.
+- [ ] Complete the practice exercises and check-yourself questions independently.
 - [ ] Test edge cases and explain the result.
