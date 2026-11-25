@@ -132,3 +132,8 @@ html[data-course=network] body{background:linear-gradient(rgba(0,0,0,.56),rgba(0
 .yg-art{position:absolute;right:3%;top:50%;transform:translateY(-50%);width:min(44%,560px);height:auto;max-height:86%;object-fit:contain;pointer-events:none;z-index:0;opacity:.95}
 html[data-course] img.hero-art,html[data-course] .hero-sigil{display:none!important}
 @media(max-width:1000px){.yg-art{display:none}}
+
+/* v8: placement fixes. Linux art sits bottom right under the heading, Network art replaces the picture inside its packet-trace panel. */
+html[data-course=linux] .dashboard-hero>.yg-art{top:auto;bottom:20px;right:40px;transform:none;width:clamp(210px,19vw,300px);max-height:none}
+html[data-course=network] .hero-diagram img{content:url(/brand/art-network.svg);width:min(100%,360px);height:auto;aspect-ratio:auto;object-fit:contain;border:0;background:none;box-shadow:none;border-radius:0!important;-webkit-mask:none;mask:none;filter:none}
+html[data-course=python] .hero>.yg-art{right:5%;width:min(34%,430px)}
