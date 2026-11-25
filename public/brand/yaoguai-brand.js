@@ -8,17 +8,21 @@
     { href: '/crypto/', label: 'CRYPTO', cn: '密码', match: /^\/crypto/ },
   ];
   var path = location.pathname;
+  // which course this page belongs to: picks the logo, the page background and the hero art
+  var KEY = /^\/network/.test(path) ? 'network' : /^\/linux/.test(path) ? 'linux' : /^\/programming/.test(path) ? 'python' : /^\/crypto/.test(path) ? 'crypto' : '';
+  if (KEY) document.documentElement.setAttribute('data-course', KEY);
+  var LOGO = KEY ? '/brand/course-' + KEY + '.svg' : '/brand/logo-oni-face.svg';
 
   function start() {
     // 1. sharp SVG logo instead of the 128px PNG
     var imgs = document.querySelectorAll('img[src*="logo-emblem"]');
-    for (var i = 0; i < imgs.length; i++) imgs[i].src = '/brand/logo-mask.svg';
+    for (var i = 0; i < imgs.length; i++) imgs[i].src = LOGO;
 
     // 2. one course bar on every page
     var bar = document.createElement('nav');
     bar.className = 'yg-bar';
     bar.setAttribute('aria-label', 'Yaoguai courses');
-    var html = '<a class="yg-logo" href="/"><img src="/brand/logo-mask.svg" alt=""><span>YAOGUAI</span></a>';
+    var html = '<a class="yg-logo" href="/"><img src="' + LOGO + '" alt=""><span>YAOGUAI</span></a>';
     COURSES.forEach(function (c) {
       var on = c.match.test(path) ? ' on' : '';
       html += '<a class="yg-link' + on + '" href="' + c.href + '">' + (c.cn ? '<b>' + c.cn + '</b>' : '') + c.label + '</a>';
@@ -103,9 +107,20 @@
     var em = h.querySelector('span,em');
     if (em) em.classList.add('yg-accent');
   }
+  function art(hero) {
+    // course art on the right side of the hero, behind the text (course pages only)
+    var KEY = document.documentElement.getAttribute('data-course');
+    if (!KEY || hero.querySelector('.yg-art')) return;
+    var a = document.createElement('img');
+    a.className = 'yg-art';
+    a.alt = '';
+    a.setAttribute('aria-hidden', 'true');
+    a.src = '/brand/art-' + KEY + '.svg';
+    hero.appendChild(a);
+  }
   function scan() {
     var heroes = document.querySelectorAll('.hero,.dashboard-hero');
-    for (var i = 0; i < heroes.length; i++) { ticker(heroes[i]); accent(heroes[i]); }
+    for (var i = 0; i < heroes.length; i++) { ticker(heroes[i]); accent(heroes[i]); art(heroes[i]); }
     var cs = document.querySelectorAll(CARDS);
     for (var j = 0; j < cs.length; j++) {
       var c = cs[j];

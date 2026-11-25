@@ -8,7 +8,9 @@
   --red:#8f0a10;--red-bright:#c01820;--red-light:#c01820;--red-deep:#5c0408;--red-soft:#3a0307;--red-wash:rgba(143,10,16,.22);
   --serif:'Space Grotesk','Zen Kaku Gothic New',Arial,sans-serif;--mono:'JetBrains Mono','IBM Plex Mono',Consolas,monospace;
   --radius:2px;
+  --yg-logo:url(/brand/logo-oni-face.svg);
 }
+html[data-course=linux]{--yg-logo:url(/brand/course-linux.svg)}html[data-course=python]{--yg-logo:url(/brand/course-python.svg)}html[data-course=crypto]{--yg-logo:url(/brand/course-crypto.svg)}html[data-course=network]{--yg-logo:url(/brand/course-network.svg)}
 body{background:radial-gradient(ellipse at 80% 0,#2a0004 0,#000 55%) fixed,#000!important;color:#fff}
 h1,h2,h3,h4{font-family:var(--serif);letter-spacing:-.01em}
 /* square, hard edged look */
@@ -24,7 +26,7 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1000;ba
 /* shared course bar */
 .yg-bar{display:flex;align-items:center;gap:6px;height:44px;padding:0 20px;background:#000;border-bottom:1px solid rgba(255,255,255,.16);position:relative;z-index:30;font:500 12px/1 var(--mono);letter-spacing:.08em}
 .yg-bar .yg-logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font:700 14px var(--serif);letter-spacing:.16em;margin-right:14px}
-.yg-bar .yg-logo img{width:26px;height:26px;display:block}
+.yg-bar .yg-logo img{width:38px;height:32px;display:block;object-fit:contain;overflow:visible}
 .yg-bar a.yg-link{color:#a0a0a0;text-decoration:none;padding:8px 12px;transition:.18s;display:flex;gap:8px;align-items:center}
 .yg-bar a.yg-link b{font:900 11px/1 'Noto Sans SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;background:#8f0a10;color:#fff;padding:3px 4px}
 .yg-bar a.yg-link:hover{color:#fff;background:rgba(143,10,16,.45)}
@@ -60,13 +62,13 @@ main section,main article,.platform-card,.map-row,.lesson-card,.module-card,.car
 .hero h1 span{color:#c01820!important}.hero h1 span{text-shadow:0 0 24px rgba(160,0,10,.6)}
 
 /* v3: unify logo usage in Linux / Programming (crisp vector mask instead of upscaled PNG or 妖 glyph) */
-img[src*="logo-emblem"]{content:url(/brand/logo-mask.svg);image-rendering:auto;object-fit:contain}
-.brand-mark,.loader-mark{font-size:0!important;color:transparent!important;background:url(/brand/logo-mask.svg) center/cover no-repeat!important;border:1px solid #c01820!important}
-.hero-sigil{font-size:0!important;color:transparent!important;background:url(/brand/logo-mask.svg) center/contain no-repeat!important;opacity:.14!important;border-radius:0!important;border:0!important;aspect-ratio:952/968}
+img[src*="logo-emblem"]{content:var(--yg-logo);image-rendering:auto;object-fit:contain}
+.brand-mark,.loader-mark{font-size:0!important;color:transparent!important;background:var(--yg-logo) center/contain no-repeat!important;border:1px solid #c01820!important}
+.hero-sigil{font-size:0!important;color:transparent!important;background:var(--yg-logo) center/contain no-repeat!important;opacity:.14!important;border-radius:0!important;border:0!important;aspect-ratio:952/968}
 
 /* v4: Crypto hero/footer logo (crisp vector instead of 206px JPG), Network double-navbar gap */
-img.hero-art{content:url(/brand/logo-mask.svg);object-fit:contain!important;padding:34px;box-sizing:border-box;background:#050202;border:1px solid #5c0408;box-shadow:0 0 60px rgba(143,10,16,.35);animation:yg-float2 5s ease-in-out infinite}
-img.footer-logo,img.brand-mark[src*="logo-emblem"]{content:url(/brand/logo-mask.svg);object-fit:contain}
+img.hero-art{content:var(--yg-logo);object-fit:contain!important;padding:34px;box-sizing:border-box;background:#050202;border:1px solid #5c0408;box-shadow:0 0 60px rgba(143,10,16,.35);animation:yg-float2 5s ease-in-out infinite}
+img.footer-logo,img.brand-mark[src*="logo-emblem"]{content:var(--yg-logo);object-fit:contain}
 body:has(header.topbar) .yg-bar{position:sticky;top:0;z-index:60}
 body:has(header.topbar) header.topbar{top:44px}
 
@@ -120,3 +122,13 @@ a.module-card,a.card,.lesson-card,.module-card,.card{transition:transform .22s,b
 @keyframes yg-breathe{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.07);opacity:1}}
 @keyframes yg-run{from{transform:translateX(-100%)}to{transform:translateX(265%)}}
 @keyframes yg-flicker{0%,100%{opacity:1}46%{opacity:1}48%{opacity:.35}50%{opacity:1}86%{opacity:.6}88%{opacity:1}}
+
+/* v7: per-course page background (fixed, behind everything) and hero art.
+   The background is dark by itself and gets a black layer on top, so text stays readable. Cards keep their solid surfaces. */
+html[data-course=linux] body{background:linear-gradient(rgba(0,0,0,.52),rgba(0,0,0,.78)) fixed,url(/brand/bg-linux.svg) center/cover fixed,#000!important}
+html[data-course=python] body{background:linear-gradient(rgba(0,0,0,.56),rgba(0,0,0,.8)) fixed,url(/brand/bg-python.svg) center/cover fixed,#000!important}
+html[data-course=crypto] body{background:linear-gradient(rgba(0,0,0,.56),rgba(0,0,0,.8)) fixed,url(/brand/bg-crypto.svg) center/cover fixed,#000!important}
+html[data-course=network] body{background:linear-gradient(rgba(0,0,0,.56),rgba(0,0,0,.8)) fixed,url(/brand/bg-network.svg) center/cover fixed,#000!important}
+.yg-art{position:absolute;right:3%;top:50%;transform:translateY(-50%);width:min(44%,560px);height:auto;max-height:86%;object-fit:contain;pointer-events:none;z-index:0;opacity:.95}
+html[data-course] img.hero-art,html[data-course] .hero-sigil{display:none!important}
+@media(max-width:1000px){.yg-art{display:none}}
