@@ -64,9 +64,9 @@
         sessionStorage.setItem(seen, '1');
         var intro = document.createElement('div');
         var isCourse = !!course.href;
-        intro.className = 'yg-intro' + (isCourse ? ' face' : '');
+        intro.className = 'yg-intro' + (isCourse ? ' face art' : '');
         intro.innerHTML = isCourse
-          ? '<img src="/brand/logo-oni-face.svg" alt=""><b class="k">' + course.cn + '</b><span class="t">YAOGUAI ' + course.label + '</span><i class="bar"></i>'
+          ? '<img src="/brand/' + (/^(linux|python|crypto|network)$/.test(document.documentElement.getAttribute('data-course')) ? 'intro-' + document.documentElement.getAttribute('data-course') : 'logo-oni-face') + '.svg" alt=""><b class="k">' + course.cn + '</b><span class="t">YAOGUAI ' + course.label + '</span><i class="bar"></i>'
           : '<img src="/brand/logo-oni.svg" alt=""><b class="k">' + course.cn + '</b><span class="t">YAOGUAI ' + course.label + '</span>';
         document.body.appendChild(intro);
         setTimeout(function () { intro.remove(); }, isCourse ? 2200 : 1800);
