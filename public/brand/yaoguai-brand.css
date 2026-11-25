@@ -137,3 +137,11 @@ html[data-course] img.hero-art,html[data-course] .hero-sigil{display:none!import
 html[data-course=linux] .dashboard-hero>.yg-art{top:auto;bottom:20px;right:40px;transform:none;width:clamp(210px,19vw,300px);max-height:none}
 html[data-course=network] .hero-diagram img{content:url(/brand/art-network.svg);width:min(100%,360px);height:auto;aspect-ratio:auto;object-fit:contain;border:0;background:none;box-shadow:none;border-radius:0!important;-webkit-mask:none;mask:none;filter:none}
 html[data-course=python] .hero>.yg-art{right:5%;width:min(34%,430px)}
+
+/* v9: course logos have no red frame; the mark is wider than tall so the logo is not squashed */
+.brand-mark,.loader-mark,img.footer-logo{border:0!important;box-shadow:none!important;background-color:transparent!important;border-radius:0!important;padding:0!important}
+.brand-mark,.loader-mark{width:48px!important;height:38px!important;object-fit:contain!important}
+img.footer-logo{width:56px!important;height:46px!important;object-fit:contain}
+
+/* v10: Linux uses the penguin only. It is the logo in the bar and brand marks, and it sits in the diamond frame in the hero. */
+html[data-course=linux] .hero-seal img{content:url(/brand/art-linux-penguin.svg);width:150px;height:auto;filter:none;opacity:1;object-fit:contain}

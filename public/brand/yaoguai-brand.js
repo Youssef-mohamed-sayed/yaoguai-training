@@ -110,7 +110,7 @@
   function art(hero) {
     // course art on the right side of the hero, behind the text (course pages only)
     var KEY = document.documentElement.getAttribute('data-course');
-    if (!KEY || KEY === 'network' || hero.querySelector('.yg-art')) return;
+    if (!KEY || KEY === 'network' || KEY === 'linux' || hero.querySelector('.yg-art')) return;
     var a = document.createElement('img');
     a.className = 'yg-art';
     a.alt = '';
